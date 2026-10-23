@@ -1,0 +1,467 @@
+/*======================================
+SATUAN SAVE
+======================================*/
+
+const SatuanSave = {
+
+
+    /*======================================
+    SAVE
+    ======================================*/
+
+    async save(
+        existingData = null
+    ) {
+
+        const kode =
+            document
+                .getElementById(
+                    "satuan-barang"
+                )
+                .value;
+
+
+        const satuan =
+            document
+                .getElementById(
+                    "satuan-nama"
+                )
+                .value
+                .trim();
+
+
+        const barcodeSatuan =
+            document
+                .getElementById(
+                    "satuan-barcode"
+                )
+                .value
+                .trim();
+
+
+        const isi =
+            Number(
+                document
+                    .getElementById(
+                        "satuan-konversi"
+                    )
+                    .value
+            );
+
+
+        const hargaJual =
+            Number(
+                document
+                    .getElementById(
+                        "satuan-harga-jual"
+                    )
+                    .value
+            ) || 0;
+
+
+        const discount =
+            Number(
+                document
+                    .getElementById(
+                        "satuan-discount"
+                    )
+                    .value
+            ) || 0;
+
+
+        /*==================================
+        VALIDASI BARANG
+        ==================================*/
+
+        if (!kode) {
+
+            Dialog.alert(
+                "Barang wajib dipilih."
+            );
+
+            return;
+
+        }
+
+
+        /*==================================
+        VALIDASI SATUAN
+        ==================================*/
+
+        if (!satuan) {
+
+           Dialog.alert(
+                "Satuan wajib diisi."
+            );
+
+            return;
+
+        }
+
+
+        /*==================================
+        VALIDASI KONVERSI
+        ==================================*/
+
+        if (
+            !isi ||
+            isi < 1
+        ) {
+
+           Dialog.alert(
+                "Konversi harus lebih dari 0."
+            );
+
+            return;
+
+        }
+
+
+        /*==================================
+        DATA LAMA UNTUK EDIT
+        ==================================*/
+
+        const oldKode =
+            existingData?.kode ||
+            kode;
+
+
+        const oldSatuan =
+            existingData?.satuan ||
+            satuan;
+
+
+        /*==================================
+        ID SATUAN
+        ==================================*/
+
+        const id =
+            existingData?.id ||
+            (
+                kode +
+                "|" +
+                satuan
+            );
+
+
+        /*==================================
+        DATA SATUAN
+        ==================================*/
+
+        const data = {
+
+            id,
+
+            kode,
+
+            satuan,
+
+            isi,
+
+            hargaJual,
+
+            discount,
+
+            barcodeSatuan,
+
+            status:
+                existingData?.status ||
+                "Aktif",
+
+            syncStatus:
+                "pending",
+
+            createdAt:
+                existingData?.createdAt ||
+                new Date()
+                    .toISOString(),
+
+            syncedAt:
+                null
+
+        };
+
+
+       
+
+        try {
+
+            /*==================================
+            EDIT DATA LAMA
+            ==================================*/
+
+            if (existingData) {
+
+                await DB.put(
+                    "satuan",
+                    data
+                );
+
+
+                const queue = {
+
+                    id:
+                        "SYNC-SAT-" +
+                        Date.now() +
+                        "-" +
+                        Math.random()
+                            .toString(36)
+                            .substring(
+                                2,
+                                8
+                            ),
+
+                    type:
+                        "satuan",
+
+                    action:
+                        "update",
+
+                    referenceId:
+                        id,
+
+                    oldKode:
+                        oldKode,
+
+                    oldSatuan:
+                        oldSatuan,
+
+                    status:
+                        "pending",
+
+                    retry:
+                        0,
+
+                    createdAt:
+                        new Date()
+                            .toISOString(),
+
+                    lastError:
+                        null
+
+                };
+
+
+                await DB.put(
+                    "syncQueue",
+                    queue
+                );
+
+
+                
+
+
+                /*==================================
+                KEMBALI KE PEMBELIAN
+                ==================================*/
+
+                if (
+                    Satuan.formOptions.returnTo ===
+                    "pembelian"
+                ) {
+
+                    Pembelian.pendingBarcode =
+                        data.barcodeSatuan;
+
+
+                    Pembelian.preserveItems =
+                        true;
+
+
+                    Router.go(
+                        "pembelian"
+                    );
+
+
+                    setTimeout(
+                        () => {
+
+                            Sync.process()
+                                .catch(
+                                    error => {
+
+                                        console.error(
+                                            "SYNC ERROR:",
+                                            error
+                                        );
+
+                                    }
+                                );
+
+                        },
+                        100
+                    );
+
+
+                    return;
+
+                }
+
+
+                Dialog.alert(
+                    "Satuan berhasil diperbarui."
+                );
+
+
+                Router.go(
+                    "satuan"
+                );
+
+
+                setTimeout(
+                    () => {
+
+                        Sync.process();
+
+                    },
+                    100
+                );
+
+
+                return;
+
+            }
+
+
+            /*==================================
+            TAMBAH SATUAN BARU
+            ==================================*/
+
+            const result =
+                await Sync.addSatuan(
+                    data
+                );
+
+
+            
+
+
+            /*==================================
+            SATUAN SUDAH ADA
+            ==================================*/
+
+            if (
+                result &&
+                result.duplicate
+            ) {
+
+                const existing =
+                    result.data;
+
+
+                const edit =
+                    confirm(
+                        "Satuan untuk barang ini sudah ada.\n\n" +
+                        "Klik OK untuk Edit.\n" +
+                        "Klik Cancel untuk Batal."
+                    );
+
+
+                if (!edit) {
+
+                    return;
+
+                }
+
+
+                SatuanForm.form(
+                    existing,
+                    Satuan.formOptions
+                );
+
+
+                return;
+
+            }
+
+
+            /*==================================
+            KEMBALI KE PEMBELIAN
+            ==================================*/
+
+            if (
+                Satuan.formOptions.returnTo ===
+                "pembelian"
+            ) {
+
+                Pembelian.pendingBarcode =
+                    data.barcodeSatuan;
+
+
+                Pembelian.preserveItems =
+                    true;
+
+
+                Router.go(
+                    "pembelian"
+                );
+
+
+                setTimeout(
+                    () => {
+
+                        Sync.process()
+                            .catch(
+                                error => {
+
+                                    console.error(
+                                        "SYNC ERROR:",
+                                        error
+                                    );
+
+                                }
+                            );
+
+                    },
+                    100
+                );
+
+
+                return;
+
+            }
+
+
+            /*==================================
+            ALUR NORMAL
+            ==================================*/
+
+            Dialog.alert(
+                "Barang dan satuan berhasil disimpan."
+            );
+
+
+            Router.go(
+                "barang"
+            );
+
+
+            setTimeout(
+                () => {
+
+                    Sync.process();
+
+                },
+                100
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "SAVE SATUAN ERROR:",
+                error
+            );
+
+
+            Dialog.alert(
+                error.message ||
+                "Gagal menyimpan satuan."
+            );
+
+        }
+
+    }
+
+};

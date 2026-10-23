@@ -1,0 +1,563 @@
+/* ======================================
+   TREEHOUSE POS
+   PEMBELIAN
+   BARCODE SCANNER DESKTOP CSS
+   FILE: pembelian-barcode-scanner-desktop.css
+====================================== */
+
+@media (min-width: 769px) {
+
+    #pembelian-barcode-scanner,
+    #pembelian-barcode-scanner * {
+        box-sizing: border-box;
+    }
+
+    #pembelian-barcode-scanner {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483647;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        overflow-y: auto;
+        font-family: inherit;
+    }
+
+    #pembelian-barcode-scanner[hidden] {
+        display: none !important;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.72);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-container {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 600px;
+        max-height: calc(100vh - 48px);
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 22px;
+        background: #15803d;
+        color: #ffffff;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.4;
+        color: #ffffff;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-close {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.12);
+        color: #ffffff;
+        font-size: 27px;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-close:hover {
+        background: rgba(255, 255, 255, 0.22);
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-body {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        min-height: 0;
+        padding: 22px;
+        overflow-y: auto;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-camera {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        overflow: hidden;
+        border-radius: 12px;
+        background: #020617;
+    }
+
+    #pembelian-barcode-scanner-video {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #020617;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-frame {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 78%;
+        height: 30%;
+        transform: translate(-50%, -50%);
+        border: 2px solid #22c55e;
+        border-radius: 10px;
+        box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.18);
+        pointer-events: none;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-frame::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        transform: translateY(-50%);
+        background: rgba(34, 197, 94, 0.9);
+        box-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
+    }
+
+    /* ======================================
+EFEK LASER MERAH SCANNER BARCODE
+====================================== */
+#pembelian-barcode-scanner .pembelian-barcode-scanner-frame {
+overflow: hidden;
+}
+/* Garis laser merah bergerak */
+#pembelian-barcode-scanner .pembelian-barcode-scanner-frame::after {
+content: "";
+position: absolute;
+left: 0;
+top: 0;
+width: 100%;
+height: 2px;
+transform: none;
+border-radius: 50%;
+background: #ff2020;
+box-shadow:
+0 0 4px #ff2020,
+0 0 8px #ff2020,
+0 0 14px rgba(255, 0, 0, 0.9);
+animation: pembelian-laser-scan 2s ease-in-out infinite alternate;
+pointer-events: none;
+}
+@keyframes pembelian-laser-scan {
+0% {
+top: 0;
+opacity: 0.7;
+}
+
+100% {
+    top: calc(100% - 2px);
+    opacity: 1;
+}
+
+}
+
+    #pembelian-barcode-scanner-message {
+        margin: 0;
+        padding: 13px 15px;
+        border: 1px solid #bbf7d0;
+        border-radius: 10px;
+        background: #f0fdf4;
+        color: #166534;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-hint {
+        margin: 0;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.6;
+        text-align: center;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 16px 22px;
+        border-top: 1px solid #e2e8f0;
+        background: #ffffff;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-footer button {
+        min-height: 42px;
+        padding: 10px 20px;
+        border: 0;
+        border-radius: 9px;
+        background: #15803d;
+        color: #ffffff;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-footer button:hover {
+        background: #166534;
+    }
+
+}
+
+
+/* ======================================
+   TREEHOUSE POS
+   PEMBELIAN
+   BARCODE SCANNER MOBILE CSS
+   FILE: pembelian-barcode-scanner-mobile.css
+====================================== */
+
+@media (max-width: 768px) {
+
+    #pembelian-barcode-scanner,
+    #pembelian-barcode-scanner * {
+        box-sizing: border-box;
+    }
+
+    #pembelian-barcode-scanner {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483647;
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        padding: 0;
+        overflow: hidden;
+        font-family: inherit;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    #pembelian-barcode-scanner[hidden] {
+        display: none !important;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-container {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        max-height: 100dvh;
+        min-width: 0;
+        overflow: hidden;
+        background: #f8fafc;
+    }
+
+    /* HEADER */
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-shrink: 0;
+        padding: 14px 16px;
+        padding-top: max(14px, env(safe-area-inset-top));
+        background: #15803d;
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-header h3 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 700;
+        line-height: 1.4;
+        color: #ffffff;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-close {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.12);
+        color: #ffffff;
+        font-size: 27px;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-close:active {
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* BODY */
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-body {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        flex: 1;
+        min-height: 0;
+        padding: 16px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* CAMERA */
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-camera {
+        position: relative;
+        flex: 0 0 auto;
+        width: 100%;
+        aspect-ratio: 3 / 4;
+        max-height: 55dvh;
+        overflow: hidden;
+        border: 1px solid #1e293b;
+        border-radius: 14px;
+        background: #020617;
+    }
+
+    #pembelian-barcode-scanner-video {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #020617;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-frame {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 88%;
+        height: 24%;
+        transform: translate(-50%, -50%);
+        border: 2px solid #22c55e;
+        border-radius: 10px;
+        box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.2);
+        pointer-events: none;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-frame::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        transform: translateY(-50%);
+        background: #22c55e;
+        box-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
+    }
+
+    /* STATUS */
+
+    #pembelian-barcode-scanner-message {
+        flex-shrink: 0;
+        margin: 0;
+        padding: 13px 14px;
+        border: 1px solid #bbf7d0;
+        border-radius: 10px;
+        background: #f0fdf4;
+        color: #166534;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-hint {
+        flex-shrink: 0;
+        margin: 0;
+        padding: 0 4px;
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.6;
+        text-align: center;
+    }
+
+    /* FOOTER */
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-footer {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-shrink: 0;
+        justify-content: stretch;
+        gap: 10px;
+        padding: 12px 16px;
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+        border-top: 1px solid #e2e8f0;
+        background: #ffffff;
+        box-shadow: 0 -3px 12px rgba(15, 23, 42, 0.05);
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-footer button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        min-width: 0;
+        min-height: 46px;
+        padding: 11px 16px;
+        border: 0;
+        border-radius: 10px;
+        background: #15803d;
+        color: #ffffff;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-footer button:active {
+        background: #166534;
+    }
+
+        /* ======================================
+EFEK LASER MERAH SCANNER BARCODE
+====================================== */
+#pembelian-barcode-scanner .pembelian-barcode-scanner-frame {
+overflow: hidden;
+}
+/* Garis laser merah bergerak */
+#pembelian-barcode-scanner .pembelian-barcode-scanner-frame::after {
+content: "";
+position: absolute;
+left: 0;
+top: 0;
+width: 100%;
+height: 2px;
+transform: none;
+border-radius: 50%;
+background: #ff2020;
+box-shadow:
+0 0 4px #ff2020,
+0 0 8px #ff2020,
+0 0 14px rgba(255, 0, 0, 0.9);
+animation: pembelian-laser-scan 2s ease-in-out infinite alternate;
+pointer-events: none;
+}
+@keyframes pembelian-laser-scan {
+0% {
+top: 0;
+opacity: 0.7;
+}
+
+100% {
+    top: calc(100% - 2px);
+    opacity: 1;
+}
+
+}
+
+}
+
+/* ======================================
+   MOBILE LANDSCAPE
+====================================== */
+
+@media (max-width: 768px) and (orientation: landscape) {
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-header {
+        padding-top: max(8px, env(safe-area-inset-top));
+        padding-bottom: 8px;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-header h3 {
+        font-size: 15px;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-close {
+        width: 34px;
+        height: 34px;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-body {
+        gap: 10px;
+        padding: 10px 16px;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-camera {
+        width: min(100%, 620px);
+        aspect-ratio: 16 / 9;
+        max-height: 48dvh;
+        align-self: center;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-frame {
+        width: 70%;
+        height: 35%;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-footer {
+        padding-top: 8px;
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+
+}
+
+/* ======================================
+   MOBILE SANGAT KECIL
+====================================== */
+
+@media (max-width: 380px) {
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-header {
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-body {
+        gap: 12px;
+        padding: 12px;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-camera {
+        aspect-ratio: 3 / 4;
+        max-height: 52dvh;
+    }
+
+    #pembelian-barcode-scanner .pembelian-barcode-scanner-footer {
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+
+}
