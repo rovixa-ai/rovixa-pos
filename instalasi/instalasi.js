@@ -307,8 +307,8 @@ const Installer = {
         );
 
         this.tokenClient.requestAccessToken({
-            prompt: "consent"
-        });
+    prompt: "consent select_account"
+});
     },
 
 
@@ -659,9 +659,9 @@ const Installer = {
             "loading"
         );
 
-        this.tokenClient.requestAccessToken({
-            prompt: "consent"
-        });
+       this.tokenClient.requestAccessToken({
+    prompt: "consent select_account"
+});
     },
 
 
