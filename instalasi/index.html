@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#059669">
-    <title>Instalasi Toko Baru - Treehouse POS</title>
+    <title>Instalasi Toko Baru - Rovixa POS</title>
 
     <style>
         * {
@@ -188,14 +187,13 @@
 <body>
     <main class="container">
         <section class="card">
-            <div class="logo" aria-hidden="true">T</div>
+            <div class="logo" aria-hidden="true">R</div>
 
             <h1>Instalasi Toko Baru</h1>
 
             <p class="description">
-                Siapkan database Treehouse POS untuk toko Anda.
-                Pilih template database melalui Google Drive,
-                kemudian buat salinan pada akun Google Anda.
+                Buat salinan template database Rovixa POS langsung
+                ke akun Google Anda tanpa memilih file dari Google Drive.
             </p>
 
             <form id="installer-form">
@@ -218,10 +216,9 @@
 
             <div class="note">
                 <strong>Informasi penting</strong><br>
-                Anda akan diminta masuk ke Google dan memilih
-                template database. Periksa akun dan file yang
-                dipilih sebelum melanjutkan. Installer tidak
-                meminta kata sandi Google Anda.
+                Anda akan diminta memberikan izin Google untuk
+                menyalin template database Rovixa POS yang telah
+                ditentukan. Installer tidak meminta kata sandi Google Anda.
             </div>
 
             <div
@@ -237,7 +234,7 @@
         </section>
 
         <footer>
-            Treehouse POS &copy; 2026
+            Rovixa POS &copy; 2026
         </footer>
     </main>
 
@@ -245,35 +242,16 @@
         "use strict";
 
         const INSTALLER_CONFIG = Object.freeze({
-            CLIENT_ID:
-                "465650752797-ji8ha0uvs5d173v588qapiur7dsl4lnp.apps.googleusercontent.com",
-
-            API_KEY:
-                "AIzaSyB17gY3Rjk5oV25IMCBK7tvq_FzZdJ2beU",
-
-            GOOGLE_CLOUD_PROJECT_NUMBER:
-                "465650752797",
-
-            TEMPLATE_SPREADSHEET_ID:
-                "1MNXOrJqIO2xGytntyeHK87R0r_Zf0CNb2W748FXEc14",
-
-            DRIVE_API_URL:
-                "https://www.googleapis.com/drive/v3/files",
-
-            DRIVE_SCOPE:
-                "https://www.googleapis.com/auth/drive.file",
-
-            SHEETS_MIME_TYPE:
-                "application/vnd.google-apps.spreadsheet"
+            CLIENT_ID: "465650752797-ji8ha0uvs5d173v588qapiur7dsl4lnp.apps.googleusercontent.com",
+            TEMPLATE_SPREADSHEET_ID: "1MNXOrJqIO2xGytntyeHK87R0r_Zf0CNb2W748FXEc14",
+            DRIVE_API_URL: "https://www.googleapis.com/drive/v3/files",
+            DRIVE_SCOPE: "https://www.googleapis.com/auth/drive"
         });
 
         const Installer = {
             tokenClient: null,
             accessToken: "",
-            pendingStoreName: "",
             isProcessing: false,
-            pickerReady: false,
-            pickerLoading: null,
 
             init() {
                 document
@@ -285,8 +263,7 @@
             },
 
             setStatus(message, type = "") {
-                const status =
-                    document.getElementById("installer-status");
+                const status = document.getElementById("installer-status");
 
                 status.replaceChildren();
                 status.className = "status visible";
@@ -301,11 +278,9 @@
             setBusy(busy, message) {
                 this.isProcessing = busy;
 
-                const button =
-                    document.getElementById("install-button");
+                const button = document.getElementById("install-button");
 
                 button.disabled = busy;
-
                 button.textContent = busy
                     ? (message || "Memproses instalasi...")
                     : "Hubungkan Google & Buat Database";
@@ -316,9 +291,7 @@
                     return;
                 }
 
-                const input =
-                    document.getElementById("store-name");
-
+                const input = document.getElementById("store-name");
                 const storeName = input.value.trim();
 
                 if (!storeName) {
@@ -342,19 +315,6 @@
                 }
 
                 if (
-                    !INSTALLER_CONFIG.API_KEY ||
-                    INSTALLER_CONFIG.API_KEY ===
-                        "TEMPELKAN_API_KEY_DI_SINI"
-                ) {
-                    this.setStatus(
-                        "API key belum diisi. Masukkan API key Google Picker pada konfigurasi installer.",
-                        "error"
-                    );
-
-                    return;
-                }
-
-                if (
                     !window.google ||
                     !window.google.accounts ||
                     !window.google.accounts.oauth2
@@ -367,7 +327,6 @@
                     return;
                 }
 
-                this.pendingStoreName = storeName;
                 this.setBusy(true, "Menghubungkan ke Google...");
 
                 try {
@@ -405,17 +364,11 @@
 
                                 this.accessToken = response.access_token;
 
-                                try {
-                                    await this.openTemplatePicker();
-                                } catch (error) {
-                                    this.setBusy(false);
-
-                                    this.setStatus(
-                                        "Google Picker gagal dibuka. " +
-                                        error.message,
-                                        "error"
-                                    );
-                                }
+                                await this.createDatabaseCopy(
+                                    this.accessToken,
+                                    INSTALLER_CONFIG.TEMPLATE_SPREADSHEET_ID,
+                                    document.getElementById("store-name").value.trim()
+                                );
                             },
 
                             error_callback: (error) => {
@@ -447,227 +400,6 @@
                 }
             },
 
-            async loadPickerApi() {
-                if (
-                    window.gapi &&
-                    window.google &&
-                    window.google.picker
-                ) {
-                    this.pickerReady = true;
-                    return;
-                }
-
-                if (this.pickerLoading) {
-                    return this.pickerLoading;
-                }
-
-                this.pickerLoading = new Promise((resolve, reject) => {
-                    const loadGapi = () => {
-                        if (!window.gapi) {
-                            reject(
-                                new Error(
-                                    "Google API Client tidak berhasil dimuat."
-                                )
-                            );
-                            return;
-                        }
-
-                        window.gapi.load("picker", {
-                            callback: () => {
-                                if (
-                                    window.google &&
-                                    window.google.picker
-                                ) {
-                                    this.pickerReady = true;
-                                    resolve();
-                                } else {
-                                    reject(
-                                        new Error(
-                                            "Google Picker API tidak tersedia."
-                                        )
-                                    );
-                                }
-                            },
-
-                            onerror: () => {
-                                reject(
-                                    new Error(
-                                        "Gagal memuat Google Picker API."
-                                    )
-                                );
-                            },
-
-                            timeout: 15000,
-
-                            ontimeout: () => {
-                                reject(
-                                    new Error(
-                                        "Waktu tunggu Google Picker habis."
-                                    )
-                                );
-                            }
-                        });
-                    };
-
-                    if (window.gapi) {
-                        loadGapi();
-                        return;
-                    }
-
-                    const existingScript = document.querySelector(
-                        'script[data-google-picker-api="true"]'
-                    );
-
-                    if (existingScript) {
-                        existingScript.addEventListener(
-                            "load",
-                            loadGapi,
-                            { once: true }
-                        );
-
-                        existingScript.addEventListener(
-                            "error",
-                            () => reject(
-                                new Error(
-                                    "Gagal mengunduh Google API Client."
-                                )
-                            ),
-                            { once: true }
-                        );
-
-                        return;
-                    }
-
-                    const script = document.createElement("script");
-
-                    script.src = "https://apis.google.com/js/api.js";
-                    script.async = true;
-                    script.defer = true;
-                    script.dataset.googlePickerApi = "true";
-
-                    script.onload = loadGapi;
-
-                    script.onerror = () => {
-                        reject(
-                            new Error(
-                                "Gagal mengunduh Google API Client."
-                            )
-                        );
-                    };
-
-                    document.head.appendChild(script);
-                });
-
-                try {
-                    await this.pickerLoading;
-                } catch (error) {
-                    this.pickerLoading = null;
-                    throw error;
-                }
-            },
-
-            async openTemplatePicker() {
-                this.setStatus(
-                    "Memuat Google Picker untuk memilih template database..."
-                );
-
-                await this.loadPickerApi();
-
-                const picker = window.google.picker;
-
-                const view = new picker.DocsView(
-                    picker.ViewId.SPREADSHEETS
-                );
-
-                view.setMimeTypes(
-                    INSTALLER_CONFIG.SHEETS_MIME_TYPE
-                );
-
-                view.setIncludeFolders(false);
-                view.setSelectFolderEnabled(false);
-
-                const pickerInstance = new picker.PickerBuilder()
-                    .setDeveloperKey(INSTALLER_CONFIG.API_KEY)
-                    .setAppId(
-                        INSTALLER_CONFIG.GOOGLE_CLOUD_PROJECT_NUMBER
-                    )
-                    .setOAuthToken(this.accessToken)
-                    .setOrigin(window.location.origin)
-                    .addView(view)
-                    .setTitle("Pilih template database Treehouse POS")
-                    .setCallback((data) => {
-                        this.handlePickerResult(data);
-                    })
-                    .build();
-
-                pickerInstance.setVisible(true);
-            },
-
-            async handlePickerResult(data) {
-                const picker = window.google.picker;
-
-                if (data.action === picker.Action.CANCEL) {
-                    this.setBusy(false);
-
-                    this.setStatus(
-                        "Pemilihan template dibatalkan. Belum ada database yang dibuat."
-                    );
-
-                    return;
-                }
-
-                if (data.action !== picker.Action.PICKED) {
-                    return;
-                }
-
-                const selectedFile =
-                    data.docs && data.docs.length
-                        ? data.docs[0]
-                        : null;
-
-                if (!selectedFile || !selectedFile.id) {
-                    this.setBusy(false);
-
-                    this.setStatus(
-                        "Google Picker tidak mengembalikan file yang valid.",
-                        "error"
-                    );
-
-                    return;
-                }
-
-                if (
-                    selectedFile.id !==
-                    INSTALLER_CONFIG.TEMPLATE_SPREADSHEET_ID
-                ) {
-                    this.setBusy(false);
-
-                    this.setStatus(
-                        "File yang dipilih bukan template database yang telah dikonfigurasi. " +
-                        "Pilih template dengan ID yang benar.",
-                        "error"
-                    );
-
-                    return;
-                }
-
-                try {
-                    await this.createDatabaseCopy(
-                        this.accessToken,
-                        selectedFile.id,
-                        this.pendingStoreName
-                    );
-                } catch (error) {
-                    this.setBusy(false);
-
-                    this.setStatus(
-                        "Database belum berhasil dibuat. " +
-                        error.message,
-                        "error"
-                    );
-                }
-            },
-
             async createDatabaseCopy(
                 accessToken,
                 templateId,
@@ -676,13 +408,10 @@
                 this.setBusy(true, "Membuat salinan database...");
 
                 this.setStatus(
-                    "Meminta Google Drive membuat salinan template..."
+                    "Meminta Google Drive membuat salinan template Rovixa POS..."
                 );
 
                 try {
-                    const copyName =
-                        "Treehouse POS - " + storeName;
-
                     const response = await fetch(
                         INSTALLER_CONFIG.DRIVE_API_URL +
                         "/" +
@@ -692,17 +421,12 @@
                             method: "POST",
 
                             headers: {
-                                "Authorization":
-                                    "Bearer " + accessToken,
-
-                                "Content-Type":
-                                    "application/json"
+                                "Authorization": "Bearer " + accessToken,
+                                "Content-Type": "application/json"
                             },
 
                             body: JSON.stringify({
-                                name: copyName,
-                                mimeType:
-                                    INSTALLER_CONFIG.SHEETS_MIME_TYPE
+                                name: "Rovixa POS - " + storeName
                             })
                         }
                     );
@@ -733,8 +457,8 @@
                     this.setStatus(
                         "Database belum berhasil dibuat. " +
                         error.message +
-                        " Periksa akses template, Google Picker API, " +
-                        "Google Drive API, dan konfigurasi OAuth.",
+                        " Pastikan akun Google memiliki akses ke template, " +
+                        "Google Drive API aktif, dan izin OAuth telah dikonfigurasi dengan benar.",
                         "error"
                     );
                 } finally {
@@ -757,7 +481,7 @@
                 const details = document.createElement("p");
 
                 details.textContent =
-                    "Nama: " + (database.name || "Treehouse POS");
+                    "Nama: " + (database.name || "Rovixa POS");
 
                 const link = document.createElement("a");
 
