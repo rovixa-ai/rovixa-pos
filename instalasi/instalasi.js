@@ -953,45 +953,35 @@ const Installer = {
     },
 
 
-    /* ======================================
-       CREATE WEB APP DEPLOYMENT
-    ====================================== */
+   /* ======================================
+   CREATE WEB APP DEPLOYMENT
+====================================== */
 
-    async createWebAppDeployment(versionNumber) {
+async createWebAppDeployment(versionNumber) {
 
-        const url =
-            INSTALLER_CONFIG.SCRIPT_API +
-            "/projects/" +
-            encodeURIComponent(this.scriptId) +
-            "/deployments";
+    const url =
+        INSTALLER_CONFIG.SCRIPT_API +
+        "/projects/" +
+        encodeURIComponent(this.scriptId) +
+        "/deployments";
 
-        return this.apiRequest(
-            url,
-            {
+    return this.apiRequest(
+        url,
+        {
+            method: "POST",
 
-                method: "POST",
+            body: JSON.stringify({
+                versionNumber: versionNumber,
 
-                body: JSON.stringify({
+                manifestFileName: "appsscript",
 
-                    deploymentConfig: {
-
-                        versionNumber:
-                            versionNumber,
-
-                        manifestFileName:
-                            "appsscript",
-
-                        description:
-                            "Rovixa POS Web App - " +
-                            this.storeName
-
-                    }
-
-                })
-
-            }
-        );
-    },
+                description:
+                    "Rovixa POS Web App - " +
+                    this.storeName
+            })
+        }
+    );
+},
 
 
     /* ======================================
