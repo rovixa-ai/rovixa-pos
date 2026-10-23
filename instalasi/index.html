@@ -192,8 +192,8 @@
             <h1>Instalasi Toko Baru</h1>
 
             <p class="description">
-                Buat salinan template database Rovixa POS langsung
-                ke akun Google Anda tanpa memilih file dari Google Drive.
+                Buat folder Rovixa POS dan salinan database toko
+                langsung di Google Drive milik Anda.
             </p>
 
             <form id="installer-form">
@@ -216,9 +216,10 @@
 
             <div class="note">
                 <strong>Informasi penting</strong><br>
-                Anda akan diminta memberikan izin Google untuk
-                menyalin template database Rovixa POS yang telah
-                ditentukan. Installer tidak meminta kata sandi Google Anda.
+                Installer akan membuat folder <strong>Rovixa POS</strong>
+                di Google Drive Anda. Salinan database toko akan disimpan
+                di dalam folder tersebut. Installer tidak meminta
+                kata sandi Google Anda.
             </div>
 
             <div
@@ -245,7 +246,8 @@
             CLIENT_ID: "465650752797-ji8ha0uvs5d173v588qapiur7dsl4lnp.apps.googleusercontent.com",
             TEMPLATE_SPREADSHEET_ID: "1MNXOrJqIO2xGytntyeHK87R0r_Zf0CNb2W748FXEc14",
             DRIVE_API_URL: "https://www.googleapis.com/drive/v3/files",
-            DRIVE_SCOPE: "https://www.googleapis.com/auth/drive"
+            DRIVE_SCOPE: "https://www.googleapis.com/auth/drive",
+            FOLDER_NAME: "Rovixa POS"
         });
 
         const Installer = {
@@ -263,7 +265,8 @@
             },
 
             setStatus(message, type = "") {
-                const status = document.getElementById("installer-status");
+                const status =
+                    document.getElementById("installer-status");
 
                 status.replaceChildren();
                 status.className = "status visible";
@@ -278,9 +281,11 @@
             setBusy(busy, message) {
                 this.isProcessing = busy;
 
-                const button = document.getElementById("install-button");
+                const button =
+                    document.getElementById("install-button");
 
                 button.disabled = busy;
+
                 button.textContent = busy
                     ? (message || "Memproses instalasi...")
                     : "Hubungkan Google & Buat Database";
@@ -291,7 +296,9 @@
                     return;
                 }
 
-                const input = document.getElementById("store-name");
+                const input =
+                    document.getElementById("store-name");
+
                 const storeName = input.value.trim();
 
                 if (!storeName) {
@@ -362,12 +369,12 @@
                                     return;
                                 }
 
-                                this.accessToken = response.access_token;
+                                this.accessToken =
+                                    response.access_token;
 
-                                await this.createDatabaseCopy(
+                                await this.installStoreDatabase(
                                     this.accessToken,
-                                    INSTALLER_CONFIG.TEMPLATE_SPREADSHEET_ID,
-                                    document.getElementById("store-name").value.trim()
+                                    storeName
                                 );
                             },
 
@@ -400,65 +407,153 @@
                 }
             },
 
-            async createDatabaseCopy(
+            async driveRequest(
                 accessToken,
-                templateId,
-                storeName
+                url,
+                options = {}
             ) {
-                this.setBusy(true, "Membuat salinan database...");
+                const response = await fetch(url, {
+                    ...options,
 
-                this.setStatus(
-                    "Meminta Google Drive membuat salinan template Rovixa POS..."
-                );
+                    headers: {
+                        "Authorization": "Bearer " + accessToken,
+                        "Content-Type": "application/json",
+                        ...(options.headers || {})
+                    }
+                });
+
+                const text = await response.text();
+
+                let result = {};
 
                 try {
-                    const response = await fetch(
+                    result = text ? JSON.parse(text) : {};
+                } catch (error) {
+                    throw new Error(
+                        "Google Drive mengembalikan respons yang tidak valid."
+                    );
+                }
+
+                if (!response.ok) {
+                    const detail =
+                        result.error && result.error.message
+                            ? result.error.message
+                            : "Permintaan Google Drive ditolak.";
+
+                    throw new Error(
+                        detail + " (HTTP " + response.status + ")"
+                    );
+                }
+
+                return result;
+            },
+
+            async findOrCreateFolder(accessToken) {
+                this.setStatus(
+                    "Memeriksa folder Rovixa POS di Google Drive Anda..."
+                );
+
+                const folderName =
+                    INSTALLER_CONFIG.FOLDER_NAME.replace(/'/g, "\\'");
+
+                const query =
+                    "name = '" + folderName + "' " +
+                    "and mimeType = 'application/vnd.google-apps.folder' " +
+                    "and trashed = false";
+
+                const searchUrl =
+                    INSTALLER_CONFIG.DRIVE_API_URL +
+                    "?q=" + encodeURIComponent(query) +
+                    "&pageSize=100" +
+                    "&orderBy=createdTime" +
+                    "&fields=files(id,name,mimeType,webViewLink)";
+
+                const searchResult = await this.driveRequest(
+                    accessToken,
+                    searchUrl
+                );
+
+                if (
+                    searchResult.files &&
+                    searchResult.files.length > 0
+                ) {
+                    return searchResult.files[0];
+                }
+
+                this.setStatus(
+                    "Membuat folder Rovixa POS di Google Drive Anda..."
+                );
+
+                return await this.driveRequest(
+                    accessToken,
+                    INSTALLER_CONFIG.DRIVE_API_URL +
+                    "?fields=id,name,mimeType,webViewLink",
+                    {
+                        method: "POST",
+
+                        body: JSON.stringify({
+                            name: INSTALLER_CONFIG.FOLDER_NAME,
+                            mimeType: "application/vnd.google-apps.folder"
+                        })
+                    }
+                );
+            },
+
+            async installStoreDatabase(accessToken, storeName) {
+                this.setBusy(true, "Menyiapkan folder toko...");
+
+                let createdDatabase = null;
+
+                try {
+                    const folder = await this.findOrCreateFolder(
+                        accessToken
+                    );
+
+                    if (!folder || !folder.id) {
+                        throw new Error(
+                            "Folder Rovixa POS tidak berhasil ditemukan atau dibuat."
+                        );
+                    }
+
+                    this.setStatus(
+                        "Menyalin template database ke folder Rovixa POS..."
+                    );
+
+                    this.setBusy(true, "Menyalin database...");
+
+                    createdDatabase = await this.driveRequest(
+                        accessToken,
                         INSTALLER_CONFIG.DRIVE_API_URL +
                         "/" +
-                        encodeURIComponent(templateId) +
-                        "/copy?fields=id,name,mimeType,webViewLink",
+                        encodeURIComponent(
+                            INSTALLER_CONFIG.TEMPLATE_SPREADSHEET_ID
+                        ) +
+                        "/copy?fields=id,name,mimeType,webViewLink,parents",
                         {
                             method: "POST",
 
-                            headers: {
-                                "Authorization": "Bearer " + accessToken,
-                                "Content-Type": "application/json"
-                            },
-
                             body: JSON.stringify({
-                                name: "Rovixa POS - " + storeName
+                                name: "Rovixa POS - " + storeName,
+                                parents: [folder.id]
                             })
                         }
                     );
 
-                    const result = await response.json();
-
-                    if (!response.ok) {
-                        const detail =
-                            result.error &&
-                            result.error.message
-                                ? result.error.message
-                                : "Permintaan Google Drive ditolak.";
-
-                        throw new Error(
-                            detail +
-                            " (HTTP " + response.status + ")"
-                        );
-                    }
-
-                    if (!result.id) {
+                    if (!createdDatabase.id) {
                         throw new Error(
                             "Google tidak mengembalikan ID database."
                         );
                     }
 
-                    this.showSuccess(result);
+                    createdDatabase.folder = folder;
+
+                    this.showSuccess(createdDatabase);
                 } catch (error) {
                     this.setStatus(
-                        "Database belum berhasil dibuat. " +
+                        "Instalasi belum berhasil diselesaikan. " +
                         error.message +
                         " Pastikan akun Google memiliki akses ke template, " +
-                        "Google Drive API aktif, dan izin OAuth telah dikonfigurasi dengan benar.",
+                        "Google Drive API aktif, dan konfigurasi OAuth benar.",
                         "error"
                     );
                 } finally {
@@ -476,24 +571,42 @@
                 const heading = document.createElement("strong");
 
                 heading.textContent =
-                    "Salinan database berhasil dibuat.";
+                    "Database toko berhasil dibuat.";
 
                 const details = document.createElement("p");
 
                 details.textContent =
-                    "Nama: " + (database.name || "Rovixa POS");
+                    "Nama database: " +
+                    (database.name || "Rovixa POS");
 
-                const link = document.createElement("a");
+                const databaseLink = document.createElement("a");
 
-                link.href =
+                databaseLink.href =
                     database.webViewLink ||
                     "https://docs.google.com/spreadsheets/d/" +
                     encodeURIComponent(database.id) +
                     "/edit";
 
-                link.target = "_blank";
-                link.rel = "noopener noreferrer";
-                link.textContent = "Buka database";
+                databaseLink.target = "_blank";
+                databaseLink.rel = "noopener noreferrer";
+                databaseLink.textContent = "Buka database";
+
+                const folder = database.folder;
+
+                const folderLink = document.createElement("a");
+
+                folderLink.href =
+                    folder.webViewLink ||
+                    "https://drive.google.com/drive/folders/" +
+                    encodeURIComponent(folder.id);
+
+                folderLink.target = "_blank";
+                folderLink.rel = "noopener noreferrer";
+                folderLink.textContent = "Buka folder Rovixa POS";
+
+                const folderDetails = document.createElement("p");
+
+                folderDetails.appendChild(folderLink);
 
                 const idLabel = document.createElement("p");
 
@@ -503,12 +616,14 @@
                 const note = document.createElement("p");
 
                 note.textContent =
-                    "Database berhasil disalin. Konfigurasi backend per klien belum dilakukan.";
+                    "Database tersimpan di Google Drive akun Anda. " +
+                    "Konfigurasi backend per client belum dilakukan.";
 
                 status.append(
                     heading,
                     details,
-                    link,
+                    databaseLink,
+                    folderDetails,
                     idLabel,
                     note
                 );
