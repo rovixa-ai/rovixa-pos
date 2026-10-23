@@ -11,6 +11,9 @@ const INSTALLER_CONFIG = {
     TEMPLATE_SPREADSHEET_ID:
         "1MNXOrJqIO2xGytntyeHK87R0r_Zf0CNb2W748FXEc14",
 
+    TEMPLATE_SCRIPT_ID:
+        "179UpTQqLCA3SavC6M07GFqBLCWHQh87AIFpJ4Wj53rKf_0mCi4FHMJR4",
+
     DRIVE_API:
         "https://www.googleapis.com/drive/v3",
 
@@ -23,11 +26,14 @@ const INSTALLER_CONFIG = {
     FOLDER_NAME:
         "Rovixa POS",
 
-    SCRIPT_CONFIG_SHEET:
-        "__INSTALLER_CONFIG",
-
     SCRIPT_CONFIG_RANGE:
         "__INSTALLER_CONFIG!A1:B2",
+
+    SCRIPT_ID_WAIT_INTERVAL:
+        1000,
+
+    SCRIPT_ID_TIMEOUT:
+        30000,
 
     OAUTH_SCOPES: [
         "https://www.googleapis.com/auth/drive",
@@ -65,18 +71,13 @@ const Installer = {
         const form =
             document.getElementById("installer-form");
 
-        const installButton =
-            document.getElementById("install-button");
-
-        if (!form || !installButton) {
-            console.error(
-                "Elemen installer tidak ditemukan."
-            );
-
+        if (!form) {
             return;
         }
 
-        if (form.dataset.installerInitialized === "true") {
+        if (
+            form.dataset.installerInitialized === "true"
+        ) {
             return;
         }
 
@@ -88,6 +89,10 @@ const Installer = {
 
             event.preventDefault();
 
+            if (this.busy) {
+                return;
+            }
+
             if (this.waitingForSpreadsheetOpen) {
 
                 this.continueDeployment();
@@ -98,8 +103,6 @@ const Installer = {
             this.startInstallation();
 
         });
-
-        installButton.disabled = false;
     },
 
 
@@ -152,7 +155,7 @@ const Installer = {
         script.onerror = () => {
 
             this.setStatus(
-                "Google Identity Services gagal dimuat. Periksa koneksi internet.",
+                "Google Identity Services gagal dimuat.",
                 "error"
             );
 
@@ -169,6 +172,7 @@ const Installer = {
             !google.accounts ||
             !google.accounts.oauth2
         ) {
+
             this.setStatus(
                 "Layanan autentikasi Google belum tersedia.",
                 "error"
@@ -214,7 +218,9 @@ const Installer = {
 
                     try {
 
-                        if (this.waitingForSpreadsheetOpen) {
+                        if (
+                            this.waitingForSpreadsheetOpen
+                        ) {
 
                             await this.continueDeployment();
 
@@ -273,7 +279,7 @@ const Installer = {
         if (!this.tokenClient) {
 
             this.setStatus(
-                "Layanan Google belum siap. Tunggu sebentar lalu coba kembali.",
+                "Layanan Google belum siap. Coba kembali.",
                 "error"
             );
 
@@ -281,8 +287,6 @@ const Installer = {
         }
 
         this.storeName = storeName;
-
-        this.storeEmail = "";
 
         this.setBusy(true);
 
@@ -313,9 +317,8 @@ const Installer = {
             );
         }
 
-        const headers = new Headers(
-            options.headers || {}
-        );
+        const headers =
+            new Headers(options.headers || {});
 
         headers.set(
             "Authorization",
@@ -334,10 +337,11 @@ const Installer = {
 
         }
 
-        const response = await fetch(url, {
-            ...options,
-            headers
-        });
+        const response =
+            await fetch(url, {
+                ...options,
+                headers
+            });
 
         const responseText =
             await response.text();
@@ -360,22 +364,17 @@ const Installer = {
 
         if (!response.ok) {
 
-            const message =
+            throw new Error(
                 result.error?.message ||
                 result.message ||
-                "Permintaan Google API gagal: HTTP " +
-                response.status;
-
-            throw new Error(message);
+                "Google API gagal: HTTP " +
+                response.status
+            );
         }
 
         return result;
     },
 
-
-    /* ======================================
-       DRIVE REQUEST
-    ====================================== */
 
     async driveRequest(
         path,
@@ -400,43 +399,43 @@ const Installer = {
             "loading"
         );
 
-        const folderName =
-            INSTALLER_CONFIG.FOLDER_NAME;
-
         const query =
             "name = '" +
-            folderName.replace(/'/g, "\\'") +
+            INSTALLER_CONFIG.FOLDER_NAME.replace(
+                /'/g,
+                "\\'"
+            ) +
             "' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
 
-        const searchParams =
+        const params =
             new URLSearchParams({
 
                 q: query,
 
                 fields:
-                    "files(id,name,mimeType,webViewLink)",
+                    "files(id,name,webViewLink)",
 
                 pageSize: "100"
 
             });
 
-        const searchResult =
+        const result =
             await this.driveRequest(
-                "/files?" + searchParams.toString()
+                "/files?" + params.toString()
             );
 
-        const folders =
-            searchResult.files || [];
-
-        if (folders.length > 0) {
+        if (
+            result.files &&
+            result.files.length > 0
+        ) {
 
             this.folderId =
-                folders[0].id;
+                result.files[0].id;
 
             return this.folderId;
         }
 
-        const createdFolder =
+        const folder =
             await this.driveRequest(
                 "/files",
                 {
@@ -445,7 +444,8 @@ const Installer = {
 
                     body: JSON.stringify({
 
-                        name: folderName,
+                        name:
+                            INSTALLER_CONFIG.FOLDER_NAME,
 
                         mimeType:
                             "application/vnd.google-apps.folder"
@@ -455,7 +455,7 @@ const Installer = {
                 }
             );
 
-        if (!createdFolder.id) {
+        if (!folder.id) {
 
             throw new Error(
                 "Folder Rovixa POS gagal dibuat."
@@ -463,7 +463,7 @@ const Installer = {
         }
 
         this.folderId =
-            createdFolder.id;
+            folder.id;
 
         return this.folderId;
     },
@@ -483,7 +483,7 @@ const Installer = {
         await this.findOrCreateFolder();
 
         this.setStatus(
-            "Menyalin database template...",
+            "Menyalin spreadsheet template...",
             "loading"
         );
 
@@ -502,8 +502,7 @@ const Installer = {
 
                     body: JSON.stringify({
 
-                        name:
-                            this.storeName,
+                        name: this.storeName,
 
                         parents: [
                             this.folderId
@@ -545,17 +544,19 @@ const Installer = {
 
     showOpenSpreadsheetStep() {
 
-        const statusElement =
-            document.getElementById("installer-status");
+        const status =
+            document.getElementById(
+                "installer-status"
+            );
 
-        if (!statusElement) {
+        if (!status) {
             return;
         }
 
-        statusElement.className =
+        status.className =
             "installer-status installer-status-info";
 
-        statusElement.innerHTML = "";
+        status.replaceChildren();
 
         const title =
             document.createElement("strong");
@@ -567,42 +568,40 @@ const Installer = {
             document.createElement("p");
 
         description.textContent =
-            "Buka spreadsheet hasil salinan di bawah ini. Setelah terbuka, tunggu beberapa detik agar fungsi onOpen menyimpan Script ID, lalu kembali ke halaman installer.";
+            "Buka spreadsheet hasil salinan. Tunggu sampai sheet __INSTALLER_CONFIG berisi Script ID, lalu kembali ke sini dan lanjutkan deployment.";
 
-        const spreadsheetLink =
+        const link =
             document.createElement("a");
 
-        spreadsheetLink.href =
+        link.href =
             this.spreadsheetUrl;
 
-        spreadsheetLink.target =
-            "_blank";
+        link.target = "_blank";
 
-        spreadsheetLink.rel =
+        link.rel =
             "noopener noreferrer";
 
-        spreadsheetLink.textContent =
+        link.textContent =
             "Buka Database Rovixa POS";
 
-        const continueButton =
+        const button =
             document.createElement("button");
 
-        continueButton.type =
-            "button";
+        button.type = "button";
 
-        continueButton.textContent =
+        button.textContent =
             "Lanjutkan Deployment";
 
-        continueButton.addEventListener(
+        button.addEventListener(
             "click",
             () => this.continueDeployment()
         );
 
-        statusElement.append(
+        status.append(
             title,
             description,
-            spreadsheetLink,
-            continueButton
+            link,
+            button
         );
     },
 
@@ -656,15 +655,15 @@ const Installer = {
         try {
 
             this.setStatus(
-                "Membaca Script ID dari spreadsheet hasil salinan...",
+                "Menunggu Script ID hasil salinan...",
                 "loading"
             );
 
             this.scriptId =
-                await this.readCopiedScriptId();
+                await this.waitForCopiedScriptId();
 
             this.setStatus(
-                "Memeriksa proyek Apps Script hasil salinan...",
+                "Memverifikasi proyek Apps Script...",
                 "loading"
             );
 
@@ -681,7 +680,7 @@ const Installer = {
             if (!version.versionNumber) {
 
                 throw new Error(
-                    "Google tidak mengembalikan nomor versi Apps Script."
+                    "Nomor versi Apps Script tidak ditemukan."
                 );
             }
 
@@ -695,24 +694,21 @@ const Installer = {
                     version.versionNumber
                 );
 
-            const webAppEntry =
+            const webApp =
                 (deployment.entryPoints || [])
                     .find((entry) =>
                         entry.entryPointType === "WEB_APP"
                     );
 
-            const webAppUrl =
-                webAppEntry?.webApp?.url;
-
-            if (!webAppUrl) {
+            if (!webApp?.webApp?.url) {
 
                 throw new Error(
-                    "Deployment berhasil dibuat, tetapi URL Web App tidak ditemukan. Periksa konfigurasi webapp pada manifest Apps Script."
+                    "Deployment dibuat, tetapi URL Web App tidak ditemukan."
                 );
             }
 
             this.webAppUrl =
-                webAppUrl;
+                webApp.webApp.url;
 
             this.waitingForSpreadsheetOpen = false;
 
@@ -725,8 +721,8 @@ const Installer = {
             this.setBusy(false);
 
             this.setStatus(
-                "Deployment belum berhasil: " +
-                error.message,
+                error.message ||
+                "Deployment gagal.",
                 "error"
             );
 
@@ -735,12 +731,82 @@ const Installer = {
 
 
     /* ======================================
-       READ SCRIPT ID
+       WAIT FOR COPIED SCRIPT ID
+    ====================================== */
+
+    async waitForCopiedScriptId() {
+
+        const startedAt =
+            Date.now();
+
+        let lastError = "";
+
+        while (
+            Date.now() - startedAt <
+            INSTALLER_CONFIG.SCRIPT_ID_TIMEOUT
+        ) {
+
+            const elapsedSeconds =
+                Math.floor(
+                    (Date.now() - startedAt) / 1000
+                );
+
+            this.setStatus(
+                "Menunggu Script ID hasil salinan... " +
+                elapsedSeconds +
+                " detik dari 30 detik.",
+                "loading"
+            );
+
+            try {
+
+                const scriptId =
+                    await this.readCopiedScriptId();
+
+                if (
+                    scriptId &&
+                    scriptId !==
+                    INSTALLER_CONFIG.TEMPLATE_SCRIPT_ID
+                ) {
+
+                    return scriptId;
+                }
+
+                lastError =
+                    "Script ID yang terbaca masih sama dengan ID template.";
+
+            } catch (error) {
+
+                lastError =
+                    error.message;
+
+            }
+
+            await new Promise((resolve) => {
+
+                setTimeout(
+                    resolve,
+                    INSTALLER_CONFIG.SCRIPT_ID_WAIT_INTERVAL
+                );
+
+            });
+
+        }
+
+        throw new Error(
+            "Script ID hasil salinan tidak berhasil diperoleh dalam 30 detik. " +
+            (lastError || "Pastikan spreadsheet salinan sudah dibuka.")
+        );
+    },
+
+
+    /* ======================================
+       READ SCRIPT ID FROM SHEET
     ====================================== */
 
     async readCopiedScriptId() {
 
-        const encodedRange =
+        const range =
             encodeURIComponent(
                 INSTALLER_CONFIG.SCRIPT_CONFIG_RANGE
             );
@@ -750,45 +816,35 @@ const Installer = {
             "/spreadsheets/" +
             encodeURIComponent(this.spreadsheetId) +
             "/values/" +
-            encodedRange;
+            range;
 
-        let result;
-
-        try {
-
-            result = await this.apiRequest(url);
-
-        } catch (error) {
-
-            throw new Error(
-                "Sheet konfigurasi belum bisa dibaca. Pastikan spreadsheet hasil salinan sudah dibuka dan fungsi onOpen selesai berjalan. Detail: " +
-                error.message
-            );
-
-        }
+        const result =
+            await this.apiRequest(url);
 
         const rows =
             result.values || [];
 
-        const scriptIdRow =
-            rows.find((row) =>
-                row[0] === "scriptId"
+        const row =
+            rows.find((item) =>
+                item[0] === "scriptId"
             );
 
         const scriptId =
-            scriptIdRow?.[1]?.trim();
+            row?.[1]?.trim();
 
         if (!scriptId) {
 
             throw new Error(
-                "Script ID belum ditemukan. Pastikan spreadsheet hasil salinan sudah dibuka, fungsi installerSaveScriptId berhasil berjalan, lalu coba lagi."
+                "Script ID belum tertulis di sheet konfigurasi."
             );
         }
 
-        if (!/^[a-zA-Z0-9_-]+$/.test(scriptId)) {
+        if (
+            !/^[a-zA-Z0-9_-]+$/.test(scriptId)
+        ) {
 
             throw new Error(
-                "Script ID yang tersimpan memiliki format tidak valid."
+                "Format Script ID tidak valid."
             );
         }
 
@@ -810,10 +866,13 @@ const Installer = {
         const project =
             await this.apiRequest(url);
 
-        if (!project.scriptId) {
+        if (
+            !project.scriptId ||
+            project.scriptId !== this.scriptId
+        ) {
 
             throw new Error(
-                "Proyek Apps Script tidak dapat diverifikasi."
+                "Proyek Apps Script tidak berhasil diverifikasi."
             );
         }
 
@@ -823,7 +882,7 @@ const Installer = {
         ) {
 
             throw new Error(
-                "Script ID yang ditemukan bukan milik spreadsheet hasil salinan ini."
+                "Script ID yang ditemukan bukan milik spreadsheet hasil salinan."
             );
         }
 
@@ -832,7 +891,7 @@ const Installer = {
 
 
     /* ======================================
-       CREATE SCRIPT VERSION
+       CREATE VERSION
     ====================================== */
 
     async createScriptVersion() {
@@ -908,17 +967,19 @@ const Installer = {
 
     showSuccess() {
 
-        const statusElement =
-            document.getElementById("installer-status");
+        const status =
+            document.getElementById(
+                "installer-status"
+            );
 
-        if (!statusElement) {
+        if (!status) {
             return;
         }
 
-        statusElement.className =
+        status.className =
             "installer-status installer-status-success";
 
-        statusElement.innerHTML = "";
+        status.replaceChildren();
 
         const title =
             document.createElement("strong");
@@ -930,7 +991,7 @@ const Installer = {
             document.createElement("p");
 
         description.textContent =
-            "Database berhasil disalin dan deployment Web App telah dibuat.";
+            "Database berhasil disalin dan deployment Web App berhasil dibuat.";
 
         const databaseLink =
             document.createElement("a");
@@ -938,8 +999,7 @@ const Installer = {
         databaseLink.href =
             this.spreadsheetUrl;
 
-        databaseLink.target =
-            "_blank";
+        databaseLink.target = "_blank";
 
         databaseLink.rel =
             "noopener noreferrer";
@@ -947,32 +1007,30 @@ const Installer = {
         databaseLink.textContent =
             "Buka Database";
 
-        const scriptUrlLabel =
+        const urlLabel =
             document.createElement("p");
 
-        scriptUrlLabel.textContent =
+        urlLabel.textContent =
             "URL Web App:";
 
-        const scriptUrl =
+        const urlLink =
             document.createElement("a");
 
-        scriptUrl.href =
+        urlLink.href =
             this.webAppUrl;
 
-        scriptUrl.target =
-            "_blank";
+        urlLink.target = "_blank";
 
-        scriptUrl.rel =
+        urlLink.rel =
             "noopener noreferrer";
 
-        scriptUrl.textContent =
+        urlLink.textContent =
             this.webAppUrl;
 
         const copyButton =
             document.createElement("button");
 
-        copyButton.type =
-            "button";
+        copyButton.type = "button";
 
         copyButton.textContent =
             "Salin URL Web App";
@@ -993,7 +1051,7 @@ const Installer = {
                 } catch {
 
                     this.setStatus(
-                        "Tidak dapat menyalin URL secara otomatis. Salin URL yang ditampilkan.",
+                        "Penyalinan otomatis gagal. Salin URL Web App secara manual.",
                         "error"
                     );
 
@@ -1002,32 +1060,13 @@ const Installer = {
             }
         );
 
-        statusElement.append(
+        status.append(
             title,
             description,
             databaseLink,
-            scriptUrlLabel,
-            scriptUrl,
+            urlLabel,
+            urlLink,
             copyButton
-        );
-
-        console.info(
-            "Rovixa POS installation completed.",
-            {
-
-                storeName:
-                    this.storeName,
-
-                spreadsheetId:
-                    this.spreadsheetId,
-
-                scriptId:
-                    this.scriptId,
-
-                webAppUrl:
-                    this.webAppUrl
-
-            }
         );
     },
 
@@ -1041,24 +1080,20 @@ const Installer = {
         type = "info"
     ) {
 
-        const statusElement =
-            document.getElementById("installer-status");
-
-        if (!statusElement) {
-
-            console.log(
-                "[Installer]",
-                message
+        const status =
+            document.getElementById(
+                "installer-status"
             );
 
+        if (!status) {
             return;
         }
 
-        statusElement.className =
+        status.className =
             "installer-status installer-status-" +
             type;
 
-        statusElement.textContent =
+        status.textContent =
             message;
     },
 
@@ -1072,31 +1107,31 @@ const Installer = {
         this.busy = busy;
 
         const button =
-            document.getElementById("install-button");
+            document.getElementById(
+                "install-button"
+            );
 
-        if (button) {
-
-            button.disabled =
-                busy;
-
-            if (busy) {
-
-                button.dataset.previousText =
-                    button.textContent;
-
-                button.textContent =
-                    "Memproses...";
-
-            } else {
-
-                button.textContent =
-                    button.dataset.previousText ||
-                    "Instal Rovixa POS";
-
-            }
-
+        if (!button) {
+            return;
         }
 
+        button.disabled = busy;
+
+        if (busy) {
+
+            button.dataset.previousText =
+                button.textContent;
+
+            button.textContent =
+                "Memproses...";
+
+        } else {
+
+            button.textContent =
+                button.dataset.previousText ||
+                "Instal Rovixa POS";
+
+        }
     }
 
 };
