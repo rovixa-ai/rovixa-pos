@@ -194,8 +194,8 @@
 
             <p class="description">
                 Siapkan database Treehouse POS untuk toko Anda.
-                Database akan disalin menggunakan akun Google
-                yang Anda otorisasi.
+                Pilih template database melalui Google Drive,
+                kemudian buat salinan pada akun Google Anda.
             </p>
 
             <form id="installer-form">
@@ -218,10 +218,10 @@
 
             <div class="note">
                 <strong>Informasi penting</strong><br>
-                Anda akan diminta memberikan izin Google Drive.
-                Periksa akun Google yang digunakan sebelum
-                menyetujui akses. Installer tidak meminta
-                kata sandi Google Anda.
+                Anda akan diminta masuk ke Google dan memilih
+                template database. Periksa akun dan file yang
+                dipilih sebelum melanjutkan. Installer tidak
+                meminta kata sandi Google Anda.
             </div>
 
             <div
@@ -248,17 +248,32 @@
             CLIENT_ID:
                 "930744096409-06die7h2beg9bk8lheu1r2e1lhccst4e.apps.googleusercontent.com",
 
+            API_KEY:
+                "AIzaSyAM9mtjYnUmX95RsXdnLVaOA6qd6EDr_fg",
+
+            GOOGLE_CLOUD_PROJECT_NUMBER:
+                "930744096409",
+
             TEMPLATE_SPREADSHEET_ID:
                 "1MNXOrJqIO2xGytntyeHK87R0r_Zf0CNb2W748FXEc14",
 
             DRIVE_API_URL:
-                "https://www.googleapis.com/drive/v3/files"
+                "https://www.googleapis.com/drive/v3/files",
+
+            DRIVE_SCOPE:
+                "https://www.googleapis.com/auth/drive.file",
+
+            SHEETS_MIME_TYPE:
+                "application/vnd.google-apps.spreadsheet"
         });
 
         const Installer = {
             tokenClient: null,
+            accessToken: "",
             pendingStoreName: "",
             isProcessing: false,
+            pickerReady: false,
+            pickerLoading: null,
 
             init() {
                 document
@@ -283,7 +298,7 @@
                 status.textContent = message;
             },
 
-            setBusy(busy) {
+            setBusy(busy, message) {
                 this.isProcessing = busy;
 
                 const button =
@@ -292,7 +307,7 @@
                 button.disabled = busy;
 
                 button.textContent = busy
-                    ? "Menghubungkan ke Google..."
+                    ? (message || "Memproses instalasi...")
                     : "Hubungkan Google & Buat Database";
             },
 
@@ -308,10 +323,12 @@
 
                 if (!storeName) {
                     input.focus();
+
                     this.setStatus(
                         "Masukkan nama toko terlebih dahulu.",
                         "error"
                     );
+
                     return;
                 }
 
@@ -320,6 +337,20 @@
                         "Installer harus dibuka melalui HTTPS.",
                         "error"
                     );
+
+                    return;
+                }
+
+                if (
+                    !INSTALLER_CONFIG.API_KEY ||
+                    INSTALLER_CONFIG.API_KEY ===
+                        "TEMPELKAN_API_KEY_DI_SINI"
+                ) {
+                    this.setStatus(
+                        "API key belum diisi. Masukkan API key Google Picker pada konfigurasi installer.",
+                        "error"
+                    );
+
                     return;
                 }
 
@@ -332,19 +363,18 @@
                         "Layanan Google belum siap. Muat ulang halaman dan coba kembali.",
                         "error"
                     );
+
                     return;
                 }
 
                 this.pendingStoreName = storeName;
-                this.setBusy(true);
+                this.setBusy(true, "Menghubungkan ke Google...");
 
                 try {
                     this.tokenClient =
                         window.google.accounts.oauth2.initTokenClient({
                             client_id: INSTALLER_CONFIG.CLIENT_ID,
-
-                            scope:
-                                "https://www.googleapis.com/auth/drive.file",
+                            scope: INSTALLER_CONFIG.DRIVE_SCOPE,
 
                             callback: async (response) => {
                                 if (response.error) {
@@ -352,8 +382,10 @@
 
                                     this.setStatus(
                                         "Otorisasi Google gagal. " +
-                                        (response.error_description ||
-                                            response.error),
+                                        (
+                                            response.error_description ||
+                                            response.error
+                                        ),
                                         "error"
                                     );
 
@@ -371,10 +403,19 @@
                                     return;
                                 }
 
-                                await this.createDatabaseCopy(
-                                    response.access_token,
-                                    this.pendingStoreName
-                                );
+                                this.accessToken = response.access_token;
+
+                                try {
+                                    await this.openTemplatePicker();
+                                } catch (error) {
+                                    this.setBusy(false);
+
+                                    this.setStatus(
+                                        "Google Picker gagal dibuka. " +
+                                        error.message,
+                                        "error"
+                                    );
+                                }
                             },
 
                             error_callback: (error) => {
@@ -382,7 +423,11 @@
 
                                 this.setStatus(
                                     "Jendela otorisasi Google gagal dibuka. " +
-                                    (error.message || error.type || ""),
+                                    (
+                                        error.message ||
+                                        error.type ||
+                                        ""
+                                    ),
                                     "error"
                                 );
                             }
@@ -402,9 +447,236 @@
                 }
             },
 
-            async createDatabaseCopy(accessToken, storeName) {
+            async loadPickerApi() {
+                if (
+                    window.gapi &&
+                    window.google &&
+                    window.google.picker
+                ) {
+                    this.pickerReady = true;
+                    return;
+                }
+
+                if (this.pickerLoading) {
+                    return this.pickerLoading;
+                }
+
+                this.pickerLoading = new Promise((resolve, reject) => {
+                    const loadGapi = () => {
+                        if (!window.gapi) {
+                            reject(
+                                new Error(
+                                    "Google API Client tidak berhasil dimuat."
+                                )
+                            );
+                            return;
+                        }
+
+                        window.gapi.load("picker", {
+                            callback: () => {
+                                if (
+                                    window.google &&
+                                    window.google.picker
+                                ) {
+                                    this.pickerReady = true;
+                                    resolve();
+                                } else {
+                                    reject(
+                                        new Error(
+                                            "Google Picker API tidak tersedia."
+                                        )
+                                    );
+                                }
+                            },
+
+                            onerror: () => {
+                                reject(
+                                    new Error(
+                                        "Gagal memuat Google Picker API."
+                                    )
+                                );
+                            },
+
+                            timeout: 15000,
+
+                            ontimeout: () => {
+                                reject(
+                                    new Error(
+                                        "Waktu tunggu Google Picker habis."
+                                    )
+                                );
+                            }
+                        });
+                    };
+
+                    if (window.gapi) {
+                        loadGapi();
+                        return;
+                    }
+
+                    const existingScript = document.querySelector(
+                        'script[data-google-picker-api="true"]'
+                    );
+
+                    if (existingScript) {
+                        existingScript.addEventListener(
+                            "load",
+                            loadGapi,
+                            { once: true }
+                        );
+
+                        existingScript.addEventListener(
+                            "error",
+                            () => reject(
+                                new Error(
+                                    "Gagal mengunduh Google API Client."
+                                )
+                            ),
+                            { once: true }
+                        );
+
+                        return;
+                    }
+
+                    const script = document.createElement("script");
+
+                    script.src = "https://apis.google.com/js/api.js";
+                    script.async = true;
+                    script.defer = true;
+                    script.dataset.googlePickerApi = "true";
+
+                    script.onload = loadGapi;
+
+                    script.onerror = () => {
+                        reject(
+                            new Error(
+                                "Gagal mengunduh Google API Client."
+                            )
+                        );
+                    };
+
+                    document.head.appendChild(script);
+                });
+
+                try {
+                    await this.pickerLoading;
+                } catch (error) {
+                    this.pickerLoading = null;
+                    throw error;
+                }
+            },
+
+            async openTemplatePicker() {
                 this.setStatus(
-                    "Meminta Google Drive membuat salinan database..."
+                    "Memuat Google Picker untuk memilih template database..."
+                );
+
+                await this.loadPickerApi();
+
+                const picker = window.google.picker;
+
+                const view = new picker.DocsView(
+                    picker.ViewId.SPREADSHEETS
+                );
+
+                view.setMimeTypes(
+                    INSTALLER_CONFIG.SHEETS_MIME_TYPE
+                );
+
+                view.setIncludeFolders(false);
+                view.setSelectFolderEnabled(false);
+
+                const pickerInstance = new picker.PickerBuilder()
+                    .setDeveloperKey(INSTALLER_CONFIG.API_KEY)
+                    .setAppId(
+                        INSTALLER_CONFIG.GOOGLE_CLOUD_PROJECT_NUMBER
+                    )
+                    .setOAuthToken(this.accessToken)
+                    .setOrigin(window.location.origin)
+                    .addView(view)
+                    .setTitle("Pilih template database Treehouse POS")
+                    .setCallback((data) => {
+                        this.handlePickerResult(data);
+                    })
+                    .build();
+
+                pickerInstance.setVisible(true);
+            },
+
+            async handlePickerResult(data) {
+                const picker = window.google.picker;
+
+                if (data.action === picker.Action.CANCEL) {
+                    this.setBusy(false);
+
+                    this.setStatus(
+                        "Pemilihan template dibatalkan. Belum ada database yang dibuat."
+                    );
+
+                    return;
+                }
+
+                if (data.action !== picker.Action.PICKED) {
+                    return;
+                }
+
+                const selectedFile =
+                    data.docs && data.docs.length
+                        ? data.docs[0]
+                        : null;
+
+                if (!selectedFile || !selectedFile.id) {
+                    this.setBusy(false);
+
+                    this.setStatus(
+                        "Google Picker tidak mengembalikan file yang valid.",
+                        "error"
+                    );
+
+                    return;
+                }
+
+                if (
+                    selectedFile.id !==
+                    INSTALLER_CONFIG.TEMPLATE_SPREADSHEET_ID
+                ) {
+                    this.setBusy(false);
+
+                    this.setStatus(
+                        "File yang dipilih bukan template database yang telah dikonfigurasi. " +
+                        "Pilih template dengan ID yang benar.",
+                        "error"
+                    );
+
+                    return;
+                }
+
+                try {
+                    await this.createDatabaseCopy(
+                        this.accessToken,
+                        selectedFile.id,
+                        this.pendingStoreName
+                    );
+                } catch (error) {
+                    this.setBusy(false);
+
+                    this.setStatus(
+                        "Database belum berhasil dibuat. " +
+                        error.message,
+                        "error"
+                    );
+                }
+            },
+
+            async createDatabaseCopy(
+                accessToken,
+                templateId,
+                storeName
+            ) {
+                this.setBusy(true, "Membuat salinan database...");
+
+                this.setStatus(
+                    "Meminta Google Drive membuat salinan template..."
                 );
 
                 try {
@@ -414,9 +686,7 @@
                     const response = await fetch(
                         INSTALLER_CONFIG.DRIVE_API_URL +
                         "/" +
-                        encodeURIComponent(
-                            INSTALLER_CONFIG.TEMPLATE_SPREADSHEET_ID
-                        ) +
+                        encodeURIComponent(templateId) +
                         "/copy?fields=id,name,mimeType,webViewLink",
                         {
                             method: "POST",
@@ -430,7 +700,9 @@
                             },
 
                             body: JSON.stringify({
-                                name: copyName
+                                name: copyName,
+                                mimeType:
+                                    INSTALLER_CONFIG.SHEETS_MIME_TYPE
                             })
                         }
                     );
@@ -461,8 +733,8 @@
                     this.setStatus(
                         "Database belum berhasil dibuat. " +
                         error.message +
-                        " Periksa izin template, Google Drive API, " +
-                        "dan konfigurasi OAuth sebelum mencoba kembali.",
+                        " Periksa akses template, Google Picker API, " +
+                        "Google Drive API, dan konfigurasi OAuth.",
                         "error"
                     );
                 } finally {
@@ -478,14 +750,19 @@
                 status.className = "status visible success";
 
                 const heading = document.createElement("strong");
-                heading.textContent = "Salinan database berhasil dibuat.";
+
+                heading.textContent =
+                    "Salinan database berhasil dibuat.";
 
                 const details = document.createElement("p");
+
                 details.textContent =
                     "Nama: " + (database.name || "Treehouse POS");
 
                 const link = document.createElement("a");
-                link.href = database.webViewLink ||
+
+                link.href =
+                    database.webViewLink ||
                     "https://docs.google.com/spreadsheets/d/" +
                     encodeURIComponent(database.id) +
                     "/edit";
@@ -495,21 +772,30 @@
                 link.textContent = "Buka database";
 
                 const idLabel = document.createElement("p");
-                idLabel.textContent = "ID database: " + database.id;
+
+                idLabel.textContent =
+                    "ID database: " + database.id;
+
+                const note = document.createElement("p");
+
+                note.textContent =
+                    "Database berhasil disalin. Konfigurasi backend per klien belum dilakukan.";
 
                 status.append(
                     heading,
                     details,
                     link,
-                    idLabel
+                    idLabel,
+                    note
                 );
             }
         };
 
         if (document.readyState === "loading") {
-            document.addEventListener("DOMContentLoaded", () => {
-                Installer.init();
-            });
+            document.addEventListener(
+                "DOMContentLoaded",
+                () => Installer.init()
+            );
         } else {
             Installer.init();
         }
