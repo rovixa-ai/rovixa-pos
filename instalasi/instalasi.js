@@ -1,3 +1,4 @@
+
 /* ======================================
    ROVIXA POS
    INSTALLER
@@ -65,6 +66,7 @@ const Installer = {
 
     busy: false,
     waitingForSpreadsheetOpen: false,
+    oauthPurpose: "",
 
     init() {
 
@@ -94,9 +96,7 @@ const Installer = {
             }
 
             if (this.waitingForSpreadsheetOpen) {
-
                 this.continueDeployment();
-
                 return;
             }
 
@@ -117,9 +117,7 @@ const Installer = {
             google.accounts &&
             google.accounts.oauth2
         ) {
-
             this.initializeTokenClient();
-
             return;
         }
 
@@ -216,17 +214,29 @@ const Installer = {
                     this.accessToken =
                         response.access_token;
 
+                    const purpose =
+                        this.oauthPurpose;
+
+                    this.oauthPurpose = "";
+
                     try {
 
-                        if (
-                            this.waitingForSpreadsheetOpen
-                        ) {
+                        if (purpose === "install") {
 
-                            await this.continueDeployment();
+                            await this.installStoreDatabase();
+
+                        } else if (purpose === "deploy") {
+
+                            await this.runDeployment();
 
                         } else {
 
-                            await this.installStoreDatabase();
+                            this.setBusy(false);
+
+                            this.setStatus(
+                                "Tujuan otorisasi tidak ditemukan. Silakan ulangi langkah terakhir.",
+                                "error"
+                            );
 
                         }
 
@@ -287,6 +297,7 @@ const Installer = {
         }
 
         this.storeName = storeName;
+        this.oauthPurpose = "install";
 
         this.setBusy(true);
 
@@ -305,15 +316,12 @@ const Installer = {
        API REQUEST
     ====================================== */
 
-    async apiRequest(
-        url,
-        options = {}
-    ) {
+    async apiRequest(url, options = {}) {
 
         if (!this.accessToken) {
 
             throw new Error(
-                "Token Google belum tersedia."
+                "Token Google belum tersedia. Ulangi otorisasi Google."
             );
         }
 
@@ -364,22 +372,20 @@ const Installer = {
 
         if (!response.ok) {
 
-            throw new Error(
+            const apiMessage =
                 result.error?.message ||
                 result.message ||
                 "Google API gagal: HTTP " +
-                response.status
-            );
+                response.status;
+
+            throw new Error(apiMessage);
         }
 
         return result;
     },
 
 
-    async driveRequest(
-        path,
-        options = {}
-    ) {
+    async driveRequest(path, options = {}) {
 
         return this.apiRequest(
             INSTALLER_CONFIG.DRIVE_API + path,
@@ -639,15 +645,40 @@ const Installer = {
             return;
         }
 
-        if (!this.accessToken) {
+        /*
+         * Selalu minta token baru untuk deployment.
+         * Callback akan menjalankan runDeployment()
+         * tanpa memanggil continueDeployment() kembali.
+         */
+        this.oauthPurpose = "deploy";
 
-            this.setBusy(true);
+        this.setBusy(true);
 
-            this.tokenClient.requestAccessToken({
-                prompt: ""
-            });
+        this.setStatus(
+            "Meminta otorisasi Google untuk deployment...",
+            "loading"
+        );
 
-            return;
+        this.tokenClient.requestAccessToken({
+            prompt: "consent"
+        });
+    },
+
+
+    /* ======================================
+       RUN DEPLOYMENT
+    ====================================== */
+
+    async runDeployment() {
+
+        if (
+            !this.waitingForSpreadsheetOpen ||
+            !this.spreadsheetId
+        ) {
+
+            throw new Error(
+                "Spreadsheet hasil salinan tidak ditemukan."
+            );
         }
 
         this.setBusy(true);
@@ -926,9 +957,7 @@ const Installer = {
        CREATE WEB APP DEPLOYMENT
     ====================================== */
 
-    async createWebAppDeployment(
-        versionNumber
-    ) {
+    async createWebAppDeployment(versionNumber) {
 
         const url =
             INSTALLER_CONFIG.SCRIPT_API +
@@ -944,15 +973,19 @@ const Installer = {
 
                 body: JSON.stringify({
 
-                    versionNumber:
-                        versionNumber,
+                    deploymentConfig: {
 
-                    manifestFileName:
-                        "appsscript",
+                        versionNumber:
+                            versionNumber,
 
-                    description:
-                        "Rovixa POS Web App - " +
-                        this.storeName
+                        manifestFileName:
+                            "appsscript",
+
+                        description:
+                            "Rovixa POS Web App - " +
+                            this.storeName
+
+                    }
 
                 })
 
@@ -1075,10 +1108,7 @@ const Installer = {
        STATUS
     ====================================== */
 
-    setStatus(
-        message,
-        type = "info"
-    ) {
+    setStatus(message, type = "info") {
 
         const status =
             document.getElementById(
@@ -1119,8 +1149,10 @@ const Installer = {
 
         if (busy) {
 
-            button.dataset.previousText =
-                button.textContent;
+            if (!button.dataset.previousText) {
+                button.dataset.previousText =
+                    button.textContent;
+            }
 
             button.textContent =
                 "Memproses...";
