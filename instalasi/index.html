@@ -1,0 +1,518 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#059669">
+    <title>Instalasi Toko Baru - Treehouse POS</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            color: #17221e;
+            background: linear-gradient(145deg, #ffffff 0%, #f1f8f5 100%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 520px;
+        }
+
+        .card {
+            padding: 32px;
+            border: 1px solid #d6e2dd;
+            border-radius: 24px;
+            background: #ffffff;
+            box-shadow: 0 16px 48px rgba(15, 23, 42, 0.08);
+        }
+
+        .logo {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 19px;
+            color: #ffffff;
+            background: linear-gradient(145deg, #10b981, #059669);
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: 28px;
+        }
+
+        .description {
+            margin: 0 0 28px;
+            color: #68766f;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            min-height: 48px;
+            padding: 12px 14px;
+            border: 1px solid #cbd8d2;
+            border-radius: 10px;
+            outline: none;
+            font: inherit;
+        }
+
+        input:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+        }
+
+        button {
+            width: 100%;
+            min-height: 48px;
+            margin-top: 18px;
+            padding: 12px 16px;
+            border: 0;
+            border-radius: 10px;
+            color: #ffffff;
+            background: #059669;
+            font: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            background: #047857;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .note {
+            margin-top: 20px;
+            padding: 14px;
+            border-radius: 10px;
+            background: #f1f8f5;
+            color: #52635a;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .status {
+            display: none;
+            margin-top: 20px;
+            padding: 14px;
+            border: 1px solid #d6e2dd;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.7;
+            overflow-wrap: anywhere;
+        }
+
+        .status.visible {
+            display: block;
+        }
+
+        .status.error {
+            color: #991b1b;
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        .status.success {
+            color: #065f46;
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+        }
+
+        .status a {
+            color: inherit;
+            font-weight: bold;
+        }
+
+        .back {
+            display: block;
+            margin-top: 22px;
+            text-align: center;
+            color: #059669;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        footer {
+            margin-top: 24px;
+            text-align: center;
+            color: #68766f;
+            font-size: 12px;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 16px;
+            }
+
+            .card {
+                padding: 24px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+
+<body>
+    <main class="container">
+        <section class="card">
+            <div class="logo" aria-hidden="true">T</div>
+
+            <h1>Instalasi Toko Baru</h1>
+
+            <p class="description">
+                Siapkan database Treehouse POS untuk toko Anda.
+                Database akan disalin menggunakan akun Google
+                yang Anda otorisasi.
+            </p>
+
+            <form id="installer-form">
+                <label for="store-name">Nama Toko</label>
+
+                <input
+                    id="store-name"
+                    name="store-name"
+                    type="text"
+                    maxlength="100"
+                    placeholder="Masukkan nama toko"
+                    autocomplete="organization"
+                    required
+                >
+
+                <button id="install-button" type="submit">
+                    Hubungkan Google &amp; Buat Database
+                </button>
+            </form>
+
+            <div class="note">
+                <strong>Informasi penting</strong><br>
+                Anda akan diminta memberikan izin Google Drive.
+                Periksa akun Google yang digunakan sebelum
+                menyetujui akses. Installer tidak meminta
+                kata sandi Google Anda.
+            </div>
+
+            <div
+                id="installer-status"
+                class="status"
+                role="status"
+                aria-live="polite"
+            ></div>
+
+            <a class="back" href="../">
+                Kembali ke halaman utama
+            </a>
+        </section>
+
+        <footer>
+            Treehouse POS &copy; 2026
+        </footer>
+    </main>
+
+    <script>
+        "use strict";
+
+        const INSTALLER_CONFIG = Object.freeze({
+            CLIENT_ID:
+                "930744096409-rbn78j3ra2nh5p4gcr6d9f1h7b35nmi0.apps.googleusercontent.com",
+
+            TEMPLATE_SPREADSHEET_ID:
+                "1MNXOrJqIO2xGytntyeHK87R0r_Zf0CNb2W748FXEc14",
+
+            DRIVE_API_URL:
+                "https://www.googleapis.com/drive/v3/files"
+        });
+
+        const Installer = {
+            tokenClient: null,
+            pendingStoreName: "",
+            isProcessing: false,
+
+            init() {
+                document
+                    .getElementById("installer-form")
+                    .addEventListener("submit", (event) => {
+                        event.preventDefault();
+                        this.startInstallation();
+                    });
+            },
+
+            setStatus(message, type = "") {
+                const status =
+                    document.getElementById("installer-status");
+
+                status.replaceChildren();
+                status.className = "status visible";
+
+                if (type) {
+                    status.classList.add(type);
+                }
+
+                status.textContent = message;
+            },
+
+            setBusy(busy) {
+                this.isProcessing = busy;
+
+                const button =
+                    document.getElementById("install-button");
+
+                button.disabled = busy;
+
+                button.textContent = busy
+                    ? "Menghubungkan ke Google..."
+                    : "Hubungkan Google & Buat Database";
+            },
+
+            startInstallation() {
+                if (this.isProcessing) {
+                    return;
+                }
+
+                const input =
+                    document.getElementById("store-name");
+
+                const storeName = input.value.trim();
+
+                if (!storeName) {
+                    input.focus();
+                    this.setStatus(
+                        "Masukkan nama toko terlebih dahulu.",
+                        "error"
+                    );
+                    return;
+                }
+
+                if (!window.isSecureContext) {
+                    this.setStatus(
+                        "Installer harus dibuka melalui HTTPS.",
+                        "error"
+                    );
+                    return;
+                }
+
+                if (
+                    !window.google ||
+                    !window.google.accounts ||
+                    !window.google.accounts.oauth2
+                ) {
+                    this.setStatus(
+                        "Layanan Google belum siap. Muat ulang halaman dan coba kembali.",
+                        "error"
+                    );
+                    return;
+                }
+
+                this.pendingStoreName = storeName;
+                this.setBusy(true);
+
+                try {
+                    this.tokenClient =
+                        window.google.accounts.oauth2.initTokenClient({
+                            client_id: INSTALLER_CONFIG.CLIENT_ID,
+
+                            scope:
+                                "https://www.googleapis.com/auth/drive.file",
+
+                            callback: async (response) => {
+                                if (response.error) {
+                                    this.setBusy(false);
+
+                                    this.setStatus(
+                                        "Otorisasi Google gagal. " +
+                                        (response.error_description ||
+                                            response.error),
+                                        "error"
+                                    );
+
+                                    return;
+                                }
+
+                                if (!response.access_token) {
+                                    this.setBusy(false);
+
+                                    this.setStatus(
+                                        "Google tidak memberikan token akses.",
+                                        "error"
+                                    );
+
+                                    return;
+                                }
+
+                                await this.createDatabaseCopy(
+                                    response.access_token,
+                                    this.pendingStoreName
+                                );
+                            },
+
+                            error_callback: (error) => {
+                                this.setBusy(false);
+
+                                this.setStatus(
+                                    "Jendela otorisasi Google gagal dibuka. " +
+                                    (error.message || error.type || ""),
+                                    "error"
+                                );
+                            }
+                        });
+
+                    this.tokenClient.requestAccessToken({
+                        prompt: "consent"
+                    });
+                } catch (error) {
+                    this.setBusy(false);
+
+                    this.setStatus(
+                        "Tidak dapat memulai otorisasi Google: " +
+                        error.message,
+                        "error"
+                    );
+                }
+            },
+
+            async createDatabaseCopy(accessToken, storeName) {
+                this.setStatus(
+                    "Meminta Google Drive membuat salinan database..."
+                );
+
+                try {
+                    const copyName =
+                        "Treehouse POS - " + storeName;
+
+                    const response = await fetch(
+                        INSTALLER_CONFIG.DRIVE_API_URL +
+                        "/" +
+                        encodeURIComponent(
+                            INSTALLER_CONFIG.TEMPLATE_SPREADSHEET_ID
+                        ) +
+                        "/copy?fields=id,name,mimeType,webViewLink",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Authorization":
+                                    "Bearer " + accessToken,
+
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body: JSON.stringify({
+                                name: copyName
+                            })
+                        }
+                    );
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        const detail =
+                            result.error &&
+                            result.error.message
+                                ? result.error.message
+                                : "Permintaan Google Drive ditolak.";
+
+                        throw new Error(
+                            detail +
+                            " (HTTP " + response.status + ")"
+                        );
+                    }
+
+                    if (!result.id) {
+                        throw new Error(
+                            "Google tidak mengembalikan ID database."
+                        );
+                    }
+
+                    this.showSuccess(result);
+                } catch (error) {
+                    this.setStatus(
+                        "Database belum berhasil dibuat. " +
+                        error.message +
+                        " Periksa izin template, Google Drive API, " +
+                        "dan konfigurasi OAuth sebelum mencoba kembali.",
+                        "error"
+                    );
+                } finally {
+                    this.setBusy(false);
+                }
+            },
+
+            showSuccess(database) {
+                const status =
+                    document.getElementById("installer-status");
+
+                status.replaceChildren();
+                status.className = "status visible success";
+
+                const heading = document.createElement("strong");
+                heading.textContent = "Salinan database berhasil dibuat.";
+
+                const details = document.createElement("p");
+                details.textContent =
+                    "Nama: " + (database.name || "Treehouse POS");
+
+                const link = document.createElement("a");
+                link.href = database.webViewLink ||
+                    "https://docs.google.com/spreadsheets/d/" +
+                    encodeURIComponent(database.id) +
+                    "/edit";
+
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+                link.textContent = "Buka database";
+
+                const idLabel = document.createElement("p");
+                idLabel.textContent = "ID database: " + database.id;
+
+                status.append(
+                    heading,
+                    details,
+                    link,
+                    idLabel
+                );
+            }
+        };
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", () => {
+                Installer.init();
+            });
+        } else {
+            Installer.init();
+        }
+    </script>
+</body>
+</html>
