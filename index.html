@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#059669">
+    <title>Treehouse POS</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            color: #17221e;
+            background: linear-gradient(145deg, #ffffff 0%, #f1f8f5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 760px;
+            text-align: center;
+        }
+
+        .logo {
+            width: 76px;
+            height: 76px;
+            margin: 0 auto 20px;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            background: linear-gradient(145deg, #10b981, #059669);
+            font-size: 34px;
+            font-weight: bold;
+            box-shadow: 0 12px 28px rgba(5, 150, 105, 0.2);
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: clamp(28px, 5vw, 40px);
+        }
+
+        .description {
+            margin: 0 auto 32px;
+            max-width: 520px;
+            color: #68766f;
+            line-height: 1.7;
+        }
+
+        .apps {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .app {
+            display: block;
+            padding: 24px 16px;
+            border: 1px solid #d6e2dd;
+            border-radius: 18px;
+            background: #ffffff;
+            color: inherit;
+            text-decoration: none;
+            box-shadow: 0 5px 18px rgba(15, 23, 42, 0.04);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .app:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 26px rgba(15, 23, 42, 0.09);
+        }
+
+        .app-icon {
+            display: block;
+            margin-bottom: 14px;
+            color: #059669;
+            font-size: 30px;
+        }
+
+        .app h2 {
+            margin: 0 0 8px;
+            font-size: 17px;
+        }
+
+        .app p {
+            margin: 0;
+            color: #68766f;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .installation {
+            display: inline-block;
+            margin-top: 28px;
+            padding: 13px 24px;
+            border-radius: 12px;
+            color: #ffffff;
+            background: #059669;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .installation:hover {
+            background: #047857;
+        }
+
+        footer {
+            margin-top: 36px;
+            color: #68766f;
+            font-size: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .apps {
+                grid-template-columns: 1fr;
+            }
+
+            .app {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                padding: 18px;
+                text-align: left;
+            }
+
+            .app-icon {
+                margin: 0;
+                min-width: 40px;
+            }
+
+            .app-content {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <div class="logo">T</div>
+
+        <h1>Treehouse POS</h1>
+
+        <p class="description">
+            Sistem kasir dan manajemen toko dalam satu platform.
+            Pilih aplikasi yang ingin Anda buka.
+        </p>
+
+        <section class="apps" aria-label="Aplikasi Treehouse POS">
+            <a class="app" href="./KasirPenjualan/">
+                <span class="app-icon" aria-hidden="true">▣</span>
+                <span class="app-content">
+                    <h2>Penjualan</h2>
+                    <p>Transaksi kasir dan pembayaran.</p>
+                </span>
+            </a>
+
+            <a class="app" href="./KasirPembelian/">
+                <span class="app-icon" aria-hidden="true">▤</span>
+                <span class="app-content">
+                    <h2>Pembelian</h2>
+                    <p>Pencatatan pembelian dan pemasok.</p>
+                </span>
+            </a>
+
+            <a class="app" href="./Management/">
+                <span class="app-icon" aria-hidden="true">⚙</span>
+                <span class="app-content">
+                    <h2>Management</h2>
+                    <p>Pengelolaan data dan operasional toko.</p>
+                </span>
+            </a>
+        </section>
+
+        <a class="installation" href="./instalasi/">
+            Instalasi Toko Baru
+        </a>
+
+        <footer>
+            Treehouse POS &copy; 2026
+        </footer>
+    </main>
+</body>
+</html>
