@@ -160,11 +160,16 @@ Object.assign(Installer, {
             "/edit";
 
         try {
+
             await this.moveSpreadsheetToFolder();
 
             const copiedSheets = [];
 
-            for (let i = 0; i < sourceSheets.length; i++) {
+            for (
+                let i = 0;
+                i < sourceSheets.length;
+                i++
+            ) {
 
                 const sourceSheet =
                     sourceSheets[i].properties;
@@ -188,7 +193,9 @@ Object.assign(Installer, {
                             INSTALLER_CONFIG.TEMPLATE_SPREADSHEET_ID
                         ) +
                         "/sheets/" +
-                        encodeURIComponent(sourceSheet.sheetId) +
+                        encodeURIComponent(
+                            sourceSheet.sheetId
+                        ) +
                         ":copyTo",
                         {
                             method: "POST",
@@ -201,7 +208,8 @@ Object.assign(Installer, {
 
                 if (!copied.sheetId) {
                     throw new Error(
-                        "Sheet '" + sourceSheet.title +
+                        "Sheet '" +
+                        sourceSheet.title +
                         "' gagal disalin."
                     );
                 }
@@ -229,24 +237,33 @@ Object.assign(Installer, {
                 });
             }
 
-            copiedSheets.forEach((sheet, index) => {
-                firstBatch.push({
-                    updateSheetProperties: {
-                        properties: {
-                            sheetId: sheet.newSheetId,
-                            title: "__INSTALLER_TEMP_" +
-                                index + "_" + sheet.newSheetId
-                        },
-                        fields: "title"
-                    }
-                });
-            });
+            copiedSheets.forEach(
+                (sheet, index) => {
+
+                    firstBatch.push({
+                        updateSheetProperties: {
+                            properties: {
+                                sheetId: sheet.newSheetId,
+                                title:
+                                    "__INSTALLER_TEMP_" +
+                                    index +
+                                    "_" +
+                                    sheet.newSheetId
+                            },
+                            fields: "title"
+                        }
+                    });
+                }
+            );
 
             if (firstBatch.length) {
+
                 await this.apiRequest(
                     INSTALLER_CONFIG.SHEETS_API +
                     "/spreadsheets/" +
-                    encodeURIComponent(this.spreadsheetId) +
+                    encodeURIComponent(
+                        this.spreadsheetId
+                    ) +
                     ":batchUpdate",
                     {
                         method: "POST",
@@ -258,22 +275,27 @@ Object.assign(Installer, {
             }
 
             const renameRequests =
-                copiedSheets.map((sheet) => ({
-                    updateSheetProperties: {
-                        properties: {
-                            sheetId: sheet.newSheetId,
-                            title: sheet.title,
-                            index: sheet.index
-                        },
-                        fields: "title,index"
-                    }
-                }));
+                copiedSheets.map(
+                    (sheet) => ({
+                        updateSheetProperties: {
+                            properties: {
+                                sheetId: sheet.newSheetId,
+                                title: sheet.title,
+                                index: sheet.index
+                            },
+                            fields: "title,index"
+                        }
+                    })
+                );
 
             if (renameRequests.length) {
+
                 await this.apiRequest(
                     INSTALLER_CONFIG.SHEETS_API +
                     "/spreadsheets/" +
-                    encodeURIComponent(this.spreadsheetId) +
+                    encodeURIComponent(
+                        this.spreadsheetId
+                    ) +
                     ":batchUpdate",
                     {
                         method: "POST",
@@ -296,20 +318,15 @@ Object.assign(Installer, {
 
             await this.createBoundScriptFromTemplate();
 
-            this.setStatus(
-                "Menyimpan Script ID baru...",
-                "loading"
-            );
-
-            await this.saveScriptIdToSpreadsheet();
-
             this.waitingForSpreadsheetOpen = true;
             this.waitingForAppsScriptSettings = false;
 
             await this.runDeployment();
 
         } catch (error) {
+
             this.setBusy(false);
+
             throw error;
         }
     },
@@ -324,7 +341,9 @@ Object.assign(Installer, {
         const file =
             await this.driveRequest(
                 "/files/" +
-                encodeURIComponent(this.spreadsheetId) +
+                encodeURIComponent(
+                    this.spreadsheetId
+                ) +
                 "?fields=id,parents,webViewLink"
             );
 
@@ -344,8 +363,11 @@ Object.assign(Installer, {
         const moved =
             await this.driveRequest(
                 "/files/" +
-                encodeURIComponent(this.spreadsheetId) +
-                "?" + params.toString(),
+                encodeURIComponent(
+                    this.spreadsheetId
+                ) +
+                "?" +
+                params.toString(),
                 {
                     method: "PATCH",
                     body: JSON.stringify({})
@@ -353,7 +375,8 @@ Object.assign(Installer, {
             );
 
         if (moved.webViewLink) {
-            this.spreadsheetUrl = moved.webViewLink;
+            this.spreadsheetUrl =
+                moved.webViewLink;
         }
     },
 
@@ -362,18 +385,24 @@ Object.assign(Installer, {
        COPY NAMED RANGES
     ====================================== */
 
-    async copyNamedRanges(namedRanges, copiedSheets) {
+    async copyNamedRanges(
+        namedRanges,
+        copiedSheets
+    ) {
 
         if (!namedRanges.length) {
             return;
         }
 
-        const sheetIdMap = new Map(
-            copiedSheets.map((sheet) => [
-                sheet.sourceSheetId,
-                sheet.newSheetId
-            ])
-        );
+        const sheetIdMap =
+            new Map(
+                copiedSheets.map(
+                    (sheet) => [
+                        sheet.sourceSheetId,
+                        sheet.newSheetId
+                    ]
+                )
+            );
 
         const requests = [];
 
@@ -388,8 +417,11 @@ Object.assign(Installer, {
             };
 
             if (range.sheetId !== undefined) {
+
                 const newSheetId =
-                    sheetIdMap.get(range.sheetId);
+                    sheetIdMap.get(
+                        range.sheetId
+                    );
 
                 if (newSheetId === undefined) {
                     return;
@@ -415,11 +447,15 @@ Object.assign(Installer, {
         await this.apiRequest(
             INSTALLER_CONFIG.SHEETS_API +
             "/spreadsheets/" +
-            encodeURIComponent(this.spreadsheetId) +
+            encodeURIComponent(
+                this.spreadsheetId
+            ) +
             ":batchUpdate",
             {
                 method: "POST",
-                body: JSON.stringify({ requests })
+                body: JSON.stringify({
+                    requests
+                })
             }
         );
     },
@@ -454,8 +490,11 @@ Object.assign(Installer, {
                 {
                     method: "POST",
                     body: JSON.stringify({
-                        title: "Rovixa POS - " + this.storeName,
-                        parentId: this.spreadsheetId
+                        title:
+                            "Rovixa POS - " +
+                            this.storeName,
+                        parentId:
+                            this.spreadsheetId
                     })
                 }
             );
@@ -466,19 +505,23 @@ Object.assign(Installer, {
             );
         }
 
-        this.scriptId = createdProject.scriptId;
+        this.scriptId =
+            createdProject.scriptId;
 
         const files =
-            templateContent.files.map((file) => ({
-                name: file.name,
-                type: file.type,
-                source: file.source
-            }));
+            templateContent.files.map(
+                (file) => ({
+                    name: file.name,
+                    type: file.type,
+                    source: file.source
+                })
+            );
 
         const manifest =
-            files.find((file) =>
-                file.name === "appsscript" &&
-                file.type === "JSON"
+            files.find(
+                (file) =>
+                    file.name === "appsscript" &&
+                    file.type === "JSON"
             );
 
         if (!manifest) {
@@ -490,11 +533,15 @@ Object.assign(Installer, {
         await this.apiRequest(
             INSTALLER_CONFIG.SCRIPT_API +
             "/projects/" +
-            encodeURIComponent(this.scriptId) +
+            encodeURIComponent(
+                this.scriptId
+            ) +
             "/content",
             {
                 method: "PUT",
-                body: JSON.stringify({ files })
+                body: JSON.stringify({
+                    files
+                })
             }
         );
 
@@ -502,49 +549,19 @@ Object.assign(Installer, {
             await this.apiRequest(
                 INSTALLER_CONFIG.SCRIPT_API +
                 "/projects/" +
-                encodeURIComponent(this.scriptId)
+                encodeURIComponent(
+                    this.scriptId
+                )
             );
 
-        if (project.parentId !== this.spreadsheetId) {
+        if (
+            project.parentId !==
+            this.spreadsheetId
+        ) {
             throw new Error(
                 "Apps Script baru tidak terikat pada spreadsheet pelanggan."
             );
         }
-    },
-
-
-    /* ======================================
-       SAVE NEW SCRIPT ID IN CONFIG SHEET
-    ====================================== */
-
-    async saveScriptIdToSpreadsheet() {
-
-        const range =
-            encodeURIComponent(
-                INSTALLER_CONFIG.SCRIPT_CONFIG_RANGE
-            );
-
-        const url =
-            INSTALLER_CONFIG.SHEETS_API +
-            "/spreadsheets/" +
-            encodeURIComponent(this.spreadsheetId) +
-            "/values/" + range +
-            "?valueInputOption=RAW";
-
-        await this.apiRequest(
-            url,
-            {
-                method: "PUT",
-                body: JSON.stringify({
-                    range: INSTALLER_CONFIG.SCRIPT_CONFIG_RANGE,
-                    majorDimension: "ROWS",
-                    values: [
-                        ["Key", "Value"],
-                        ["scriptId", this.scriptId]
-                    ]
-                })
-            }
-        );
     },
 
 
@@ -556,7 +573,9 @@ Object.assign(Installer, {
     showAppsScriptSettingsStep() {
 
         const status =
-            document.getElementById("installer-status");
+            document.getElementById(
+                "installer-status"
+            );
 
         if (!status) {
             return;
@@ -587,15 +606,19 @@ Object.assign(Installer, {
 
         settingsLink.target = "_blank";
         settingsLink.rel = "noopener noreferrer";
+
         settingsLink.textContent =
             "Buka Pengaturan Google Apps Script";
 
         const databaseLink =
             document.createElement("a");
 
-        databaseLink.href = this.spreadsheetUrl;
+        databaseLink.href =
+            this.spreadsheetUrl;
+
         databaseLink.target = "_blank";
         databaseLink.rel = "noopener noreferrer";
+
         databaseLink.textContent =
             "Buka Database Rovixa POS";
 
@@ -619,11 +642,15 @@ Object.assign(Installer, {
             return;
         }
 
-        if (!this.spreadsheetId || !this.scriptId) {
+        if (
+            !this.spreadsheetId ||
+            !this.scriptId
+        ) {
             this.setStatus(
                 "Tahap deployment belum siap. Spreadsheet atau Script ID tidak ditemukan.",
                 "error"
             );
+
             return;
         }
 
@@ -632,10 +659,12 @@ Object.assign(Installer, {
                 "Layanan Google belum siap.",
                 "error"
             );
+
             return;
         }
 
         this.oauthPurpose = "deploy";
+
         this.setBusy(true);
 
         this.setStatus(
