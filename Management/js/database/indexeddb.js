@@ -1,8 +1,7 @@
 const DB = {
 
     name:
-        "TreehouseAdminDB",
-
+        "TreehouseManagementDB",
 
     version:
         14,
