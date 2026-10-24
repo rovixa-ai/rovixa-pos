@@ -36,6 +36,9 @@ const INSTALLER_CONFIG = {
     SCRIPT_ID_TIMEOUT:
         30000,
 
+    APPS_SCRIPT_SETTINGS_URL:
+        "https://script.google.com/home/usersettings",
+
     OAUTH_SCOPES: [
         "https://www.googleapis.com/auth/drive",
         "https://www.googleapis.com/auth/spreadsheets",
@@ -66,6 +69,7 @@ const Installer = {
 
     busy: false,
     waitingForSpreadsheetOpen: false,
+    waitingForAppsScriptSettings: false,
     oauthPurpose: "",
 
     init() {
@@ -92,6 +96,11 @@ const Installer = {
             event.preventDefault();
 
             if (this.busy) {
+                return;
+            }
+
+            if (this.waitingForAppsScriptSettings) {
+                this.continueDeployment();
                 return;
             }
 
@@ -307,8 +316,8 @@ const Installer = {
         );
 
         this.tokenClient.requestAccessToken({
-    prompt: "consent select_account"
-});
+            prompt: "consent select_account"
+        });
     },
 
 
@@ -537,18 +546,19 @@ const Installer = {
             "/edit";
 
         this.waitingForSpreadsheetOpen = true;
+        this.waitingForAppsScriptSettings = true;
 
         this.setBusy(false);
 
-        this.showOpenSpreadsheetStep();
+        this.showAppsScriptSettingsStep();
     },
 
 
     /* ======================================
-       OPEN SPREADSHEET STEP
+       APPS SCRIPT SETTINGS STEP
     ====================================== */
 
-    showOpenSpreadsheetStep() {
+    showAppsScriptSettingsStep() {
 
         const status =
             document.getElementById(
@@ -574,20 +584,34 @@ const Installer = {
             document.createElement("p");
 
         description.textContent =
-            "Buka spreadsheet hasil salinan. Tunggu sampai sheet __INSTALLER_CONFIG berisi Script ID, lalu kembali ke sini dan lanjutkan deployment.";
+            "Langkah berikutnya, buka pengaturan Google Apps Script pada akun pelanggan dan aktifkan Google Apps Script API. Setelah selesai, kembali ke installer untuk melanjutkan deployment. Database tidak akan disalin ulang.";
 
-        const link =
+        const settingsLink =
             document.createElement("a");
 
-        link.href =
-            this.spreadsheetUrl;
+        settingsLink.href =
+            INSTALLER_CONFIG.APPS_SCRIPT_SETTINGS_URL;
 
-        link.target = "_blank";
+        settingsLink.target = "_blank";
 
-        link.rel =
+        settingsLink.rel =
             "noopener noreferrer";
 
-        link.textContent =
+        settingsLink.textContent =
+            "Buka Pengaturan Google Apps Script";
+
+        const databaseLink =
+            document.createElement("a");
+
+        databaseLink.href =
+            this.spreadsheetUrl;
+
+        databaseLink.target = "_blank";
+
+        databaseLink.rel =
+            "noopener noreferrer";
+
+        databaseLink.textContent =
             "Buka Database Rovixa POS";
 
         const button =
@@ -596,7 +620,7 @@ const Installer = {
         button.type = "button";
 
         button.textContent =
-            "Lanjutkan Deployment";
+            "Saya Sudah Mengaktifkan API — Lanjutkan";
 
         button.addEventListener(
             "click",
@@ -606,7 +630,10 @@ const Installer = {
         status.append(
             title,
             description,
-            link,
+            settingsLink,
+            document.createElement("br"),
+            databaseLink,
+            document.createElement("br"),
             button
         );
     },
@@ -623,12 +650,12 @@ const Installer = {
         }
 
         if (
-            !this.waitingForSpreadsheetOpen ||
-            !this.spreadsheetId
+            !this.spreadsheetId ||
+            !this.waitingForSpreadsheetOpen
         ) {
 
             this.setStatus(
-                "Tahap deployment belum siap.",
+                "Tahap deployment belum siap. Database hasil salinan tidak ditemukan.",
                 "error"
             );
 
@@ -645,11 +672,7 @@ const Installer = {
             return;
         }
 
-        /*
-         * Selalu minta token baru untuk deployment.
-         * Callback akan menjalankan runDeployment()
-         * tanpa memanggil continueDeployment() kembali.
-         */
+        this.waitingForAppsScriptSettings = false;
         this.oauthPurpose = "deploy";
 
         this.setBusy(true);
@@ -659,9 +682,9 @@ const Installer = {
             "loading"
         );
 
-       this.tokenClient.requestAccessToken({
-    prompt: "consent select_account"
-});
+        this.tokenClient.requestAccessToken({
+            prompt: "consent select_account"
+        });
     },
 
 
@@ -742,6 +765,7 @@ const Installer = {
                 webApp.webApp.url;
 
             this.waitingForSpreadsheetOpen = false;
+            this.waitingForAppsScriptSettings = false;
 
             this.setBusy(false);
 
@@ -757,7 +781,89 @@ const Installer = {
                 "error"
             );
 
+            /*
+             * Jangan menyalin ulang database ketika
+             * deployment gagal. Pengguna dapat mencoba
+             * melanjutkan kembali dari langkah ini.
+             */
+            this.waitingForSpreadsheetOpen = true;
+            this.waitingForAppsScriptSettings = true;
+
+            this.showRetryDeploymentStep(
+                error.message ||
+                "Deployment gagal."
+            );
         }
+    },
+
+
+    /* ======================================
+       RETRY DEPLOYMENT STEP
+    ====================================== */
+
+    showRetryDeploymentStep(message) {
+
+        const status =
+            document.getElementById(
+                "installer-status"
+            );
+
+        if (!status) {
+            return;
+        }
+
+        status.className =
+            "installer-status installer-status-error";
+
+        status.replaceChildren();
+
+        const title =
+            document.createElement("strong");
+
+        title.textContent =
+            "Deployment belum berhasil.";
+
+        const description =
+            document.createElement("p");
+
+        description.textContent =
+            message +
+            " Periksa pengaturan Apps Script API. Database yang sudah disalin tetap digunakan.";
+
+        const settingsLink =
+            document.createElement("a");
+
+        settingsLink.href =
+            INSTALLER_CONFIG.APPS_SCRIPT_SETTINGS_URL;
+
+        settingsLink.target = "_blank";
+
+        settingsLink.rel =
+            "noopener noreferrer";
+
+        settingsLink.textContent =
+            "Buka Pengaturan Apps Script";
+
+        const button =
+            document.createElement("button");
+
+        button.type = "button";
+
+        button.textContent =
+            "Coba Deployment Lagi";
+
+        button.addEventListener(
+            "click",
+            () => this.continueDeployment()
+        );
+
+        status.append(
+            title,
+            description,
+            settingsLink,
+            document.createElement("br"),
+            button
+        );
     },
 
 
@@ -953,35 +1059,35 @@ const Installer = {
     },
 
 
-   /* ======================================
-   CREATE WEB APP DEPLOYMENT
-====================================== */
+    /* ======================================
+       CREATE WEB APP DEPLOYMENT
+    ====================================== */
 
-async createWebAppDeployment(versionNumber) {
+    async createWebAppDeployment(versionNumber) {
 
-    const url =
-        INSTALLER_CONFIG.SCRIPT_API +
-        "/projects/" +
-        encodeURIComponent(this.scriptId) +
-        "/deployments";
+        const url =
+            INSTALLER_CONFIG.SCRIPT_API +
+            "/projects/" +
+            encodeURIComponent(this.scriptId) +
+            "/deployments";
 
-    return this.apiRequest(
-        url,
-        {
-            method: "POST",
+        return this.apiRequest(
+            url,
+            {
+                method: "POST",
 
-            body: JSON.stringify({
-                versionNumber: versionNumber,
+                body: JSON.stringify({
+                    versionNumber: versionNumber,
 
-                manifestFileName: "appsscript",
+                    manifestFileName: "appsscript",
 
-                description:
-                    "Rovixa POS Web App - " +
-                    this.storeName
-            })
-        }
-    );
-},
+                    description:
+                        "Rovixa POS Web App - " +
+                        this.storeName
+                })
+            }
+        );
+    },
 
 
     /* ======================================
