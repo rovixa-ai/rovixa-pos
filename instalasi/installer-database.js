@@ -91,7 +91,7 @@ Object.assign(Installer, {
                 ) +
                 "?fields=" +
                 encodeURIComponent(
-                    "spreadsheetId,properties(title,locale,timeZone,autoRecalc,iterativeCalculation,spreadsheetTheme),sheets(properties(sheetId,title,index)),namedRanges"
+                    "spreadsheetId,properties(title,locale,timeZone,autoRecalc,spreadsheetTheme),sheets(properties(sheetId,title,index)),namedRanges"
                 )
             );
 
