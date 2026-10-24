@@ -6,6 +6,6 @@
 window.API_CONFIG = Object.freeze({
 
     SCRIPT_URL:
-        "https://script.google.com/macros/s/AKfycbzA9MrO-5EwnMXfnC6aYCofa3nltrnVs1ZgQPFYdDrQ0_62p1w3gLFibyNeNOyW56tQaw/exec"
+        "https://script.google.com/macros/s/AKfycbzL06gRZzBXKW2xXvF7qJxLb7fj15Dq10TRp6C6ajG825sLgLQwmzA048x2wMI9apsIvQ/exec"
 
 });
