@@ -5,10 +5,6 @@
 
 Object.assign(Installer, {
 
-    /* ======================================
-       RUN DEPLOYMENT
-    ====================================== */
-
     async runDeployment() {
 
         if (!this.spreadsheetId || !this.scriptId) {
@@ -65,6 +61,7 @@ Object.assign(Installer, {
             }
 
             this.webAppUrl = webApp.webApp.url;
+
             this.waitingForSpreadsheetOpen = false;
             this.waitingForAppsScriptSettings = false;
 
@@ -80,7 +77,9 @@ Object.assign(Installer, {
                 "error"
             );
 
-            this.waitingForSpreadsheetOpen = true;
+            this.waitingForSpreadsheetOpen =
+                Boolean(this.spreadsheetId);
+
             this.waitingForAppsScriptSettings = true;
 
             this.showRetryDeploymentStep(
@@ -89,10 +88,6 @@ Object.assign(Installer, {
         }
     },
 
-
-    /* ======================================
-       VERIFY BOUND SCRIPT
-    ====================================== */
 
     async verifyCopiedScript() {
 
@@ -123,10 +118,6 @@ Object.assign(Installer, {
     },
 
 
-    /* ======================================
-       CREATE VERSION
-    ====================================== */
-
     async createScriptVersion() {
 
         const url =
@@ -149,10 +140,6 @@ Object.assign(Installer, {
         );
     },
 
-
-    /* ======================================
-       CREATE WEB APP DEPLOYMENT
-    ====================================== */
 
     async createWebAppDeployment(versionNumber) {
 

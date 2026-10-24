@@ -5,10 +5,6 @@
 
 Object.assign(Installer, {
 
-    /* ======================================
-       GOOGLE IDENTITY
-    ====================================== */
-
     loadGoogleIdentity() {
 
         if (
@@ -126,7 +122,26 @@ Object.assign(Installer, {
 
                         } else if (purpose === "deploy") {
 
-                            await this.runDeployment();
+                            if (
+                                !this.scriptId &&
+                                this.databaseReadyForScript
+                            ) {
+                                await this.createBoundScriptFromTemplate();
+
+                                await this.saveScriptIdToSpreadsheet();
+                            }
+
+                            if (this.scriptId) {
+
+                                await this.runDeployment();
+
+                            } else {
+
+                                throw new Error(
+                                    "Apps Script belum siap. Periksa pengaturan API lalu ulangi langkah ini."
+                                );
+
+                            }
 
                         } else {
 
@@ -143,6 +158,19 @@ Object.assign(Installer, {
 
                         this.setBusy(false);
 
+                        if (
+                            error.service === "apps-script" ||
+                            this.waitingForAppsScriptSettings
+                        ) {
+
+                            this.showAppsScriptSettingsStep(
+                                error.message ||
+                                "Google Apps Script API belum dapat digunakan."
+                            );
+
+                            return;
+                        }
+
                         this.setStatus(
                             error.message ||
                             "Instalasi gagal.",
@@ -156,10 +184,6 @@ Object.assign(Installer, {
             });
     },
 
-
-    /* ======================================
-       START INSTALLATION
-    ====================================== */
 
     startInstallation() {
 

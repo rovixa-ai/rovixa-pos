@@ -38,6 +38,9 @@ const INSTALLER_CONFIG = {
     APPS_SCRIPT_SETTINGS_URL:
         "https://script.google.com/home/usersettings",
 
+    OAUTH_VERIFICATION_HELP_URL:
+        "https://support.google.com/cloud/answer/9110914",
+
     OAUTH_SCOPES: [
         "https://www.googleapis.com/auth/drive",
         "https://www.googleapis.com/auth/spreadsheets",

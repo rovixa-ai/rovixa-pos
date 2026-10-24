@@ -21,6 +21,7 @@ const Installer = {
     busy: false,
     waitingForSpreadsheetOpen: false,
     waitingForAppsScriptSettings: false,
+    databaseReadyForScript: false,
     oauthPurpose: "",
 
     init() {
@@ -50,12 +51,10 @@ const Installer = {
                 return;
             }
 
-            if (this.waitingForAppsScriptSettings) {
-                this.continueDeployment();
-                return;
-            }
-
-            if (this.waitingForSpreadsheetOpen) {
+            if (
+                this.waitingForAppsScriptSettings ||
+                this.waitingForSpreadsheetOpen
+            ) {
                 this.continueDeployment();
                 return;
             }
@@ -65,10 +64,6 @@ const Installer = {
         });
     },
 
-
-    /* ======================================
-       API REQUEST
-    ====================================== */
 
     async apiRequest(url, options = {}) {
 
@@ -91,12 +86,10 @@ const Installer = {
             options.body &&
             !headers.has("Content-Type")
         ) {
-
             headers.set(
                 "Content-Type",
                 "application/json"
             );
-
         }
 
         const response =
@@ -132,7 +125,28 @@ const Installer = {
                 "Google API gagal: HTTP " +
                 response.status;
 
-            throw new Error(apiMessage);
+            const error = new Error(apiMessage);
+
+            error.status = response.status;
+
+            error.service =
+                url.includes("script.googleapis.com")
+                    ? "apps-script"
+                    : url.includes("sheets.googleapis.com")
+                        ? "sheets"
+                        : url.includes("googleapis.com/drive/")
+                            ? "drive"
+                            : "google-api";
+
+            error.apiStatus =
+                result.error?.status || "";
+
+            error.apiReason =
+                (result.error?.errors || [])
+                    .map((item) => item.reason || "")
+                    .filter(Boolean);
+
+            throw error;
         }
 
         return result;
@@ -147,10 +161,6 @@ const Installer = {
         );
     },
 
-
-    /* ======================================
-       STATUS
-    ====================================== */
 
     setStatus(message, type = "info") {
 
@@ -171,10 +181,6 @@ const Installer = {
             message;
     },
 
-
-    /* ======================================
-       BUSY STATE
-    ====================================== */
 
     setBusy(busy) {
 
