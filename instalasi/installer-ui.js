@@ -1,3 +1,4 @@
+
 /* ======================================
    ROVIXA POS
    INSTALLER UI
@@ -119,6 +120,7 @@ Object.assign(Installer, {
 
         if (status) {
             status.classList.add("visible");
+
             status.classList.remove(
                 "error",
                 "success"
@@ -204,7 +206,11 @@ Object.assign(Installer, {
         status.appendChild(paragraph);
 
         status.classList.add("visible");
-        status.classList.remove("error", "success");
+
+        status.classList.remove(
+            "error",
+            "success"
+        );
 
         if (normalizedType === "error") {
             status.classList.add("error");
@@ -367,7 +373,9 @@ Object.assign(Installer, {
             document.createElement("p");
 
         instruction.textContent =
-            "1. Buka pengaturan Google di tab baru. 2. Aktifkan Google Apps Script API jika belum aktif. 3. Kembali ke installer ini.";
+            "1. Buka pengaturan Google di tab baru. " +
+            "2. Aktifkan Google Apps Script API jika belum aktif. " +
+            "3. Kembali ke halaman installer ini.";
 
         instruction.style.fontSize = "12px";
         instruction.style.lineHeight = "1.7";
@@ -388,33 +396,108 @@ Object.assign(Installer, {
 
 
     /* ======================================
-       RETRY CLIENT CONFIGURATION SAVE
+       OPEN GOOGLE VERIFICATION
     ====================================== */
 
-    showRetryClientConfigurationStep() {
+    async openGoogleVerification() {
 
-        this.updateInstallationProgress(
-            4,
-            "Menunggu penyimpanan konfigurasi"
-        );
+        if (!this.webAppUrl) {
 
-        const content =
-            this.showActionPanel(
-                "Simpan hasil instalasi",
-                "Deployment Web App sudah tersedia. Coba simpan hasil instalasi ke Client Configuration kembali. Database dan deployment tidak akan dibuat ulang."
+            this.setStatus(
+                "URL Web App tidak tersedia. Periksa kembali hasil deployment.",
+                "error"
             );
 
-        if (!content) {
             return;
         }
 
-        const button =
-            this.createActionButton(
-                "Coba Simpan Lagi",
-                () => this.retrySaveClientConfiguration()
+        if (!this.tokenClient) {
+
+            this.setStatus(
+                "Layanan autentikasi Google belum siap. Muat ulang installer lalu coba kembali.",
+                "error"
             );
 
-        content.appendChild(button);
+            return;
+        }
+
+        if (this.busy) {
+            return;
+        }
+
+        /*
+         * Buka jendela terlebih dahulu agar tidak
+         * diblokir browser setelah proses OAuth.
+         */
+
+        const verificationWindow =
+            window.open(
+                "about:blank",
+                "_blank"
+            );
+
+        if (!verificationWindow) {
+
+            this.setStatus(
+                "Jendela verifikasi diblokir browser. Izinkan pop-up untuk installer, lalu coba kembali.",
+                "error"
+            );
+
+            return;
+        }
+
+        this.verificationWindow =
+            verificationWindow;
+
+        try {
+
+            verificationWindow.document.title =
+                "Verifikasi Google - Rovixa POS";
+
+            verificationWindow.document.body.textContent =
+                "Menunggu pemilihan akun Google...";
+
+        } catch (error) {
+            // Jendela akan diarahkan setelah OAuth selesai.
+        }
+
+        this.oauthPurpose =
+            "verify-webapp";
+
+        this.setBusy(true);
+
+        this.setStatus(
+            "Silakan pilih akun Google yang digunakan saat deployment untuk melanjutkan verifikasi Web App.",
+            "loading"
+        );
+
+        try {
+
+            this.tokenClient.requestAccessToken({
+                prompt: "select_account consent"
+            });
+
+        } catch (error) {
+
+            this.oauthPurpose = "";
+
+            this.setBusy(false);
+
+            if (
+                this.verificationWindow &&
+                !this.verificationWindow.closed
+            ) {
+                this.verificationWindow.close();
+            }
+
+            this.verificationWindow = null;
+
+            this.setStatus(
+                error.message ||
+                "Permintaan autentikasi Google gagal dimulai.",
+                "error"
+            );
+        }
     },
 
 
@@ -430,7 +513,7 @@ Object.assign(Installer, {
         );
 
         this.setStatus(
-            "Database toko, Apps Script, deployment Web App, dan penyimpanan Client Configuration berhasil diselesaikan.",
+            "Database toko, Apps Script, dan deployment Web App berhasil disiapkan.",
             "success"
         );
 
@@ -445,40 +528,11 @@ Object.assign(Installer, {
             return;
         }
 
-        const existingButton =
-            status.querySelector(
-                '[data-installer-action="verify-google"]'
-            );
-
-        if (existingButton) {
-            existingButton.remove();
-        }
-
         const verifyButton =
             this.createActionButton(
                 "Verifikasi Google",
-                () => {
-
-                    if (!this.webAppUrl) {
-
-                        this.setStatus(
-                            "URL Web App tidak tersedia. Periksa kembali hasil deployment.",
-                            "error"
-                        );
-
-                        return;
-                    }
-
-                    window.open(
-                        this.webAppUrl,
-                        "_blank",
-                        "noopener,noreferrer"
-                    );
-                }
+                () => this.openGoogleVerification()
             );
-
-        verifyButton.dataset.installerAction =
-            "verify-google";
 
         verifyButton.style.display = "block";
         verifyButton.style.marginTop = "16px";

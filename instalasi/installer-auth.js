@@ -1,3 +1,4 @@
+
 /* ======================================
    ROVIXA POS
    INSTALLER GOOGLE AUTHENTICATION
@@ -96,13 +97,30 @@ Object.assign(Installer, {
 
                 callback: async (response) => {
 
+                    const purpose =
+                        this.oauthPurpose;
+
                     if (
                         !response ||
                         response.error ||
                         !response.access_token
                     ) {
 
+                        this.oauthPurpose = "";
+
                         this.setBusy(false);
+
+                        if (purpose === "verify-webapp") {
+
+                            if (
+                                this.verificationWindow &&
+                                !this.verificationWindow.closed
+                            ) {
+                                this.verificationWindow.close();
+                            }
+
+                            this.verificationWindow = null;
+                        }
 
                         this.setStatus(
                             "Otorisasi Google gagal: " +
@@ -120,12 +138,65 @@ Object.assign(Installer, {
                     this.accessToken =
                         response.access_token;
 
-                    const purpose =
-                        this.oauthPurpose;
-
                     this.oauthPurpose = "";
 
                     try {
+
+                        /*
+                         * VERIFIKASI WEB APP
+                         *
+                         * Tidak memanggil verifyAppsScriptApi(),
+                         * installStoreDatabase(), atau runDeployment().
+                         * Hanya membuka URL deployment yang sudah ada.
+                         */
+
+                        if (purpose === "verify-webapp") {
+
+                            const webAppUrl =
+                                this.webAppUrl;
+
+                            if (!webAppUrl) {
+
+                                throw new Error(
+                                    "URL Web App tidak tersedia. Deployment yang sudah ada tidak diubah."
+                                );
+
+                            }
+
+                            const targetWindow =
+                                this.verificationWindow;
+
+                            this.verificationWindow = null;
+
+                            this.setBusy(false);
+
+                            if (
+                                targetWindow &&
+                                !targetWindow.closed
+                            ) {
+
+                                targetWindow.location.replace(
+                                    webAppUrl
+                                );
+
+                            } else {
+
+                                window.open(
+                                    webAppUrl,
+                                    "_blank",
+                                    "noopener,noreferrer"
+                                );
+
+                            }
+
+                            this.setStatus(
+                                "Pemilihan akun Google selesai. Membuka Web App yang sudah di-deploy.",
+                                "success"
+                            );
+
+                            return;
+                        }
+
 
                         if (purpose === "verify-api") {
 
@@ -134,14 +205,8 @@ Object.assign(Installer, {
                             return;
                         }
 
+
                         if (purpose === "install") {
-
-                            if (this.webAppUrl) {
-
-                                await this.retrySaveClientConfiguration();
-
-                                return;
-                            }
 
                             if (this.spreadsheetId) {
 
@@ -169,13 +234,6 @@ Object.assign(Installer, {
                             await this.installStoreDatabase();
 
                         } else if (purpose === "deploy") {
-
-                            if (this.webAppUrl) {
-
-                                await this.retrySaveClientConfiguration();
-
-                                return;
-                            }
 
                             if (!this.spreadsheetId) {
 
@@ -220,6 +278,18 @@ Object.assign(Installer, {
                     } catch (error) {
 
                         this.setBusy(false);
+
+                        if (purpose === "verify-webapp") {
+
+                            if (
+                                this.verificationWindow &&
+                                !this.verificationWindow.closed
+                            ) {
+                                this.verificationWindow.close();
+                            }
+
+                            this.verificationWindow = null;
+                        }
 
                         if (
                             error.service === "apps-script" ||
@@ -284,6 +354,12 @@ Object.assign(Installer, {
 
         this.storeName = storeName;
 
+        /*
+         * TAHAP PERTAMA:
+         * Tampilkan pengaturan Apps Script terlebih dahulu.
+         * Jangan membuat spreadsheet pada tahap ini.
+         */
+
         this.waitingForAppsScriptSettings = true;
 
         this.showAppsScriptSettingsStep(
@@ -318,7 +394,9 @@ Object.assign(Installer, {
             response = await fetch(
                 INSTALLER_CONFIG.SCRIPT_API +
                 "/projects/" +
-                encodeURIComponent(templateScriptId) +
+                encodeURIComponent(
+                    templateScriptId
+                ) +
                 "/content",
                 {
                     method: "GET",
@@ -392,13 +470,6 @@ Object.assign(Installer, {
             "Akses Apps Script API berhasil diverifikasi.",
             "success"
         );
-
-        if (this.webAppUrl) {
-
-            await this.retrySaveClientConfiguration();
-
-            return;
-        }
 
         if (!this.spreadsheetId) {
 
