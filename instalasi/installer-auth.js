@@ -381,147 +381,158 @@ Object.assign(Installer, {
 
     async verifyAppsScriptApi() {
 
-        this.setBusy(true);
+    this.setBusy(true);
 
-        this.setStatus(
-            "Memeriksa akses Google Apps Script API...",
-            "loading"
-        );
+    this.setStatus(
+        "Memeriksa akses Google Apps Script API...",
+        "loading"
+    );
+
+    try {
+
+        const templateScriptId =
+            INSTALLER_CONFIG.TEMPLATE_SCRIPT_ID;
+
+        if (!templateScriptId) {
+            throw new Error(
+                "TEMPLATE_SCRIPT_ID belum dikonfigurasi."
+            );
+        }
+
+        if (!this.accessToken) {
+            throw new Error(
+                "Token akses Google tidak tersedia. Silakan autentikasi kembali."
+            );
+        }
+
+        let response;
 
         try {
 
-            const templateScriptId =
-                INSTALLER_CONFIG.TEMPLATE_SCRIPT_ID;
-
-            if (!templateScriptId) {
-
-                throw new Error(
-                    "TEMPLATE_SCRIPT_ID belum dikonfigurasi."
-                );
-            }
-
-            let response;
-
-            try {
-
-                response = await fetch(
-                    INSTALLER_CONFIG.SCRIPT_API +
-                    "/projects/" +
-                    encodeURIComponent(templateScriptId) +
-                    "/content",
-                    {
-                        method: "GET",
-                        headers: {
-                            Authorization:
-                                "Bearer " + this.accessToken
-                        }
+            response = await fetch(
+                INSTALLER_CONFIG.SCRIPT_API +
+                "/projects/" +
+                encodeURIComponent(templateScriptId) +
+                "/content",
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization:
+                            "Bearer " + this.accessToken
                     }
-                );
-
-            } catch (error) {
-
-                throw new Error(
-                    "Tidak dapat menghubungi Google Apps Script API. Periksa koneksi internet dan konfigurasi API."
-                );
-            }
-
-            if (!response.ok) {
-
-                let details = {};
-
-                try {
-                    details = await response.json();
-                } catch (error) {
-                    details = {};
                 }
-
-                const apiMessage =
-                    details.error?.message || "";
-
-                const status =
-                    response.status;
-
-                const error = new Error(
-                    status === 403
-                        ? "Akses Apps Script API ditolak. Pastikan API aktif dan akun Google memiliki izin mengakses project template. " + apiMessage
-                        : status === 404
-                            ? "Project Apps Script template tidak ditemukan atau akun tidak memiliki akses."
-                            : "Pemeriksaan Apps Script API gagal (HTTP " +
-                              status +
-                              "). " +
-                              apiMessage
-                );
-
-                error.service = "apps-script";
-                error.status = status;
-
-                throw error;
-            }
-
-            const result =
-                await response.json();
-
-            if (!result.files?.length) {
-
-                const error = new Error(
-                    "File pada project Apps Script template tidak ditemukan."
-                );
-
-                error.service = "apps-script";
-
-                throw error;
-            }
-
-            this.waitingForAppsScriptSettings = false;
-
-            this.setStatus(
-                "Akses Apps Script API berhasil diverifikasi.",
-                "success"
             );
-
-            if (!this.spreadsheetId) {
-
-                await this.installStoreDatabase();
-                return;
-            }
-
-            if (!this.scriptId) {
-
-                if (this.databaseReadyForScript) {
-
-                    await this.createBoundScriptFromTemplate();
-
-                } else {
-
-                    throw new Error(
-                        "Spreadsheet sudah dibuat tetapi proses penyalinan database belum selesai. Jangan membuat spreadsheet baru."
-                    );
-                }
-            }
-
-            await this.runDeployment();
 
         } catch (error) {
 
-            this.setBusy(false);
+            throw new Error(
+                "Tidak dapat menghubungi Google Apps Script API. Periksa koneksi internet dan konfigurasi API."
+            );
+        }
 
-            if (
-                error.service === "apps-script" ||
-                this.waitingForAppsScriptSettings
-            ) {
+        if (!response.ok) {
 
-                this.showAppsScriptSettingsStep(
-                    error.message ||
-                    "Google Apps Script API belum dapat digunakan."
-                );
+            let details = {};
 
-                return;
+            try {
+                details = await response.json();
+            } catch (error) {
+                details = {};
             }
+
+            const apiMessage =
+                details.error?.message || "";
+
+            const status =
+                response.status;
+
+            const error = new Error(
+                status === 403
+                    ? "Akses Apps Script API ditolak. Pastikan API aktif dan akun Google memiliki izin mengakses project template. " + apiMessage
+                    : status === 404
+                        ? "Project Apps Script template tidak ditemukan atau akun tidak memiliki akses."
+                        : "Pemeriksaan Apps Script API gagal (HTTP " +
+                          status +
+                          "). " +
+                          apiMessage
+            );
+
+            error.service = "apps-script";
+            error.status = status;
 
             throw error;
         }
-    },
 
+        const result =
+            await response.json();
+
+        if (!result.files?.length) {
+
+            const error = new Error(
+                "File pada project Apps Script template tidak ditemukan."
+            );
+
+            error.service = "apps-script";
+
+            throw error;
+        }
+
+        this.waitingForAppsScriptSettings = false;
+
+        this.setStatus(
+            "Akses Apps Script API berhasil. Menyiapkan database pelanggan...",
+            "loading"
+        );
+
+        if (!this.spreadsheetId) {
+
+            await this.installStoreDatabase();
+
+            return;
+        }
+
+        if (!this.scriptId) {
+
+            if (this.databaseReadyForScript) {
+
+                await this.createBoundScriptFromTemplate();
+
+            } else {
+
+                throw new Error(
+                    "Spreadsheet sudah dibuat tetapi proses penyalinan database belum selesai. Jangan membuat spreadsheet baru."
+                );
+            }
+        }
+
+        await this.runDeployment();
+
+    } catch (error) {
+
+        this.setBusy(false);
+
+        if (
+            error.service === "apps-script" ||
+            this.waitingForAppsScriptSettings
+        ) {
+
+            this.showAppsScriptSettingsStep(
+                error.message ||
+                "Google Apps Script API belum dapat digunakan."
+            );
+
+            return;
+        }
+
+        this.setStatus(
+            "Proses instalasi berhenti: " +
+            (error.message || "Terjadi kesalahan yang tidak diketahui."),
+            "error"
+        );
+
+        throw error;
+    }
+},
 
     continueAfterAppsScriptSettings() {
 
