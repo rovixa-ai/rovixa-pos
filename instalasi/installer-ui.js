@@ -1,447 +1,489 @@
-/* ====================================== 
-   ROVIXA POS 
-   INSTALLER UI 
-====================================== */ 
-
-Object.assign(Installer, { 
-
-    /* ====================================== 
-       UPDATE INSTALLATION PROGRESS 
-    ====================================== */ 
-
-    updateInstallationProgress(step, label) { 
-
-        const progressLabel = 
-            document.getElementById( 
-                "installer-progress-label" 
-            ); 
-
-        const progressFill = 
-            document.getElementById( 
-                "installer-progress-fill" 
-            ); 
-
-        const steps = 
-            document.querySelectorAll( 
-                ".step-item[data-step]" 
-            ); 
-
-        const currentStep = 
-            Math.max(1, Math.min(4, Number(step) || 1)); 
-
-        if (progressLabel) { 
-            progressLabel.textContent = 
-                label || "Memproses instalasi..."; 
-        } 
-
-        if (progressFill) { 
-            progressFill.style.width = 
-                ((currentStep - 1) / 3 * 100) + "%"; 
-        } 
-
-        steps.forEach((item) => { 
-
-            const itemStep = 
-                Number(item.dataset.step); 
-
-            item.classList.toggle( 
-                "active", 
-                itemStep === currentStep 
-            ); 
-
-            item.classList.toggle( 
-                "completed", 
-                itemStep < currentStep 
-            ); 
-
-            if (itemStep === currentStep) { 
-                item.setAttribute( 
-                    "aria-current", 
-                    "step" 
-                ); 
-            } else { 
-                item.removeAttribute("aria-current"); 
-            } 
-
-            const number = 
-                item.querySelector(".step-number"); 
-
-            if (number) { 
-                number.textContent = 
-                    itemStep < currentStep 
-                        ? "✓" 
-                        : String(itemStep); 
-            } 
-        }); 
-    }, 
-
-
-    /* ====================================== 
-       UPDATE STATUS PANEL 
-    ====================================== */ 
-
-    updateStatusPanel(title, badge, state) { 
-
-        const panel = 
-            document.getElementById( 
-                "installer-status-panel" 
-            ); 
-
-        const titleElement = 
-            document.getElementById( 
-                "installer-status-title" 
-            ); 
-
-        const badgeElement = 
-            document.getElementById( 
-                "installer-status-badge" 
-            ); 
-
-        const status = 
-            document.getElementById( 
-                "installer-status" 
-            ); 
-
-        if (panel) { 
-            panel.hidden = false; 
-            panel.dataset.state = state || "info"; 
-        } 
-
-        if (titleElement) { 
-            titleElement.textContent = 
-                title || "Status instalasi"; 
-        } 
-
-        if (badgeElement) { 
-            badgeElement.textContent = 
-                badge || "Memproses"; 
-        } 
-
-        if (status) { 
-            status.classList.add("visible"); 
-            status.classList.remove( 
-                "error", 
-                "success" 
-            ); 
-
-            if (state === "error") { 
-                status.classList.add("error"); 
-            } 
-
-            if (state === "success") { 
-                status.classList.add("success"); 
-            } 
-        } 
-
-        const icon = 
-            document.getElementById( 
-                "installer-status-icon" 
-            ); 
-
-        if (icon) { 
-            icon.dataset.state = state || "info"; 
-        } 
-    }, 
-
-
-    /* ====================================== 
-       SET STATUS MESSAGE 
-    ====================================== */ 
-
-    setStatus(message, type = "info") { 
-
-        const status = 
-            document.getElementById( 
-                "installer-status" 
-            ); 
-
-        if (!status) { 
-            return; 
-        } 
-
-        const normalizedType = 
-            type === "loading" 
-                ? "loading" 
-                : type === "error" 
-                    ? "error" 
-                    : type === "success" 
-                        ? "success" 
-                        : "info"; 
-
-        const panel = 
-            document.getElementById( 
-                "installer-status-panel" 
-            ); 
-
-        const titleMap = { 
-            loading: "Sedang memproses instalasi", 
-            error: "Proses memerlukan perhatian", 
-            success: "Proses berhasil", 
-            info: "Informasi instalasi" 
-        }; 
-
-        const badgeMap = { 
-            loading: "Memproses", 
-            error: "Perlu tindakan", 
-            success: "Berhasil", 
-            info: "Informasi" 
-        }; 
-
-        this.updateStatusPanel( 
-            titleMap[normalizedType], 
-            badgeMap[normalizedType], 
-            normalizedType 
-        ); 
-
-        status.replaceChildren(); 
-
-        const paragraph = 
-            document.createElement("p"); 
-
-        paragraph.textContent = 
-            message || ""; 
-
-        status.appendChild(paragraph); 
-
-        status.classList.add("visible"); 
-        status.classList.remove("error", "success"); 
-
-        if (normalizedType === "error") { 
-            status.classList.add("error"); 
-        } 
-
-        if (normalizedType === "success") { 
-            status.classList.add("success"); 
-        } 
-
-        if (panel) { 
-            panel.hidden = false; 
-        } 
-    }, 
+/* ======================================
+   ROVIXA POS
+   INSTALLER UI
+====================================== */
+
+Object.assign(Installer, {
+
+    /* ======================================
+       UPDATE INSTALLATION PROGRESS
+    ====================================== */
+
+    updateInstallationProgress(step, label) {
+
+        const progressLabel =
+            document.getElementById(
+                "installer-progress-label"
+            );
+
+        const progressFill =
+            document.getElementById(
+                "installer-progress-fill"
+            );
+
+        const steps =
+            document.querySelectorAll(
+                ".step-item[data-step]"
+            );
+
+        const currentStep =
+            Math.max(1, Math.min(4, Number(step) || 1));
+
+        if (progressLabel) {
+            progressLabel.textContent =
+                label || "Memproses instalasi...";
+        }
+
+        if (progressFill) {
+            progressFill.style.width =
+                ((currentStep - 1) / 3 * 100) + "%";
+        }
+
+        steps.forEach((item) => {
+
+            const itemStep =
+                Number(item.dataset.step);
+
+            item.classList.toggle(
+                "active",
+                itemStep === currentStep
+            );
+
+            item.classList.toggle(
+                "completed",
+                itemStep < currentStep
+            );
+
+            if (itemStep === currentStep) {
+                item.setAttribute(
+                    "aria-current",
+                    "step"
+                );
+            } else {
+                item.removeAttribute("aria-current");
+            }
+
+            const number =
+                item.querySelector(".step-number");
+
+            if (number) {
+                number.textContent =
+                    itemStep < currentStep
+                        ? "✓"
+                        : String(itemStep);
+            }
+        });
+    },
+
+
+    /* ======================================
+       UPDATE STATUS PANEL
+    ====================================== */
+
+    updateStatusPanel(title, badge, state) {
+
+        const panel =
+            document.getElementById(
+                "installer-status-panel"
+            );
+
+        const titleElement =
+            document.getElementById(
+                "installer-status-title"
+            );
+
+        const badgeElement =
+            document.getElementById(
+                "installer-status-badge"
+            );
+
+        const status =
+            document.getElementById(
+                "installer-status"
+            );
+
+        if (panel) {
+            panel.hidden = false;
+            panel.dataset.state = state || "info";
+        }
+
+        if (titleElement) {
+            titleElement.textContent =
+                title || "Status instalasi";
+        }
+
+        if (badgeElement) {
+            badgeElement.textContent =
+                badge || "Memproses";
+        }
+
+        if (status) {
+            status.classList.add("visible");
+            status.classList.remove(
+                "error",
+                "success"
+            );
+
+            if (state === "error") {
+                status.classList.add("error");
+            }
+
+            if (state === "success") {
+                status.classList.add("success");
+            }
+        }
+
+        const icon =
+            document.getElementById(
+                "installer-status-icon"
+            );
+
+        if (icon) {
+            icon.dataset.state = state || "info";
+        }
+    },
+
+
+    /* ======================================
+       SET STATUS MESSAGE
+    ====================================== */
+
+    setStatus(message, type = "info") {
+
+        const status =
+            document.getElementById(
+                "installer-status"
+            );
+
+        if (!status) {
+            return;
+        }
+
+        const normalizedType =
+            type === "loading"
+                ? "loading"
+                : type === "error"
+                    ? "error"
+                    : type === "success"
+                        ? "success"
+                        : "info";
+
+        const panel =
+            document.getElementById(
+                "installer-status-panel"
+            );
+
+        const titleMap = {
+            loading: "Sedang memproses instalasi",
+            error: "Proses memerlukan perhatian",
+            success: "Proses berhasil",
+            info: "Informasi instalasi"
+        };
+
+        const badgeMap = {
+            loading: "Memproses",
+            error: "Perlu tindakan",
+            success: "Berhasil",
+            info: "Informasi"
+        };
+
+        this.updateStatusPanel(
+            titleMap[normalizedType],
+            badgeMap[normalizedType],
+            normalizedType
+        );
+
+        status.replaceChildren();
+
+        const paragraph =
+            document.createElement("p");
+
+        paragraph.textContent =
+            message || "";
+
+        status.appendChild(paragraph);
+
+        status.classList.add("visible");
+        status.classList.remove("error", "success");
+
+        if (normalizedType === "error") {
+            status.classList.add("error");
+        }
+
+        if (normalizedType === "success") {
+            status.classList.add("success");
+        }
+
+        if (panel) {
+            panel.hidden = false;
+        }
+    },
 
 
-    /* ====================================== 
-       ACTION PANEL 
-    ====================================== */ 
+    /* ======================================
+       ACTION PANEL
+    ====================================== */
 
-    showActionPanel(title, description) { 
+    showActionPanel(title, description) {
 
-        const panel = 
-            document.getElementById( 
-                "installer-action-panel" 
-            ); 
+        const panel =
+            document.getElementById(
+                "installer-action-panel"
+            );
 
-        const titleElement = 
-            document.getElementById( 
-                "installer-action-title" 
-            ); 
-
-        const descriptionElement = 
-            document.getElementById( 
-                "installer-action-description" 
-            ); 
-
-        const content = 
-            document.getElementById( 
-                "installer-action-content" 
-            ); 
-
-        if (!panel || !content) { 
-            return null; 
-        } 
+        const titleElement =
+            document.getElementById(
+                "installer-action-title"
+            );
+
+        const descriptionElement =
+            document.getElementById(
+                "installer-action-description"
+            );
+
+        const content =
+            document.getElementById(
+                "installer-action-content"
+            );
+
+        if (!panel || !content) {
+            return null;
+        }
 
-        panel.hidden = false; 
-
-        if (titleElement) { 
-            titleElement.textContent = 
-                title || "Tindakan diperlukan"; 
-        } 
+        panel.hidden = false;
+
+        if (titleElement) {
+            titleElement.textContent =
+                title || "Tindakan diperlukan";
+        }
 
-        if (descriptionElement) { 
-            descriptionElement.textContent = 
-                description || ""; 
-        } 
+        if (descriptionElement) {
+            descriptionElement.textContent =
+                description || "";
+        }
 
-        content.replaceChildren(); 
+        content.replaceChildren();
 
-        return content; 
-    }, 
+        return content;
+    },
 
 
-    /* ====================================== 
-       HIDE ACTION PANEL 
-    ====================================== */ 
+    /* ======================================
+       HIDE ACTION PANEL
+    ====================================== */
 
-    hideActionPanel() { 
+    hideActionPanel() {
 
-        const panel = 
-            document.getElementById( 
-                "installer-action-panel" 
-            ); 
+        const panel =
+            document.getElementById(
+                "installer-action-panel"
+            );
 
-        const content = 
-            document.getElementById( 
-                "installer-action-content" 
-            ); 
+        const content =
+            document.getElementById(
+                "installer-action-content"
+            );
 
-        if (content) { 
-            content.replaceChildren(); 
-        } 
+        if (content) {
+            content.replaceChildren();
+        }
 
-        if (panel) { 
-            panel.hidden = true; 
-        } 
-    }, 
+        if (panel) {
+            panel.hidden = true;
+        }
+    },
 
 
-    /* ====================================== 
-       CREATE ACTION BUTTON 
-    ====================================== */ 
+    /* ======================================
+       CREATE ACTION BUTTON
+    ====================================== */
 
-    createActionButton(text, callback, className = "") { 
+    createActionButton(text, callback, className = "") {
 
-        const button = 
-            document.createElement("button"); 
+        const button =
+            document.createElement("button");
 
-        button.type = "button"; 
-        button.textContent = text; 
+        button.type = "button";
+        button.textContent = text;
 
-        if (className) { 
-            button.className = className; 
-        } 
+        if (className) {
+            button.className = className;
+        }
 
-        button.addEventListener( 
-            "click", 
-            callback 
-        ); 
+        button.addEventListener(
+            "click",
+            callback
+        );
 
-        return button; 
-    }, 
+        return button;
+    },
 
 
-    /* ====================================== 
-       RETRY DEPLOYMENT STEP 
-    ====================================== */ 
+    /* ======================================
+       RETRY DEPLOYMENT STEP
+    ====================================== */
 
-    showRetryDeploymentStep(message) { 
+    showRetryDeploymentStep(message) {
 
-        this.setStatus( 
-            message || 
-                "Deployment belum berhasil. Periksa pengaturan Google Apps Script API.", 
-            "error" 
-        ); 
+        this.setStatus(
+            message ||
+                "Deployment belum berhasil. Periksa pengaturan Google Apps Script API.",
+            "error"
+        );
 
-        this.updateInstallationProgress( 
-            3, 
-            "Menunggu deployment" 
-        ); 
+        this.updateInstallationProgress(
+            3,
+            "Menunggu deployment"
+        );
 
-        const content = 
-            this.showActionPanel( 
-                "Lanjutkan instalasi", 
-                "Database dan Apps Script yang sudah dibuat akan tetap digunakan. Aktifkan API jika diperlukan, lalu kembali ke halaman ini." 
-            ); 
+        const content =
+            this.showActionPanel(
+                "Lanjutkan instalasi",
+                "Database dan Apps Script yang sudah dibuat akan tetap digunakan. Aktifkan API jika diperlukan, lalu kembali ke halaman ini."
+            );
 
-        if (!content) { 
-            return; 
-        } 
+        if (!content) {
+            return;
+        }
 
-        const settingsLink = 
-            document.createElement("a"); 
+        const settingsLink =
+            document.createElement("a");
 
-        settingsLink.href = 
-            INSTALLER_CONFIG.APPS_SCRIPT_SETTINGS_URL; 
+        settingsLink.href =
+            INSTALLER_CONFIG.APPS_SCRIPT_SETTINGS_URL;
 
-        settingsLink.target = "_blank"; 
+        settingsLink.target = "_blank";
 
-        settingsLink.rel = 
-            "noopener noreferrer"; 
+        settingsLink.rel =
+            "noopener noreferrer";
 
-        settingsLink.textContent = 
-            "Buka Pengaturan Apps Script API"; 
+        settingsLink.textContent =
+            "Buka Pengaturan Apps Script API";
 
-        settingsLink.style.display = "inline-block"; 
-        settingsLink.style.marginBottom = "10px"; 
+        settingsLink.style.display = "inline-block";
+        settingsLink.style.marginBottom = "10px";
 
-        const instruction = 
-            document.createElement("p"); 
+        const instruction =
+            document.createElement("p");
 
-        instruction.textContent = 
-            "1. Buka pengaturan Google di tab baru. 2. Aktifkan Google Apps Script API jika belum aktif. 3. Kembali ke halaman installer ini."; 
+        instruction.textContent =
+            "1. Buka pengaturan Google di tab baru. 2. Aktifkan Google Apps Script API jika belum aktif. 3. Kembali ke installer ini.";
 
-        instruction.style.fontSize = "12px"; 
-        instruction.style.lineHeight = "1.7"; 
-        instruction.style.color = "#92400e"; 
+        instruction.style.fontSize = "12px";
+        instruction.style.lineHeight = "1.7";
+        instruction.style.color = "#92400e";
 
-        const button = 
-            this.createActionButton( 
-                "Lanjutkan Deployment", 
-                () => this.continueDeployment() 
-            ); 
+        const button =
+            this.createActionButton(
+                "Lanjutkan Deployment",
+                () => this.continueDeployment()
+            );
 
-        content.append( 
-            settingsLink, 
-            instruction, 
-            button 
-        ); 
-    }, 
+        content.append(
+            settingsLink,
+            instruction,
+            button
+        );
+    },
 
 
-    /* ====================================== 
-       SUCCESS 
-    ====================================== */ 
+    /* ======================================
+       RETRY CLIENT CONFIGURATION SAVE
+    ====================================== */
 
-    showSuccess() { 
+    showRetryClientConfigurationStep() {
 
-        this.updateInstallationProgress( 
-            4, 
-            "Instalasi selesai" 
-        ); 
+        this.updateInstallationProgress(
+            4,
+            "Menunggu penyimpanan konfigurasi"
+        );
 
-        this.setStatus( 
-            "Database toko, Apps Script, dan deployment Web App berhasil disiapkan.", 
-            "success" 
-        ); 
+        const content =
+            this.showActionPanel(
+                "Simpan hasil instalasi",
+                "Deployment Web App sudah tersedia. Coba simpan hasil instalasi ke Client Configuration kembali. Database dan deployment tidak akan dibuat ulang."
+            );
 
-        this.hideActionPanel(); 
+        if (!content) {
+            return;
+        }
 
-        const status = 
-            document.getElementById( 
-                "installer-status" 
-            ); 
+        const button =
+            this.createActionButton(
+                "Coba Simpan Lagi",
+                () => this.retrySaveClientConfiguration()
+            );
 
-        if (!status) { 
-            return; 
-        } 
+        content.appendChild(button);
+    },
 
-        const verifyButton = 
-            this.createActionButton( 
-                "Verifikasi Google", 
-                () => { 
 
-                    if (!this.webAppUrl) { 
+    /* ======================================
+       SUCCESS
+    ====================================== */
 
-                        this.setStatus( 
-                            "URL Web App tidak tersedia. Periksa kembali hasil deployment.", 
-                            "error" 
-                        ); 
+    showSuccess() {
 
-                        return; 
-                    } 
+        this.updateInstallationProgress(
+            4,
+            "Instalasi selesai"
+        );
 
-                    window.open( 
-                        this.webAppUrl, 
-                        "_blank", 
-                        "noopener,noreferrer" 
-                    ); 
+        this.setStatus(
+            "Database toko, Apps Script, deployment Web App, dan penyimpanan Client Configuration berhasil diselesaikan.",
+            "success"
+        );
 
-                } 
-            ); 
+        this.hideActionPanel();
 
-        verifyButton.style.display = "block"; 
-        verifyButton.style.marginTop = "16px"; 
+        const status =
+            document.getElementById(
+                "installer-status"
+            );
 
-        status.appendChild(verifyButton); 
-    } 
+        if (!status) {
+            return;
+        }
+
+        const existingButton =
+            status.querySelector(
+                '[data-installer-action="verify-google"]'
+            );
+
+        if (existingButton) {
+            existingButton.remove();
+        }
+
+        const verifyButton =
+            this.createActionButton(
+                "Verifikasi Google",
+                () => {
+
+                    if (!this.webAppUrl) {
+
+                        this.setStatus(
+                            "URL Web App tidak tersedia. Periksa kembali hasil deployment.",
+                            "error"
+                        );
+
+                        return;
+                    }
+
+                    window.open(
+                        this.webAppUrl,
+                        "_blank",
+                        "noopener,noreferrer"
+                    );
+                }
+            );
+
+        verifyButton.dataset.installerAction =
+            "verify-google";
+
+        verifyButton.style.display = "block";
+        verifyButton.style.marginTop = "16px";
+
+        status.appendChild(verifyButton);
+    }
 
 });

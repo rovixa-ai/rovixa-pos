@@ -10,6 +10,9 @@ const Installer = {
 
     storeName: "",
     storeEmail: "",
+    googleEmail: "",
+    clientConfigurationEmail: "",
+    clientConfigurationSaved: false,
 
     folderId: "",
     spreadsheetId: "",
@@ -48,6 +51,12 @@ const Installer = {
             event.preventDefault();
 
             if (this.busy) {
+                return;
+            }
+
+            if (this.webAppUrl && !this.clientConfigurationSaved) {
+
+                this.retrySaveClientConfiguration();
                 return;
             }
 

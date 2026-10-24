@@ -83,11 +83,29 @@ Object.assign(Installer, {
 
             this.setBusy(false);
 
+            await this.saveClientConfiguration();
+
             this.showSuccess();
 
         } catch (error) {
 
             this.setBusy(false);
+
+            if (this.webAppUrl) {
+
+                this.setStatus(
+                    "Deployment Web App sudah berhasil, tetapi data instalasi " +
+                    "belum berhasil disimpan ke Client Configuration. " +
+                    "Tekan tombol Coba Simpan Lagi untuk mengulangi penyimpanan " +
+                    "tanpa membuat database atau deployment baru. Detail: " +
+                    (error?.message || "Penyimpanan gagal."),
+                    "error"
+                );
+
+                this.showRetryClientConfigurationStep();
+
+                return;
+            }
 
             this.waitingForSpreadsheetOpen =
                 Boolean(this.spreadsheetId && this.scriptId);
@@ -104,6 +122,298 @@ Object.assign(Installer, {
                 this.getDeploymentErrorMessage(error)
             );
         }
+    },
+
+
+    /* ======================================
+       SAVE CLIENT CONFIGURATION
+    ====================================== */
+
+    async saveClientConfiguration() {
+
+        if (
+            !this.spreadsheetId ||
+            !this.scriptId ||
+            !this.webAppUrl
+        ) {
+            throw new Error(
+                "Data instalasi belum lengkap. Spreadsheet ID, Script ID, " +
+                "dan Web App URL wajib tersedia."
+            );
+        }
+
+        const masterSpreadsheetId =
+            INSTALLER_CONFIG.CLIENT_CONFIG_SPREADSHEET_ID;
+
+        const sheetName =
+            INSTALLER_CONFIG.CLIENT_CONFIG_SHEET_NAME;
+
+        if (!masterSpreadsheetId || !sheetName) {
+            throw new Error(
+                "ID spreadsheet atau nama tab Client Configuration belum dikonfigurasi."
+            );
+        }
+
+        this.setBusy(true);
+
+        try {
+
+            this.setStatus(
+                "Menyimpan hasil instalasi ke Client Configuration...",
+                "loading"
+            );
+
+            const email =
+                await this.getInstallerGoogleEmail();
+
+            const storeName =
+                String(this.storeName || "").trim();
+
+            if (!storeName) {
+                throw new Error(
+                    "Nama toko belum tersedia."
+                );
+            }
+
+            if (!email) {
+                throw new Error(
+                    "Email akun Google tidak berhasil diperoleh. " +
+                    "Pastikan izin email Google sudah diberikan."
+                );
+            }
+
+            const installedAt =
+                new Date().toISOString();
+
+            const rowValues = [
+                storeName,
+                email,
+                this.spreadsheetId,
+                this.scriptId,
+                this.webAppUrl,
+                installedAt
+            ];
+
+            const escapedSheetName =
+                "'" + sheetName.replace(/'/g, "''") + "'";
+
+            const readRange =
+                encodeURIComponent(
+                    escapedSheetName + "!A:F"
+                );
+
+            const readUrl =
+                INSTALLER_CONFIG.SHEETS_API +
+                "/spreadsheets/" +
+                encodeURIComponent(masterSpreadsheetId) +
+                "/values/" +
+                readRange;
+
+            const result =
+                await this.apiRequest(readUrl);
+
+            const rows =
+                Array.isArray(result.values)
+                    ? result.values
+                    : [];
+
+            const existingIndex =
+                rows.findIndex((row, index) =>
+                    index > 0 &&
+                    String(row?.[2] || "").trim() ===
+                        this.spreadsheetId
+                );
+
+            if (existingIndex >= 0) {
+
+                const sheetRow =
+                    existingIndex + 1;
+
+                const updateRange =
+                    encodeURIComponent(
+                        escapedSheetName +
+                        "!A" + sheetRow +
+                        ":F" + sheetRow
+                    );
+
+                const updateUrl =
+                    INSTALLER_CONFIG.SHEETS_API +
+                    "/spreadsheets/" +
+                    encodeURIComponent(masterSpreadsheetId) +
+                    "/values/" +
+                    updateRange +
+                    "?valueInputOption=USER_ENTERED";
+
+                await this.apiRequest(
+                    updateUrl,
+                    {
+                        method: "PUT",
+                        body: JSON.stringify({
+                            range:
+                                escapedSheetName +
+                                "!A" + sheetRow +
+                                ":F" + sheetRow,
+                            majorDimension: "ROWS",
+                            values: [rowValues]
+                        })
+                    }
+                );
+
+            } else {
+
+                const appendRange =
+                    encodeURIComponent(
+                        escapedSheetName + "!A:F"
+                    );
+
+                const appendUrl =
+                    INSTALLER_CONFIG.SHEETS_API +
+                    "/spreadsheets/" +
+                    encodeURIComponent(masterSpreadsheetId) +
+                    "/values/" +
+                    appendRange +
+                    ":append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS";
+
+                await this.apiRequest(
+                    appendUrl,
+                    {
+                        method: "POST",
+                        body: JSON.stringify({
+                            majorDimension: "ROWS",
+                            values: [rowValues]
+                        })
+                    }
+                );
+            }
+
+            this.clientConfigurationSaved = true;
+            this.clientConfigurationEmail = email;
+
+            return true;
+
+        } finally {
+
+            this.setBusy(false);
+        }
+    },
+
+
+    /* ======================================
+       GET INSTALLER GOOGLE EMAIL
+    ====================================== */
+
+    async getInstallerGoogleEmail() {
+
+        if (this.clientConfigurationEmail) {
+            return this.clientConfigurationEmail;
+        }
+
+        const existingEmail =
+            this.googleEmail ||
+            this.userEmail ||
+            this.accountEmail ||
+            this.email;
+
+        if (existingEmail) {
+            this.clientConfigurationEmail =
+                String(existingEmail).trim();
+
+            return this.clientConfigurationEmail;
+        }
+
+        if (!this.accessToken) {
+            throw new Error(
+                "Token akses Google tidak tersedia. Silakan autentikasi kembali."
+            );
+        }
+
+        const response =
+            await fetch(
+                "https://www.googleapis.com/oauth2/v3/userinfo",
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization:
+                            "Bearer " + this.accessToken
+                    }
+                }
+            );
+
+        if (!response.ok) {
+            throw new Error(
+                "Email akun Google tidak dapat dibaca. Pastikan OAuth memiliki " +
+                "scope userinfo.email dan autentikasi ulang jika diminta."
+            );
+        }
+
+        const profile =
+            await response.json();
+
+        if (!profile.email) {
+            throw new Error(
+                "Google tidak mengembalikan alamat email akun."
+            );
+        }
+
+        this.clientConfigurationEmail =
+            String(profile.email).trim();
+
+        return this.clientConfigurationEmail;
+    },
+
+
+    /* ======================================
+       RETRY SAVE CLIENT CONFIGURATION
+    ====================================== */
+
+    async retrySaveClientConfiguration() {
+
+        this.hideActionPanel?.();
+
+        try {
+
+            await this.saveClientConfiguration();
+
+            this.showSuccess();
+
+        } catch (error) {
+
+            this.setStatus(
+                "Data instalasi belum berhasil disimpan ke Client Configuration. " +
+                "Database dan deployment yang sudah dibuat tetap digunakan. " +
+                "Periksa izin Google, lalu coba simpan kembali. Detail: " +
+                (error?.message || "Penyimpanan gagal."),
+                "error"
+            );
+
+            this.showRetryClientConfigurationStep();
+        }
+    },
+
+
+    /* ======================================
+       SHOW RETRY SAVE ACTION
+    ====================================== */
+
+    showRetryClientConfigurationStep() {
+
+        const content =
+            this.showActionPanel(
+                "Simpan hasil instalasi",
+                "Deployment Web App sudah tersedia. Perbaiki izin atau koneksi " +
+                "Google jika diperlukan, lalu simpan kembali data instalasi. " +
+                "Database dan deployment tidak akan dibuat ulang."
+            );
+
+        if (!content) return;
+
+        const button =
+            this.createActionButton(
+                "Coba Simpan Lagi",
+                () => this.retrySaveClientConfiguration()
+            );
+
+        content.appendChild(button);
     },
 
 

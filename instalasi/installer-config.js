@@ -14,6 +14,24 @@ const INSTALLER_CONFIG = {
     TEMPLATE_SCRIPT_ID:
         "179UpTQqLCA3SavC6M07GFqBLCWHQh87AIFpJ4Wj53rKf_0mCi4FHMJR4",
 
+    CLIENT_CONFIG_SPREADSHEET_ID:
+        "1osbB9wmW_7_s9OyOZzXhAFwZndZ83L8ZE_O3DnBxvJQ",
+
+    CLIENT_CONFIG_SHEET_NAME:
+        "Clients",
+
+    CLIENT_CONFIG_RANGE:
+        "Clients!A:F",
+
+    CLIENT_CONFIG_HEADERS: [
+        "Nama Toko",
+        "Email Google",
+        "Spreadsheet ID",
+        "Apps Script ID",
+        "Web App URL",
+        "Tanggal Instalasi"
+    ],
+
     DRIVE_API:
         "https://www.googleapis.com/drive/v3",
 
