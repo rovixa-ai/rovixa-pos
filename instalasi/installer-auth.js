@@ -287,112 +287,133 @@ Object.assign(Installer, {
 
     async verifyAppsScriptApi() {
 
-        this.setBusy(true);
+    this.setStatus(
+        "Memeriksa akses Google Apps Script API...",
+        "loading"
+    );
 
-        this.setStatus(
-            "Memeriksa akses Google Apps Script API...",
-            "loading"
+    const templateScriptId =
+        INSTALLER_CONFIG.TEMPLATE_SCRIPT_ID;
+
+    if (!templateScriptId) {
+
+        throw new Error(
+            "TEMPLATE_SCRIPT_ID belum dikonfigurasi."
         );
 
+    }
+
+    let response;
+
+    try {
+
+        response = await fetch(
+            INSTALLER_CONFIG.SCRIPT_API +
+            "/projects/" +
+            encodeURIComponent(
+                templateScriptId
+            ) +
+            "/content",
+            {
+                method: "GET",
+                headers: {
+                    Authorization:
+                        "Bearer " + this.accessToken
+                }
+            }
+        );
+
+    } catch (error) {
+
+        throw new Error(
+            "Tidak dapat menghubungi Google Apps Script API. Periksa koneksi internet dan konfigurasi API."
+        );
+
+    }
+
+    if (!response.ok) {
+
+        let details = {};
+
         try {
-
-            const response = await fetch(
-                "https://script.googleapis.com/v1/projects",
-                {
-                    method: "GET",
-
-                    headers: {
-                        "Authorization":
-                            "Bearer " + this.accessToken
-                    }
-                }
-            );
-
-            /*
-             * HTTP 200 atau 403 bisa berarti API sudah aktif,
-             * tetapi 403 juga bisa disebabkan izin atau kebijakan.
-             * Karena itu, jangan menganggap 403 sebagai sukses.
-             */
-
-            if (response.status === 403) {
-
-                const result =
-                    await response.json().catch(() => ({}));
-
-                throw new Error(
-                    result?.error?.message ||
-                    "Akses Google Apps Script API ditolak. Pastikan API aktif dan akun memiliki izin yang diperlukan."
-                );
-
-            }
-
-            if (!response.ok) {
-
-                const result =
-                    await response.json().catch(() => ({}));
-
-                throw new Error(
-                    result?.error?.message ||
-                    "Pemeriksaan Google Apps Script API gagal. HTTP " +
-                    response.status
-                );
-
-            }
-
-            this.waitingForAppsScriptSettings = false;
-
-            this.setStatus(
-                "Akses Google Apps Script API berhasil diperiksa. Melanjutkan pembuatan database...",
-                "success"
-            );
-
-            /*
-             * Spreadsheet baru dibuat setelah pemeriksaan berhasil.
-             * Jika ID sudah tersedia, lanjutkan proses yang ada.
-             */
-
-            if (this.spreadsheetId) {
-
-                this.oauthPurpose = "deploy";
-
-                if (!this.scriptId) {
-
-                    await this.createBoundScriptFromTemplate();
-
-                }
-
-                if (this.scriptId) {
-
-                    await this.runDeployment();
-
-                } else {
-
-                    throw new Error(
-                        "Apps Script belum siap. Database yang sudah dibuat tidak akan dibuat ulang."
-                    );
-
-                }
-
-                return;
-            }
-
-            await this.installStoreDatabase();
-
+            details = await response.json();
         } catch (error) {
+            details = {};
+        }
 
-            this.setBusy(false);
+        const apiMessage =
+            details.error?.message || "";
 
-            this.waitingForAppsScriptSettings = true;
+        const status =
+            response.status;
 
-            this.showAppsScriptSettingsStep(
-                error.message ||
-                "Google Apps Script API belum dapat digunakan. Periksa pengaturan API, lalu coba lagi."
+        const error = new Error(
+            status === 403
+                ? "Akses Apps Script API ditolak. Pastikan API aktif dan akun Google memiliki izin mengakses project template. " + apiMessage
+                : status === 404
+                    ? "Project Apps Script template tidak ditemukan atau akun tidak memiliki akses."
+                    : "Pemeriksaan Apps Script API gagal (HTTP " +
+                      status +
+                      "). " +
+                      apiMessage
+        );
+
+        error.service = "apps-script";
+        error.status = status;
+
+        throw error;
+
+    }
+
+    const result =
+        await response.json();
+
+    if (!result.files?.length) {
+
+        const error = new Error(
+            "File pada project Apps Script template tidak ditemukan."
+        );
+
+        error.service = "apps-script";
+
+        throw error;
+
+    }
+
+    this.waitingForAppsScriptSettings = false;
+
+    this.setStatus(
+        "Akses Apps Script API berhasil diverifikasi.",
+        "success"
+    );
+
+    if (!this.spreadsheetId) {
+
+        await this.installStoreDatabase();
+
+        return;
+
+    }
+
+    if (!this.scriptId) {
+
+        if (this.databaseReadyForScript) {
+
+            await this.createBoundScriptFromTemplate();
+
+        } else {
+
+            throw new Error(
+                "Spreadsheet sudah dibuat tetapi proses penyalinan database belum selesai. Jangan membuat spreadsheet baru."
             );
 
         }
 
-    },
+    }
 
+    await this.runDeployment();
+
+},
 
     continueAfterAppsScriptSettings() {
 
