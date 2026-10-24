@@ -136,7 +136,7 @@ Object.assign(LaporanPembelian, {
                 );
 
 
-            c
+            
 
             /* ==================================
                MAP DETAIL
