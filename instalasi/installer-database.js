@@ -320,6 +320,7 @@ Object.assign(Installer, {
 
             this.waitingForSpreadsheetOpen = true;
             this.waitingForAppsScriptSettings = false;
+            this.databaseReadyForScript = true;
 
             await this.runDeployment();
 
@@ -570,7 +571,62 @@ Object.assign(Installer, {
        Kept for compatibility with existing UI.
     ====================================== */
 
-    showAppsScriptSettingsStep() {
+    showAppsScriptSettingsStep(message) {
+
+        if (typeof this.showActionPanel === "function") {
+
+            this.setStatus(
+                message ||
+                "Periksa pengaturan Google Apps Script API sebelum melanjutkan instalasi.",
+                "error"
+            );
+
+            this.showActionPanel(
+                "Persiapan Google Apps Script API",
+                "Buka halaman pengaturan di tab baru. Jika API belum aktif, aktifkan terlebih dahulu, lalu kembali ke installer dan lanjutkan."
+            );
+
+            const content =
+                document.getElementById(
+                    "installer-action-content"
+                );
+
+            if (content) {
+
+                const settingsLink =
+                    document.createElement("a");
+
+                settingsLink.href =
+                    INSTALLER_CONFIG.APPS_SCRIPT_SETTINGS_URL;
+
+                settingsLink.target = "_blank";
+                settingsLink.rel = "noopener noreferrer";
+                settingsLink.textContent =
+                    "Buka Pengaturan Apps Script API";
+
+                settingsLink.className =
+                    "secondary-button";
+
+                settingsLink.style.display =
+                    "inline-flex";
+
+                settingsLink.style.marginBottom =
+                    "12px";
+
+                const continueButton =
+                    this.createActionButton(
+                        "Lanjutkan Instalasi",
+                        () => this.continueDeployment()
+                    );
+
+                content.replaceChildren(
+                    settingsLink,
+                    continueButton
+                );
+            }
+
+            return;
+        }
 
         const status =
             document.getElementById(
@@ -590,13 +646,14 @@ Object.assign(Installer, {
             document.createElement("strong");
 
         title.textContent =
-            "Spreadsheet pelanggan berhasil dibuat.";
+            "Persiapan Google Apps Script API";
 
         const description =
             document.createElement("p");
 
         description.textContent =
-            "Jika Google Apps Script API belum aktif pada akun ini, aktifkan melalui pengaturan berikut lalu coba deployment lagi. Spreadsheet tidak akan dibuat ulang.";
+            message ||
+            "Periksa pengaturan Apps Script API sebelum melanjutkan instalasi.";
 
         const settingsLink =
             document.createElement("a");
@@ -610,30 +667,16 @@ Object.assign(Installer, {
         settingsLink.textContent =
             "Buka Pengaturan Google Apps Script";
 
-        const databaseLink =
-            document.createElement("a");
-
-        databaseLink.href =
-            this.spreadsheetUrl;
-
-        databaseLink.target = "_blank";
-        databaseLink.rel = "noopener noreferrer";
-
-        databaseLink.textContent =
-            "Buka Database Rovixa POS";
-
         status.append(
             title,
             description,
-            settingsLink,
-            document.createElement("br"),
-            databaseLink
+            settingsLink
         );
     },
 
 
     /* ======================================
-       CONTINUE DEPLOYMENT
+       CONTINUE DEPLOYMENT / INSTALLATION
     ====================================== */
 
     async continueDeployment() {
@@ -642,19 +685,8 @@ Object.assign(Installer, {
             return;
         }
 
-        if (
-            !this.spreadsheetId ||
-            !this.scriptId
-        ) {
-            this.setStatus(
-                "Tahap deployment belum siap. Spreadsheet atau Script ID tidak ditemukan.",
-                "error"
-            );
-
-            return;
-        }
-
         if (!this.tokenClient) {
+
             this.setStatus(
                 "Layanan Google belum siap.",
                 "error"
@@ -663,12 +695,38 @@ Object.assign(Installer, {
             return;
         }
 
-        this.oauthPurpose = "deploy";
+        const nameInput =
+            document.getElementById("store-name");
+
+        if (!this.storeName) {
+
+            this.storeName =
+                nameInput?.value?.trim() || "";
+        }
+
+        if (!this.storeName) {
+
+            this.setStatus(
+                "Nama toko wajib diisi.",
+                "error"
+            );
+
+            nameInput?.focus();
+
+            return;
+        }
+
+        this.oauthPurpose =
+            this.spreadsheetId && this.scriptId
+                ? "deploy"
+                : "install";
 
         this.setBusy(true);
 
         this.setStatus(
-            "Meminta otorisasi Google untuk melanjutkan deployment...",
+            this.oauthPurpose === "deploy"
+                ? "Meminta otorisasi Google untuk melanjutkan deployment..."
+                : "Meminta otorisasi Google untuk memulai instalasi...",
             "loading"
         );
 

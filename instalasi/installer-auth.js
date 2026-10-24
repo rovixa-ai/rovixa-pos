@@ -29,6 +29,17 @@ Object.assign(Installer, {
                 { once: true }
             );
 
+            existingScript.addEventListener(
+                "error",
+                () => {
+                    this.setStatus(
+                        "Google Identity Services gagal dimuat.",
+                        "error"
+                    );
+                },
+                { once: true }
+            );
+
             return;
         }
 
@@ -126,9 +137,9 @@ Object.assign(Installer, {
                                 !this.scriptId &&
                                 this.databaseReadyForScript
                             ) {
+
                                 await this.createBoundScriptFromTemplate();
 
-                                await this.saveScriptIdToSpreadsheet();
                             }
 
                             if (this.scriptId) {
@@ -138,7 +149,7 @@ Object.assign(Installer, {
                             } else {
 
                                 throw new Error(
-                                    "Apps Script belum siap. Periksa pengaturan API lalu ulangi langkah ini."
+                                    "Apps Script belum siap. Silakan periksa pengaturan API lalu ulangi langkah ini."
                                 );
 
                             }
@@ -220,6 +231,7 @@ Object.assign(Installer, {
         }
 
         this.storeName = storeName;
+
         this.oauthPurpose = "install";
 
         this.setBusy(true);
