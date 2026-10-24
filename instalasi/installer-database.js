@@ -70,6 +70,36 @@ Object.assign(Installer, {
 
     async installStoreDatabase() {
 
+        /*
+         * MENCEGAH PEMBUATAN SPREADSHEET GANDA
+         */
+
+        if (this.spreadsheetId) {
+
+            this.spreadsheetUrl =
+                this.spreadsheetUrl ||
+                "https://docs.google.com/spreadsheets/d/" +
+                this.spreadsheetId +
+                "/edit";
+
+            if (!this.scriptId) {
+
+                this.databaseReadyForScript = true;
+
+                await this.createBoundScriptFromTemplate();
+
+            }
+
+            if (this.scriptId) {
+                await this.runDeployment();
+                return;
+            }
+
+            throw new Error(
+                "Database sudah dibuat. Instalasi dilanjutkan dari tahap Apps Script."
+            );
+        }
+
         this.setStatus(
             "Menyiapkan folder instalasi...",
             "loading"
@@ -119,10 +149,14 @@ Object.assign(Installer, {
             "iterativeCalculation",
             "spreadsheetTheme"
         ].forEach((key) => {
+
             if (template.properties?.[key] !== undefined) {
+
                 spreadsheetProperties[key] =
                     template.properties[key];
+
             }
+
         });
 
         this.setStatus(
@@ -151,13 +185,20 @@ Object.assign(Installer, {
         this.spreadsheetId =
             created.spreadsheetId;
 
-        const initialSheetId =
-            created.sheets?.[0]?.properties?.sheetId;
-
         this.spreadsheetUrl =
             "https://docs.google.com/spreadsheets/d/" +
             this.spreadsheetId +
             "/edit";
+
+        /*
+         * Simpan progres sesegera mungkin agar jika proses
+         * berikutnya gagal, installer tidak membuat database baru.
+         */
+
+        this.databaseReadyForScript = false;
+
+        const initialSheetId =
+            created.sheets?.[0]?.properties?.sheetId;
 
         try {
 
@@ -220,6 +261,7 @@ Object.assign(Installer, {
                     title: sourceSheet.title,
                     index: sourceSheet.index
                 });
+
             }
 
             this.setStatus(
@@ -230,11 +272,13 @@ Object.assign(Installer, {
             const firstBatch = [];
 
             if (initialSheetId !== undefined) {
+
                 firstBatch.push({
                     deleteSheet: {
                         sheetId: initialSheetId
                     }
                 });
+
             }
 
             copiedSheets.forEach(
@@ -253,6 +297,7 @@ Object.assign(Installer, {
                             fields: "title"
                         }
                     });
+
                 }
             );
 
@@ -272,6 +317,7 @@ Object.assign(Installer, {
                         })
                     }
                 );
+
             }
 
             const renameRequests =
@@ -304,12 +350,15 @@ Object.assign(Installer, {
                         })
                     }
                 );
+
             }
 
             await this.copyNamedRanges(
                 template.namedRanges || [],
                 copiedSheets
             );
+
+            this.databaseReadyForScript = true;
 
             this.setStatus(
                 "Membuat Apps Script yang terikat ke spreadsheet pelanggan...",
@@ -320,7 +369,6 @@ Object.assign(Installer, {
 
             this.waitingForSpreadsheetOpen = true;
             this.waitingForAppsScriptSettings = false;
-            this.databaseReadyForScript = true;
 
             await this.runDeployment();
 
@@ -329,7 +377,9 @@ Object.assign(Installer, {
             this.setBusy(false);
 
             throw error;
+
         }
+
     },
 
 
@@ -355,10 +405,12 @@ Object.assign(Installer, {
             });
 
         if (file.parents && file.parents.length) {
+
             params.set(
                 "removeParents",
                 file.parents.join(",")
             );
+
         }
 
         const moved =
@@ -376,9 +428,12 @@ Object.assign(Installer, {
             );
 
         if (moved.webViewLink) {
+
             this.spreadsheetUrl =
                 moved.webViewLink;
+
         }
+
     },
 
 
@@ -429,6 +484,7 @@ Object.assign(Installer, {
                 }
 
                 range.sheetId = newSheetId;
+
             }
 
             requests.push({
@@ -439,6 +495,7 @@ Object.assign(Installer, {
                     }
                 }
             });
+
         });
 
         if (!requests.length) {
@@ -459,6 +516,7 @@ Object.assign(Installer, {
                 })
             }
         );
+
     },
 
 
@@ -467,6 +525,18 @@ Object.assign(Installer, {
     ====================================== */
 
     async createBoundScriptFromTemplate() {
+
+        if (!this.spreadsheetId) {
+
+            throw new Error(
+                "Spreadsheet pelanggan belum tersedia."
+            );
+
+        }
+
+        if (this.scriptId) {
+            return this.scriptId;
+        }
 
         const templateContent =
             await this.apiRequest(
@@ -479,9 +549,15 @@ Object.assign(Installer, {
             );
 
         if (!templateContent.files?.length) {
-            throw new Error(
+
+            const error = new Error(
                 "Kode Apps Script template tidak dapat dibaca. Pastikan Apps Script API aktif dan akun memiliki akses ke template."
             );
+
+            error.service = "apps-script";
+
+            throw error;
+
         }
 
         const createdProject =
@@ -501,9 +577,11 @@ Object.assign(Installer, {
             );
 
         if (!createdProject.scriptId) {
+
             throw new Error(
                 "Apps Script terikat gagal dibuat."
             );
+
         }
 
         this.scriptId =
@@ -526,9 +604,11 @@ Object.assign(Installer, {
             );
 
         if (!manifest) {
+
             throw new Error(
                 "Manifest appsscript.json tidak ditemukan pada template."
             );
+
         }
 
         await this.apiRequest(
@@ -559,19 +639,25 @@ Object.assign(Installer, {
             project.parentId !==
             this.spreadsheetId
         ) {
+
             throw new Error(
                 "Apps Script baru tidak terikat pada spreadsheet pelanggan."
             );
+
         }
+
+        return this.scriptId;
+
     },
 
 
     /* ======================================
-       LEGACY SETTINGS STEP
-       Kept for compatibility with existing UI.
+       APPS SCRIPT SETTINGS STEP
     ====================================== */
 
     showAppsScriptSettingsStep(message) {
+
+        this.waitingForAppsScriptSettings = true;
 
         if (typeof this.showActionPanel === "function") {
 
@@ -583,7 +669,7 @@ Object.assign(Installer, {
 
             this.showActionPanel(
                 "Persiapan Google Apps Script API",
-                "Buka halaman pengaturan di tab baru. Jika API belum aktif, aktifkan terlebih dahulu, lalu kembali ke installer dan lanjutkan."
+                "Buka halaman pengaturan di tab baru. Aktifkan API jika diperlukan, lalu kembali ke installer dan tekan Lanjutkan Instalasi."
             );
 
             const content =
@@ -601,6 +687,7 @@ Object.assign(Installer, {
 
                 settingsLink.target = "_blank";
                 settingsLink.rel = "noopener noreferrer";
+
                 settingsLink.textContent =
                     "Buka Pengaturan Apps Script API";
 
@@ -623,6 +710,7 @@ Object.assign(Installer, {
                     settingsLink,
                     continueButton
                 );
+
             }
 
             return;
@@ -672,11 +760,12 @@ Object.assign(Installer, {
             description,
             settingsLink
         );
+
     },
 
 
     /* ======================================
-       CONTINUE DEPLOYMENT / INSTALLATION
+       CONTINUE INSTALLATION / DEPLOYMENT
     ====================================== */
 
     async continueDeployment() {
@@ -698,13 +787,12 @@ Object.assign(Installer, {
         const nameInput =
             document.getElementById("store-name");
 
-        if (!this.storeName) {
+        const storeName =
+            nameInput?.value?.trim() ||
+            this.storeName ||
+            "";
 
-            this.storeName =
-                nameInput?.value?.trim() || "";
-        }
-
-        if (!this.storeName) {
+        if (!storeName) {
 
             this.setStatus(
                 "Nama toko wajib diisi.",
@@ -716,23 +804,40 @@ Object.assign(Installer, {
             return;
         }
 
-        this.oauthPurpose =
-            this.spreadsheetId && this.scriptId
-                ? "deploy"
-                : "install";
+        this.storeName = storeName;
+
+        /*
+         * Jika database sudah ada, jangan kembali ke proses
+         * pembuatan spreadsheet. Lanjutkan dari deployment.
+         */
+
+        if (this.spreadsheetId && this.scriptId) {
+
+            this.oauthPurpose = "deploy";
+
+        } else {
+
+            /*
+             * Pemeriksaan API dilakukan sebelum pembuatan database.
+             */
+
+            this.oauthPurpose = "verify-api";
+
+        }
 
         this.setBusy(true);
 
         this.setStatus(
             this.oauthPurpose === "deploy"
                 ? "Meminta otorisasi Google untuk melanjutkan deployment..."
-                : "Meminta otorisasi Google untuk memulai instalasi...",
+                : "Meminta otorisasi Google untuk memeriksa Apps Script API...",
             "loading"
         );
 
         this.tokenClient.requestAccessToken({
             prompt: "consent select_account"
         });
+
     }
 
 });
