@@ -11,11 +11,17 @@ Object.assign(Installer, {
 
     async runDeployment() {
 
+        if (this.busy && this._deploymentProcessActive) {
+            return;
+        }
+
         if (!this.spreadsheetId || !this.scriptId) {
             throw new Error(
                 "Spreadsheet atau Script ID pelanggan tidak ditemukan."
             );
         }
+
+        this._deploymentProcessActive = true;
 
         this.setBusy(true);
 
@@ -81,15 +87,16 @@ Object.assign(Installer, {
             this.waitingForAppsScriptSettings = false;
             this.databaseReadyForScript = true;
 
-            this.setBusy(false);
+            this.setStatus(
+                "Deployment berhasil. Menyimpan data instalasi...",
+                "loading"
+            );
 
             await this.saveClientConfiguration();
 
             this.showSuccess();
 
         } catch (error) {
-
-            this.setBusy(false);
 
             if (this.webAppUrl) {
 
@@ -121,6 +128,13 @@ Object.assign(Installer, {
             this.showRetryDeploymentStep(
                 this.getDeploymentErrorMessage(error)
             );
+
+        } finally {
+
+            this._deploymentProcessActive = false;
+
+            this.setBusy(false);
+
         }
     },
 
@@ -153,6 +167,9 @@ Object.assign(Installer, {
                 "ID spreadsheet atau nama tab Client Configuration belum dikonfigurasi."
             );
         }
+
+        const deploymentOwnsBusyState =
+            Boolean(this._deploymentProcessActive);
 
         this.setBusy(true);
 
@@ -284,6 +301,7 @@ Object.assign(Installer, {
                         })
                     }
                 );
+
             }
 
             this.clientConfigurationSaved = true;
@@ -293,7 +311,15 @@ Object.assign(Installer, {
 
         } finally {
 
-            this.setBusy(false);
+            /*
+             * Jika deployment masih berjalan, deployment yang
+             * bertanggung jawab mengaktifkan kembali tombol.
+             */
+
+            if (!deploymentOwnsBusyState) {
+                this.setBusy(false);
+            }
+
         }
     },
 
@@ -304,63 +330,63 @@ Object.assign(Installer, {
 
     async getInstallerGoogleEmail() {
 
-    if (this.clientConfigurationEmail) {
-        return this.clientConfigurationEmail;
-    }
-
-    const existingEmail =
-        this.googleEmail ||
-        this.userEmail ||
-        this.accountEmail ||
-        this.email;
-
-    if (existingEmail) {
-        this.clientConfigurationEmail =
-            String(existingEmail).trim();
-
-        return this.clientConfigurationEmail;
-    }
-
-    if (!this.accessToken) {
-        throw new Error(
-            "Token akses Google tidak tersedia. Silakan autentikasi kembali."
-        );
-    }
-
-    const response = await fetch(
-        "https://openidconnect.googleapis.com/v1/userinfo",
-        {
-            method: "GET",
-            headers: {
-                Authorization: "Bearer " + this.accessToken
-            }
+        if (this.clientConfigurationEmail) {
+            return this.clientConfigurationEmail;
         }
-    );
 
-    let profile = {};
+        const existingEmail =
+            this.googleEmail ||
+            this.userEmail ||
+            this.accountEmail ||
+            this.email;
 
-    try {
-        profile = await response.json();
-    } catch (error) {
-        profile = {};
-    }
+        if (existingEmail) {
+            this.clientConfigurationEmail =
+                String(existingEmail).trim();
 
-    if (!response.ok || !profile.email) {
-        throw new Error(
-            profile.error_description ||
-            profile.error?.message ||
-            "Email akun Google tidak dapat dibaca. " +
-            "Pastikan OAuth memiliki scope openid, email, " +
-            "dan https://www.googleapis.com/auth/userinfo.email. " +
-            "Autentikasi ulang Google, lalu coba simpan kembali."
+            return this.clientConfigurationEmail;
+        }
+
+        if (!this.accessToken) {
+            throw new Error(
+                "Token akses Google tidak tersedia. Silakan autentikasi kembali."
+            );
+        }
+
+        const response = await fetch(
+            "https://openidconnect.googleapis.com/v1/userinfo",
+            {
+                method: "GET",
+                headers: {
+                    Authorization: "Bearer " + this.accessToken
+                }
+            }
         );
-    }
 
-    this.clientConfigurationEmail =
-        String(profile.email).trim();
+        let profile = {};
 
-    return this.clientConfigurationEmail;
-},
+        try {
+            profile = await response.json();
+        } catch (error) {
+            profile = {};
+        }
+
+        if (!response.ok || !profile.email) {
+            throw new Error(
+                profile.error_description ||
+                profile.error?.message ||
+                "Email akun Google tidak dapat dibaca. " +
+                "Pastikan OAuth memiliki scope openid, email, " +
+                "dan https://www.googleapis.com/auth/userinfo.email. " +
+                "Autentikasi ulang Google, lalu coba simpan kembali."
+            );
+        }
+
+        this.clientConfigurationEmail =
+            String(profile.email).trim();
+
+        return this.clientConfigurationEmail;
+    },
 
 
     /* ======================================
@@ -369,6 +395,11 @@ Object.assign(Installer, {
 
     async retrySaveClientConfiguration() {
 
+        if (this.busy) {
+            return;
+        }
+
+        this.setBusy(true);
         this.hideActionPanel?.();
 
         try {
@@ -388,6 +419,11 @@ Object.assign(Installer, {
             );
 
             this.showRetryClientConfigurationStep();
+
+        } finally {
+
+            this.setBusy(false);
+
         }
     },
 

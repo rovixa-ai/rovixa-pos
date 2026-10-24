@@ -1,3 +1,4 @@
+
 /* ======================================
 ROVIXA POS
 INSTALLER GOOGLE AUTHENTICATION
@@ -124,16 +125,6 @@ Object.assign(Installer, {
 
                     try {
 
-                        /*
-                         * VERIFIKASI WEB APP
-                         *
-                         * Meminta persetujuan Google dan
-                         * membuka Web App yang sudah ada.
-                         *
-                         * Tidak membuat database baru
-                         * dan tidak melakukan deployment ulang.
-                         */
-
                         if (purpose === "verify-webapp") {
 
                             this.setBusy(false);
@@ -147,15 +138,6 @@ Object.assign(Installer, {
 
                                 return;
                             }
-
-                            /*
-                             * Token OAuth sudah diterima.
-                             * Google akan menampilkan halaman
-                             * persetujuan apabila masih diperlukan.
-                             *
-                             * Setelah callback berhasil,
-                             * tampilkan tombol untuk membuka Web App.
-                             */
 
                             this.setStatus(
                                 "Otorisasi Google berhasil. Tekan Buka Web App untuk melanjutkan.",
@@ -175,6 +157,10 @@ Object.assign(Installer, {
                                         "Buka Web App",
                                         () => {
 
+                                            if (this.busy) {
+                                                return;
+                                            }
+
                                             if (!this.webAppUrl) {
 
                                                 this.setStatus(
@@ -190,7 +176,6 @@ Object.assign(Installer, {
                                                 "_blank",
                                                 "noopener,noreferrer"
                                             );
-
                                         }
                                     );
 
@@ -202,13 +187,11 @@ Object.assign(Installer, {
                             return;
                         }
 
-
                         if (purpose === "verify-api") {
 
                             await this.verifyAppsScriptApi();
                             return;
                         }
-
 
                         if (purpose === "install") {
 
@@ -301,6 +284,10 @@ Object.assign(Installer, {
 
     openGoogleVerification() {
 
+        if (this.busy) {
+            return;
+        }
+
         if (!this.webAppUrl) {
 
             this.setStatus(
@@ -318,10 +305,6 @@ Object.assign(Installer, {
                 "error"
             );
 
-            return;
-        }
-
-        if (this.busy) {
             return;
         }
 
@@ -398,121 +381,145 @@ Object.assign(Installer, {
 
     async verifyAppsScriptApi() {
 
+        this.setBusy(true);
+
         this.setStatus(
             "Memeriksa akses Google Apps Script API...",
             "loading"
         );
 
-        const templateScriptId =
-            INSTALLER_CONFIG.TEMPLATE_SCRIPT_ID;
-
-        if (!templateScriptId) {
-
-            throw new Error(
-                "TEMPLATE_SCRIPT_ID belum dikonfigurasi."
-            );
-        }
-
-        let response;
-
         try {
 
-            response = await fetch(
-                INSTALLER_CONFIG.SCRIPT_API +
-                "/projects/" +
-                encodeURIComponent(templateScriptId) +
-                "/content",
-                {
-                    method: "GET",
-                    headers: {
-                        Authorization:
-                            "Bearer " + this.accessToken
+            const templateScriptId =
+                INSTALLER_CONFIG.TEMPLATE_SCRIPT_ID;
+
+            if (!templateScriptId) {
+
+                throw new Error(
+                    "TEMPLATE_SCRIPT_ID belum dikonfigurasi."
+                );
+            }
+
+            let response;
+
+            try {
+
+                response = await fetch(
+                    INSTALLER_CONFIG.SCRIPT_API +
+                    "/projects/" +
+                    encodeURIComponent(templateScriptId) +
+                    "/content",
+                    {
+                        method: "GET",
+                        headers: {
+                            Authorization:
+                                "Bearer " + this.accessToken
+                        }
                     }
+                );
+
+            } catch (error) {
+
+                throw new Error(
+                    "Tidak dapat menghubungi Google Apps Script API. Periksa koneksi internet dan konfigurasi API."
+                );
+            }
+
+            if (!response.ok) {
+
+                let details = {};
+
+                try {
+                    details = await response.json();
+                } catch (error) {
+                    details = {};
                 }
+
+                const apiMessage =
+                    details.error?.message || "";
+
+                const status =
+                    response.status;
+
+                const error = new Error(
+                    status === 403
+                        ? "Akses Apps Script API ditolak. Pastikan API aktif dan akun Google memiliki izin mengakses project template. " + apiMessage
+                        : status === 404
+                            ? "Project Apps Script template tidak ditemukan atau akun tidak memiliki akses."
+                            : "Pemeriksaan Apps Script API gagal (HTTP " +
+                              status +
+                              "). " +
+                              apiMessage
+                );
+
+                error.service = "apps-script";
+                error.status = status;
+
+                throw error;
+            }
+
+            const result =
+                await response.json();
+
+            if (!result.files?.length) {
+
+                const error = new Error(
+                    "File pada project Apps Script template tidak ditemukan."
+                );
+
+                error.service = "apps-script";
+
+                throw error;
+            }
+
+            this.waitingForAppsScriptSettings = false;
+
+            this.setStatus(
+                "Akses Apps Script API berhasil diverifikasi.",
+                "success"
             );
+
+            if (!this.spreadsheetId) {
+
+                await this.installStoreDatabase();
+                return;
+            }
+
+            if (!this.scriptId) {
+
+                if (this.databaseReadyForScript) {
+
+                    await this.createBoundScriptFromTemplate();
+
+                } else {
+
+                    throw new Error(
+                        "Spreadsheet sudah dibuat tetapi proses penyalinan database belum selesai. Jangan membuat spreadsheet baru."
+                    );
+                }
+            }
+
+            await this.runDeployment();
 
         } catch (error) {
 
-            throw new Error(
-                "Tidak dapat menghubungi Google Apps Script API. Periksa koneksi internet dan konfigurasi API."
-            );
-        }
+            this.setBusy(false);
 
-        if (!response.ok) {
+            if (
+                error.service === "apps-script" ||
+                this.waitingForAppsScriptSettings
+            ) {
 
-            let details = {};
-
-            try {
-                details = await response.json();
-            } catch (error) {
-                details = {};
-            }
-
-            const apiMessage =
-                details.error?.message || "";
-
-            const status =
-                response.status;
-
-            const error = new Error(
-                status === 403
-                    ? "Akses Apps Script API ditolak. Pastikan API aktif dan akun Google memiliki izin mengakses project template. " + apiMessage
-                    : status === 404
-                        ? "Project Apps Script template tidak ditemukan atau akun tidak memiliki akses."
-                        : "Pemeriksaan Apps Script API gagal (HTTP " +
-                          status +
-                          "). " +
-                          apiMessage
-            );
-
-            error.service = "apps-script";
-            error.status = status;
-
-            throw error;
-        }
-
-        const result =
-            await response.json();
-
-        if (!result.files?.length) {
-
-            const error = new Error(
-                "File pada project Apps Script template tidak ditemukan."
-            );
-
-            error.service = "apps-script";
-
-            throw error;
-        }
-
-        this.waitingForAppsScriptSettings = false;
-
-        this.setStatus(
-            "Akses Apps Script API berhasil diverifikasi.",
-            "success"
-        );
-
-        if (!this.spreadsheetId) {
-
-            await this.installStoreDatabase();
-            return;
-        }
-
-        if (!this.scriptId) {
-
-            if (this.databaseReadyForScript) {
-
-                await this.createBoundScriptFromTemplate();
-
-            } else {
-
-                throw new Error(
-                    "Spreadsheet sudah dibuat tetapi proses penyalinan database belum selesai. Jangan membuat spreadsheet baru."
+                this.showAppsScriptSettingsStep(
+                    error.message ||
+                    "Google Apps Script API belum dapat digunakan."
                 );
-            }
-        }
 
-        await this.runDeployment();
+                return;
+            }
+
+            throw error;
+        }
     },
 
 
@@ -561,9 +568,23 @@ Object.assign(Installer, {
             "loading"
         );
 
-        this.tokenClient.requestAccessToken({
-            prompt: "consent select_account"
-        });
+        try {
+
+            this.tokenClient.requestAccessToken({
+                prompt: "consent select_account"
+            });
+
+        } catch (error) {
+
+            this.oauthPurpose = "";
+            this.setBusy(false);
+
+            this.setStatus(
+                error.message ||
+                "Popup Google gagal dibuka. Izinkan popup untuk situs installer.",
+                "error"
+            );
+        }
     }
 
 });
