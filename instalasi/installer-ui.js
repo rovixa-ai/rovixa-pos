@@ -1,4 +1,3 @@
-
 /* ======================================
    ROVIXA POS
    INSTALLER UI
@@ -77,148 +76,6 @@ Object.assign(Installer, {
 
 
     /* ======================================
-       AUTHORIZATION STEP
-    ====================================== */
-
-    showAuthorizationStep() {
-
-        const status =
-            document.getElementById(
-                "installer-status"
-            );
-
-        if (!status) {
-            return;
-        }
-
-        status.className =
-            "installer-status";
-
-        status.replaceChildren();
-
-        const title =
-            document.createElement("strong");
-
-        title.textContent =
-            "Deployment Web App berhasil.";
-
-        const description =
-            document.createElement("p");
-
-        description.textContent =
-            "Langkah berikutnya, buka Web App untuk menyelesaikan otorisasi Google Apps Script jika diminta.";
-
-        const openButton =
-            document.createElement("button");
-
-        openButton.type = "button";
-
-        openButton.textContent =
-            "Buka Web App untuk Otorisasi";
-
-        openButton.addEventListener(
-            "click",
-            () => {
-
-                if (!this.webAppUrl) {
-
-                    this.setStatus(
-                        "URL Web App tidak tersedia.",
-                        "error"
-                    );
-
-                    return;
-                }
-
-                window.open(
-                    this.webAppUrl,
-                    "_blank",
-                    "noopener,noreferrer"
-                );
-
-            }
-        );
-
-        const instruction =
-            document.createElement("p");
-
-        instruction.textContent =
-            "Selesaikan izin Google pada tab yang terbuka. Setelah selesai, kembali ke halaman installer ini.";
-
-        const confirmButton =
-            document.createElement("button");
-
-        confirmButton.type = "button";
-
-        confirmButton.textContent =
-            "Saya Sudah Memberikan Izin";
-
-        confirmButton.addEventListener(
-            "click",
-            async () => {
-
-                if (this.busy) {
-                    return;
-                }
-
-                this.setBusy(true);
-
-                this.setStatus(
-                    "Memeriksa URL Web App...",
-                    "loading"
-                );
-
-                try {
-
-                    if (
-                        typeof this.verifyWebAppUrl !==
-                        "function"
-                    ) {
-
-                        throw new Error(
-                            "Fungsi verifikasi Web App belum tersedia."
-                        );
-                    }
-
-                    await this.verifyWebAppUrl();
-
-                    this.authorizationStepCompleted =
-                        true;
-
-                    this.setBusy(false);
-
-                    this.showSuccess();
-
-                } catch (error) {
-
-                    this.setBusy(false);
-
-                    this.setStatus(
-                        "URL Web App belum dapat diverifikasi. Pastikan proses otorisasi sudah selesai, lalu buka kembali Web App dan coba lagi. " +
-                        (
-                            error.message || ""
-                        ),
-                        "error"
-                    );
-
-                    this.showAuthorizationStep();
-
-                }
-
-            }
-        );
-
-        status.append(
-            title,
-            description,
-            openButton,
-            instruction,
-            confirmButton
-        );
-    },
-
-
-    /* ======================================
        SUCCESS
     ====================================== */
 
@@ -248,7 +105,7 @@ Object.assign(Installer, {
             document.createElement("p");
 
         description.textContent =
-            "Database berhasil disalin, deployment Web App dibuat, dan langkah otorisasi installer telah diselesaikan.";
+            "Spreadsheet pelanggan berhasil dibuat dari template, Apps Script terikat berhasil dibuat, dan deployment Web App berhasil dibuat.";
 
         const databaseLink =
             document.createElement("a");

@@ -11,13 +11,9 @@ Object.assign(Installer, {
 
     async runDeployment() {
 
-        if (
-            !this.waitingForSpreadsheetOpen ||
-            !this.spreadsheetId
-        ) {
-
+        if (!this.spreadsheetId || !this.scriptId) {
             throw new Error(
-                "Spreadsheet hasil salinan tidak ditemukan."
+                "Spreadsheet atau Script ID pelanggan tidak ditemukan."
             );
         }
 
@@ -26,15 +22,7 @@ Object.assign(Installer, {
         try {
 
             this.setStatus(
-                "Menunggu Script ID hasil salinan...",
-                "loading"
-            );
-
-            this.scriptId =
-                await this.waitForCopiedScriptId();
-
-            this.setStatus(
-                "Memverifikasi proyek Apps Script...",
+                "Memverifikasi Apps Script pelanggan...",
                 "loading"
             );
 
@@ -49,7 +37,6 @@ Object.assign(Installer, {
                 await this.createScriptVersion();
 
             if (!version.versionNumber) {
-
                 throw new Error(
                     "Nomor versi Apps Script tidak ditemukan."
                 );
@@ -66,185 +53,45 @@ Object.assign(Installer, {
                 );
 
             const webApp =
-                (deployment.entryPoints || [])
-                    .find((entry) =>
+                (deployment.entryPoints || []).find(
+                    (entry) =>
                         entry.entryPointType === "WEB_APP"
-                    );
+                );
 
             if (!webApp?.webApp?.url) {
-
                 throw new Error(
                     "Deployment dibuat, tetapi URL Web App tidak ditemukan."
                 );
             }
 
-            this.webAppUrl =
-                webApp.webApp.url;
-
+            this.webAppUrl = webApp.webApp.url;
             this.waitingForSpreadsheetOpen = false;
             this.waitingForAppsScriptSettings = false;
 
             this.setBusy(false);
-
-            /*
-             * Deployment berhasil.
-             * Lanjutkan ke langkah otorisasi Web App,
-             * bukan langsung menampilkan instalasi selesai.
-             */
-
-            this.showAuthorizationStep();
+            this.showSuccess();
 
         } catch (error) {
 
             this.setBusy(false);
 
             this.setStatus(
-                error.message ||
-                "Deployment gagal.",
+                error.message || "Deployment gagal.",
                 "error"
             );
-
-            /*
-             * Jangan menyalin ulang database ketika
-             * deployment gagal. Pengguna dapat mencoba
-             * melanjutkan kembali dari langkah ini.
-             */
 
             this.waitingForSpreadsheetOpen = true;
             this.waitingForAppsScriptSettings = true;
 
             this.showRetryDeploymentStep(
-                error.message ||
-                "Deployment gagal."
+                error.message || "Deployment gagal."
             );
         }
     },
 
 
     /* ======================================
-       WAIT FOR COPIED SCRIPT ID
-    ====================================== */
-
-    async waitForCopiedScriptId() {
-
-        const startedAt =
-            Date.now();
-
-        let lastError = "";
-
-        while (
-            Date.now() - startedAt <
-            INSTALLER_CONFIG.SCRIPT_ID_TIMEOUT
-        ) {
-
-            const elapsedSeconds =
-                Math.floor(
-                    (Date.now() - startedAt) / 1000
-                );
-
-            this.setStatus(
-                "Menunggu Script ID hasil salinan... " +
-                elapsedSeconds +
-                " detik dari 30 detik.",
-                "loading"
-            );
-
-            try {
-
-                const scriptId =
-                    await this.readCopiedScriptId();
-
-                if (
-                    scriptId &&
-                    scriptId !==
-                    INSTALLER_CONFIG.TEMPLATE_SCRIPT_ID
-                ) {
-
-                    return scriptId;
-                }
-
-                lastError =
-                    "Script ID yang terbaca masih sama dengan ID template.";
-
-            } catch (error) {
-
-                lastError =
-                    error.message;
-
-            }
-
-            await new Promise((resolve) => {
-
-                setTimeout(
-                    resolve,
-                    INSTALLER_CONFIG.SCRIPT_ID_WAIT_INTERVAL
-                );
-
-            });
-
-        }
-
-        throw new Error(
-            "Script ID hasil salinan tidak berhasil diperoleh dalam 30 detik. " +
-            (lastError || "Pastikan spreadsheet salinan sudah dibuka.")
-        );
-    },
-
-
-    /* ======================================
-       READ SCRIPT ID FROM SHEET
-    ====================================== */
-
-    async readCopiedScriptId() {
-
-        const range =
-            encodeURIComponent(
-                INSTALLER_CONFIG.SCRIPT_CONFIG_RANGE
-            );
-
-        const url =
-            INSTALLER_CONFIG.SHEETS_API +
-            "/spreadsheets/" +
-            encodeURIComponent(this.spreadsheetId) +
-            "/values/" +
-            range;
-
-        const result =
-            await this.apiRequest(url);
-
-        const rows =
-            result.values || [];
-
-        const row =
-            rows.find((item) =>
-                item[0] === "scriptId"
-            );
-
-        const scriptId =
-            row?.[1]?.trim();
-
-        if (!scriptId) {
-
-            throw new Error(
-                "Script ID belum tertulis di sheet konfigurasi."
-            );
-        }
-
-        if (
-            !/^[a-zA-Z0-9_-]+$/.test(scriptId)
-        ) {
-
-            throw new Error(
-                "Format Script ID tidak valid."
-            );
-        }
-
-        return scriptId;
-    },
-
-
-    /* ======================================
-       VERIFY COPIED SCRIPT
+       VERIFY BOUND SCRIPT
     ====================================== */
 
     async verifyCopiedScript() {
@@ -261,19 +108,14 @@ Object.assign(Installer, {
             !project.scriptId ||
             project.scriptId !== this.scriptId
         ) {
-
             throw new Error(
                 "Proyek Apps Script tidak berhasil diverifikasi."
             );
         }
 
-        if (
-            project.parentId &&
-            project.parentId !== this.spreadsheetId
-        ) {
-
+        if (project.parentId !== this.spreadsheetId) {
             throw new Error(
-                "Script ID yang ditemukan bukan milik spreadsheet hasil salinan."
+                "Script ID yang ditemukan bukan milik spreadsheet pelanggan."
             );
         }
 
@@ -296,18 +138,13 @@ Object.assign(Installer, {
         return this.apiRequest(
             url,
             {
-
                 method: "POST",
-
                 body: JSON.stringify({
-
                     description:
                         "Rovixa POS - " +
                         this.storeName +
                         " - Instalasi otomatis"
-
                 })
-
             }
         );
     },
@@ -329,12 +166,9 @@ Object.assign(Installer, {
             url,
             {
                 method: "POST",
-
                 body: JSON.stringify({
-                    versionNumber: versionNumber,
-
+                    versionNumber,
                     manifestFileName: "appsscript",
-
                     description:
                         "Rovixa POS Web App - " +
                         this.storeName
