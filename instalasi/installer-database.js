@@ -70,147 +70,137 @@ Object.assign(Installer, {
 
     async installStoreDatabase() {
 
-        if (this.busy && !this._databaseProcessActive) {
-            return;
-        }
+        /*
+         * MENCEGAH PEMBUATAN SPREADSHEET GANDA
+         */
 
-        const startedBusy =
-            this.busy;
-
-        this._databaseProcessActive = true;
-        this.setBusy(true);
-
-        try {
-
-            /*
-             * MENCEGAH PEMBUATAN SPREADSHEET GANDA
-             */
-
-            if (this.spreadsheetId) {
-
-                this.spreadsheetUrl =
-                    this.spreadsheetUrl ||
-                    "https://docs.google.com/spreadsheets/d/" +
-                    this.spreadsheetId +
-                    "/edit";
-
-                if (!this.scriptId) {
-
-                    this.databaseReadyForScript = true;
-
-                    await this.createBoundScriptFromTemplate();
-
-                }
-
-                if (this.scriptId) {
-                    await this.runDeployment();
-                    return;
-                }
-
-                throw new Error(
-                    "Database sudah dibuat. Instalasi dilanjutkan dari tahap Apps Script."
-                );
-            }
-
-            this.setStatus(
-                "Menyiapkan folder instalasi...",
-                "loading"
-            );
-
-            await this.findOrCreateFolder();
-
-            this.setStatus(
-                "Membaca struktur spreadsheet template...",
-                "loading"
-            );
-
-            const template =
-                await this.apiRequest(
-                    INSTALLER_CONFIG.SHEETS_API +
-                    "/spreadsheets/" +
-                    encodeURIComponent(
-                        INSTALLER_CONFIG.TEMPLATE_SPREADSHEET_ID
-                    ) +
-                    "?fields=" +
-                    encodeURIComponent(
-                        "spreadsheetId,properties(title,locale,timeZone,autoRecalc,spreadsheetTheme),sheets(properties(sheetId,title,index)),namedRanges"
-                    )
-                );
-
-            if (!template.sheets || !template.sheets.length) {
-                throw new Error(
-                    "Sheet pada spreadsheet template tidak ditemukan."
-                );
-            }
-
-            const sourceSheets =
-                [...template.sheets].sort(
-                    (a, b) =>
-                        (a.properties.index || 0) -
-                        (b.properties.index || 0)
-                );
-
-            const spreadsheetProperties = {
-                title: this.storeName
-            };
-
-            [
-                "locale",
-                "timeZone",
-                "autoRecalc",
-                "iterativeCalculation",
-                "spreadsheetTheme"
-            ].forEach((key) => {
-
-                if (template.properties?.[key] !== undefined) {
-
-                    spreadsheetProperties[key] =
-                        template.properties[key];
-
-                }
-
-            });
-
-            this.setStatus(
-                "Membuat spreadsheet pelanggan...",
-                "loading"
-            );
-
-            const created =
-                await this.apiRequest(
-                    INSTALLER_CONFIG.SHEETS_API +
-                    "/spreadsheets",
-                    {
-                        method: "POST",
-                        body: JSON.stringify({
-                            properties: spreadsheetProperties
-                        })
-                    }
-                );
-
-            if (!created.spreadsheetId) {
-                throw new Error(
-                    "Spreadsheet pelanggan gagal dibuat."
-                );
-            }
-
-            this.spreadsheetId =
-                created.spreadsheetId;
+        if (this.spreadsheetId) {
 
             this.spreadsheetUrl =
+                this.spreadsheetUrl ||
                 "https://docs.google.com/spreadsheets/d/" +
                 this.spreadsheetId +
                 "/edit";
 
-            /*
-             * Simpan progres sesegera mungkin agar jika proses
-             * berikutnya gagal, installer tidak membuat database baru.
-             */
+            if (!this.scriptId) {
 
-            this.databaseReadyForScript = false;
+                this.databaseReadyForScript = true;
 
-            const initialSheetId =
-                created.sheets?.[0]?.properties?.sheetId;
+                await this.createBoundScriptFromTemplate();
+
+            }
+
+            if (this.scriptId) {
+                await this.runDeployment();
+                return;
+            }
+
+            throw new Error(
+                "Database sudah dibuat. Instalasi dilanjutkan dari tahap Apps Script."
+            );
+        }
+
+        this.setStatus(
+            "Menyiapkan folder instalasi...",
+            "loading"
+        );
+
+        await this.findOrCreateFolder();
+
+        this.setStatus(
+            "Membaca struktur spreadsheet template...",
+            "loading"
+        );
+
+        const template =
+            await this.apiRequest(
+                INSTALLER_CONFIG.SHEETS_API +
+                "/spreadsheets/" +
+                encodeURIComponent(
+                    INSTALLER_CONFIG.TEMPLATE_SPREADSHEET_ID
+                ) +
+                "?fields=" +
+                encodeURIComponent(
+                    "spreadsheetId,properties(title,locale,timeZone,autoRecalc,spreadsheetTheme),sheets(properties(sheetId,title,index)),namedRanges"
+                )
+            );
+
+        if (!template.sheets || !template.sheets.length) {
+            throw new Error(
+                "Sheet pada spreadsheet template tidak ditemukan."
+            );
+        }
+
+        const sourceSheets =
+            [...template.sheets].sort(
+                (a, b) =>
+                    (a.properties.index || 0) -
+                    (b.properties.index || 0)
+            );
+
+        const spreadsheetProperties = {
+            title: this.storeName
+        };
+
+        [
+            "locale",
+            "timeZone",
+            "autoRecalc",
+            "iterativeCalculation",
+            "spreadsheetTheme"
+        ].forEach((key) => {
+
+            if (template.properties?.[key] !== undefined) {
+
+                spreadsheetProperties[key] =
+                    template.properties[key];
+
+            }
+
+        });
+
+        this.setStatus(
+            "Membuat spreadsheet pelanggan...",
+            "loading"
+        );
+
+        const created =
+            await this.apiRequest(
+                INSTALLER_CONFIG.SHEETS_API +
+                "/spreadsheets",
+                {
+                    method: "POST",
+                    body: JSON.stringify({
+                        properties: spreadsheetProperties
+                    })
+                }
+            );
+
+        if (!created.spreadsheetId) {
+            throw new Error(
+                "Spreadsheet pelanggan gagal dibuat."
+            );
+        }
+
+        this.spreadsheetId =
+            created.spreadsheetId;
+
+        this.spreadsheetUrl =
+            "https://docs.google.com/spreadsheets/d/" +
+            this.spreadsheetId +
+            "/edit";
+
+        /*
+         * Simpan progres sesegera mungkin agar jika proses
+         * berikutnya gagal, installer tidak membuat database baru.
+         */
+
+        this.databaseReadyForScript = false;
+
+        const initialSheetId =
+            created.sheets?.[0]?.properties?.sheetId;
+
+        try {
 
             await this.moveSpreadsheetToFolder();
 
@@ -387,14 +377,6 @@ Object.assign(Installer, {
             this.setBusy(false);
 
             throw error;
-
-        } finally {
-
-            this._databaseProcessActive = false;
-
-            if (this.busy) {
-                this.setBusy(false);
-            }
 
         }
 
@@ -824,10 +806,23 @@ Object.assign(Installer, {
 
         this.storeName = storeName;
 
+        /*
+         * Jika database sudah ada, jangan kembali ke proses
+         * pembuatan spreadsheet. Lanjutkan dari deployment.
+         */
+
         if (this.spreadsheetId && this.scriptId) {
+
             this.oauthPurpose = "deploy";
+
         } else {
+
+            /*
+             * Pemeriksaan API dilakukan sebelum pembuatan database.
+             */
+
             this.oauthPurpose = "verify-api";
+
         }
 
         this.setBusy(true);
@@ -839,25 +834,9 @@ Object.assign(Installer, {
             "loading"
         );
 
-        try {
-
-            this.tokenClient.requestAccessToken({
-                prompt: "consent select_account"
-            });
-
-        } catch (error) {
-
-            this.oauthPurpose = "";
-
-            this.setBusy(false);
-
-            this.setStatus(
-                error.message ||
-                "Permintaan otorisasi Google gagal.",
-                "error"
-            );
-
-        }
+        this.tokenClient.requestAccessToken({
+            prompt: "consent select_account"
+        });
 
     }
 

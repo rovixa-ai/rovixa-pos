@@ -261,149 +261,77 @@ const Installer = {
     },
 
 
-    /* ======================================
+ 
+/* ======================================
    BUSY STATE
 ====================================== */
 
 setBusy(busy) {
 
-    this.busy = Boolean(busy);
+        this.busy = busy;
 
-    const isBusy = this.busy;
-
-    const form =
-        document.getElementById(
-            "installer-form"
-        );
-
-    const installButton =
-        document.getElementById(
-            "install-button"
-        );
-
-    const storeNameInput =
-        document.getElementById(
-            "store-name"
-        );
-
-    const actionPanel =
-        document.getElementById(
-            "installer-action-panel"
-        );
-
-    /*
-     * SIMPAN STATUS AWAL TOMBOL
-     * DAN NONAKTIFKAN SEMUA TOMBOL
-     */
-
-    const buttons =
-        document.querySelectorAll(
-            "button"
-        );
-
-    buttons.forEach((button) => {
-
-        if (isBusy) {
-
-            if (
-                !button.hasAttribute(
-                    "data-installer-busy"
-                )
-            ) {
-
-                button.dataset.installerWasDisabled =
-                    String(button.disabled);
-
-                button.setAttribute(
-                    "data-installer-busy",
-                    "true"
-                );
-            }
-
-            button.disabled = true;
-
-            return;
-        }
-
-        /*
-         * PULIHKAN STATUS AWAL
-         */
-
-        if (
-            button.hasAttribute(
-                "data-installer-busy"
-            )
-        ) {
-
-            button.disabled =
-                button.dataset.installerWasDisabled === "true";
-
-            button.removeAttribute(
-                "data-installer-busy"
+        const button =
+            document.getElementById(
+                "install-button"
             );
 
-            delete button.dataset.installerWasDisabled;
-        }
-    });
+        if (button) {
 
-    /*
-     * TOMBOL UTAMA
-     */
+            button.disabled = busy;
 
-    if (installButton) {
+            if (busy) {
 
-        if (isBusy) {
+                if (!button.dataset.previousText) {
+                    button.dataset.previousText =
+                        button.textContent.trim();
+                }
 
-            if (!installButton.dataset.previousText) {
-                installButton.dataset.previousText =
-                    installButton.textContent.trim();
+                button.textContent =
+                    "Memproses...";
+
+            } else {
+
+                button.textContent =
+                    button.dataset.previousText ||
+                    "Hubungkan Google & Mulai Instalasi";
+
             }
+        }
 
-            installButton.textContent =
-                "Memproses...";
+        const form =
+            document.getElementById(
+                "installer-form"
+            );
 
-        } else {
+        const storeNameInput =
+            document.getElementById(
+                "store-name"
+            );
 
-            installButton.textContent =
-                installButton.dataset.previousText ||
-                "Hubungkan Google & Mulai Instalasi";
+        if (storeNameInput) {
+            storeNameInput.disabled =
+                busy || this.databaseReadyForScript;
+        }
+
+        if (form) {
+            form.setAttribute(
+                "aria-busy",
+                String(busy)
+            );
+        }
+
+        const actionPanel =
+            document.getElementById(
+                "installer-action-panel"
+            );
+
+        if (actionPanel) {
+            actionPanel.setAttribute(
+                "aria-busy",
+                String(busy)
+            );
         }
     }
 
-    /*
-     * INPUT NAMA TOKO
-     */
-
-    if (storeNameInput) {
-
-        storeNameInput.disabled =
-            isBusy ||
-            Boolean(this.databaseReadyForScript);
-    }
-
-    /*
-     * STATUS FORM
-     */
-
-    if (form) {
-
-        form.setAttribute(
-            "aria-busy",
-            String(isBusy)
-        );
-    }
-
-    /*
-     * STATUS PANEL TINDAKAN
-     */
-
-    if (actionPanel) {
-
-        actionPanel.setAttribute(
-            "aria-busy",
-            String(isBusy)
-        );
-    }
-}
 
 };
