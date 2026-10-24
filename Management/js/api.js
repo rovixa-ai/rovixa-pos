@@ -1,8 +1,93 @@
 const API = {
 
-    URL: window.API_CONFIG.SCRIPT_URL,
+    URL: null,
+
+    initialized: false,
+
+    initPromise: null,
+
+
+    /* ==================================
+       INITIALIZE CLIENT API
+       ================================== */
+
+    async init() {
+
+        if (this.initialized && this.URL) {
+            return this.URL;
+        }
+
+        if (this.initPromise) {
+            return this.initPromise;
+        }
+
+        this.initPromise = (async () => {
+
+            if (
+                !window.API_CONFIG ||
+                typeof window.API_CONFIG.init !== "function"
+            ) {
+
+                throw new Error(
+                    "Konfigurasi pelanggan belum tersedia."
+                );
+
+            }
+
+            await window.API_CONFIG.init();
+
+            const scriptUrl =
+                String(
+                    window.API_CONFIG.SCRIPT_URL || ""
+                ).trim();
+
+            if (
+                !scriptUrl ||
+                !/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/
+                    .test(scriptUrl)
+            ) {
+
+                throw new Error(
+                    "URL Web App pelanggan tidak valid."
+                );
+
+            }
+
+            this.URL = scriptUrl;
+
+            this.initialized = true;
+
+            return this.URL;
+
+        })();
+
+        try {
+
+            return await this.initPromise;
+
+        } catch (error) {
+
+            this.URL = null;
+
+            this.initialized = false;
+
+            this.initPromise = null;
+
+            throw error;
+
+        }
+
+    },
+
+
+    /* ==================================
+       GET REQUEST
+       ================================== */
 
     async get(action, params = {}) {
+
+        const url =
+            await this.init();
 
         const query =
             new URLSearchParams({
@@ -13,16 +98,13 @@ const API = {
 
             });
 
-
         const response =
             await fetch(
-                `${this.URL}?${query.toString()}`
+                `${url}?${query.toString()}`
             );
-
 
         const text =
             await response.text();
-
 
         try {
 
@@ -30,15 +112,12 @@ const API = {
                 text
             );
 
-        }
-
-        catch (error) {
+        } catch (error) {
 
             console.error(
                 "API RESPONSE:",
                 text
             );
-
 
             throw new Error(
                 "Response API bukan JSON"
@@ -49,12 +128,19 @@ const API = {
     },
 
 
+    /* ==================================
+       POST REQUEST
+       ================================== */
+
     async post(data = {}) {
+
+        const url =
+            await this.init();
 
         const response =
             await fetch(
 
-                this.URL,
+                url,
 
                 {
 
@@ -76,10 +162,8 @@ const API = {
 
             );
 
-
         const text =
             await response.text();
-
 
         try {
 
@@ -87,15 +171,12 @@ const API = {
                 text
             );
 
-        }
-
-        catch (error) {
+        } catch (error) {
 
             console.error(
                 "API RESPONSE:",
                 text
             );
-
 
             throw new Error(
                 "Response API bukan JSON"
@@ -135,9 +216,6 @@ const API = {
         );
 
     },
-
-
-   
 
 
     saveUser(data) {
@@ -180,7 +258,7 @@ const API = {
 
         });
 
-},
+    },
 
 
     /* ==================================
@@ -457,7 +535,7 @@ const API = {
     },
 
 
-        /* ==================================
+    /* ==================================
        LAPORAN PEMBELIAN PDF
        ================================== */
 
@@ -506,42 +584,42 @@ const API = {
 
     },
 
+
     printLaporanPenjualanBulanan(data = {}) {
 
-    return this.post({
+        return this.post({
 
-        action:
-            "printLaporanPenjualanBulanan",
+            action:
+                "printLaporanPenjualanBulanan",
 
-        bulan:
-            data.bulan,
+            bulan:
+                data.bulan,
 
-        tahun:
-            data.tahun,
+            tahun:
+                data.tahun,
 
-        kasir:
-            data.kasir || "",
+            kasir:
+                data.kasir || "",
 
-        database: {
+            database: {
 
-            year:
-                data.database?.year,
+                year:
+                    data.database?.year,
 
-            penjualanId:
-                data.database?.penjualan,
+                penjualanId:
+                    data.database?.penjualan,
 
-            detailPenjualanId:
-                data.database?.detailPenjualan,
+                detailPenjualanId:
+                    data.database?.detailPenjualan,
 
-            pembayaranId:
-                data.database?.pembayaran
+                pembayaranId:
+                    data.database?.pembayaran
 
-        }
+            }
 
-    });
+        });
 
-},
-
+    },
 
 
     getLaporanPenjualanPdf() {
@@ -561,7 +639,6 @@ const API = {
 
         database =
             database || {};
-
 
         return this.get(
             "downloadExpense",

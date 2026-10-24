@@ -1,8 +1,84 @@
 const API = {
 
-    URL: window.API_CONFIG.SCRIPT_URL,
+    URL: null,
+
+    initialized: false,
+
+    initPromise: null,
+
+
+    /* ==================================
+       INITIALIZE CLIENT API
+    ================================== */
+
+    async init() {
+
+        if (this.initialized && this.URL) {
+            return this.URL;
+        }
+
+        if (this.initPromise) {
+            return this.initPromise;
+        }
+
+        this.initPromise = (async () => {
+
+            if (
+                !window.API_CONFIG ||
+                typeof window.API_CONFIG.init !== "function"
+            ) {
+                throw new Error(
+                    "Konfigurasi pelanggan belum tersedia."
+                );
+            }
+
+            await window.API_CONFIG.init();
+
+            const scriptUrl =
+                String(
+                    window.API_CONFIG.SCRIPT_URL || ""
+                ).trim();
+
+            if (
+                !/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/
+                    .test(scriptUrl)
+            ) {
+                throw new Error(
+                    "URL Web App pelanggan tidak valid."
+                );
+            }
+
+            this.URL = scriptUrl;
+            this.initialized = true;
+
+            return this.URL;
+
+        })();
+
+        try {
+
+            return await this.initPromise;
+
+        } catch (error) {
+
+            this.URL = null;
+            this.initialized = false;
+            this.initPromise = null;
+
+            throw error;
+
+        }
+
+    },
+
+
+    /* ==================================
+       GET
+    ================================== */
 
     async get(action, params = {}) {
+
+        const url = await this.init();
 
         const query =
             new URLSearchParams({
@@ -12,7 +88,7 @@ const API = {
 
         const response =
             await fetch(
-                `${this.URL}?${query.toString()}`
+                `${url}?${query.toString()}`
             );
 
         const text =
@@ -37,11 +113,18 @@ const API = {
 
     },
 
+
+    /* ==================================
+       POST
+    ================================== */
+
     async post(data = {}) {
+
+        const url = await this.init();
 
         const response =
             await fetch(
-                this.URL,
+                url,
                 {
                     method: "POST",
                     headers: {
@@ -75,17 +158,32 @@ const API = {
 
     },
 
+
+    /* ==================================
+       USER
+    ================================== */
+
     getUsers() {
 
         return this.get("users");
 
     },
 
+
+    /* ==================================
+       BARANG
+    ================================== */
+
     getBarang() {
 
         return this.get("barang");
 
     },
+
+
+    /* ==================================
+       SATUAN
+    ================================== */
 
     getSatuan(barang) {
 
@@ -98,11 +196,21 @@ const API = {
 
     },
 
+
+    /* ==================================
+       BOOTSTRAP
+    ================================== */
+
     getBootstrap() {
 
         return this.get("bootstrap");
 
     },
+
+
+    /* ==================================
+       DOWNLOAD PEMBELIAN
+    ================================== */
 
     getDownloadPembelian(database) {
 
@@ -127,6 +235,11 @@ const API = {
 
     },
 
+
+    /* ==================================
+       SIMPAN BARANG
+    ================================== */
+
     saveBarang(data) {
 
         return this.post({
@@ -135,6 +248,11 @@ const API = {
         });
 
     },
+
+
+    /* ==================================
+       SIMPAN SATUAN
+    ================================== */
 
     saveSatuan(data) {
 
@@ -145,6 +263,11 @@ const API = {
 
     },
 
+
+    /* ==================================
+       UPDATE SATUAN
+    ================================== */
+
     updateSatuan(data) {
 
         return this.post({
@@ -153,6 +276,11 @@ const API = {
         });
 
     },
+
+
+    /* ==================================
+       PENYESUAIAN STOK
+    ================================== */
 
     saveStokAdjustment(data) {
 
@@ -163,6 +291,11 @@ const API = {
 
     },
 
+
+    /* ==================================
+       UPDATE BARANG
+    ================================== */
+
     updateBarang(data) {
 
         return this.post({
@@ -171,6 +304,11 @@ const API = {
         });
 
     },
+
+
+    /* ==================================
+       PEMBELIAN
+    ================================== */
 
     savePembelian(data) {
 
@@ -181,6 +319,7 @@ const API = {
 
     },
 
+
     updatePembelian(data) {
 
         return this.post({
@@ -190,6 +329,11 @@ const API = {
 
     },
 
+
+    /* ==================================
+       LAPORAN PEMBELIAN
+    ================================== */
+
     saveLaporanPembelian(data) {
 
         return this.post({
@@ -198,6 +342,7 @@ const API = {
         });
 
     },
+
 
     printLaporanPembelian(data) {
 

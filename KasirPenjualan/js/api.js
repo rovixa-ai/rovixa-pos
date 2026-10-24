@@ -1,10 +1,16 @@
 // ======================================
 // TREEHOUSE POS
 // API
+// MULTI-CLIENT CONFIGURATION
 // ======================================
 
 const API = {
 
+    URL: null,
+
+    initialized: false,
+
+    initPromise: null,
 
     /* ==================================
        BOOTSTRAP CACHE
@@ -18,63 +24,133 @@ const API = {
 
 
     /* ==================================
+       INITIALIZE CLIENT API
+       ================================== */
+
+    async init() {
+
+        if (
+            this.initialized &&
+            this.URL
+        ) {
+
+            return this.URL;
+
+        }
+
+        if (
+            this.initPromise
+        ) {
+
+            return this.initPromise;
+
+        }
+
+        this.initPromise =
+            (async () => {
+
+                if (
+                    !window.API_CONFIG ||
+                    typeof window.API_CONFIG.init !== "function"
+                ) {
+
+                    throw new Error(
+                        "Konfigurasi pelanggan belum tersedia."
+                    );
+
+                }
+
+                await window.API_CONFIG.init();
+
+                const scriptUrl =
+                    String(
+                        window.API_CONFIG.SCRIPT_URL || ""
+                    ).trim();
+
+                if (
+                    !/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/
+                        .test(scriptUrl)
+                ) {
+
+                    throw new Error(
+                        "URL Web App pelanggan tidak valid."
+                    );
+
+                }
+
+                this.URL =
+                    scriptUrl;
+
+                this.initialized =
+                    true;
+
+                return this.URL;
+
+            })();
+
+        try {
+
+            return await this.initPromise;
+
+        } catch (error) {
+
+            this.URL =
+                null;
+
+            this.initialized =
+                false;
+
+            this.initPromise =
+                null;
+
+            throw error;
+
+        }
+
+    },
+
+
+    /* ==================================
        GET
        ================================== */
 
     async get(action, params = {}) {
 
-        let url =
-            window.API_CONFIG.SCRIPT_URL +
-            "?action=" +
-            encodeURIComponent(
-                action
-            );
+        const baseUrl =
+            await this.init();
 
+        const query =
+            new URLSearchParams({
 
-        Object.keys(params)
-            .forEach(
-                key => {
+                action:
+                    action,
 
-                    url +=
-                        "&" +
-                        encodeURIComponent(
-                            key
-                        ) +
-                        "=" +
-                        encodeURIComponent(
-                            params[key]
-                        );
+                ...params
 
-                }
-            );
-
+            });
 
         const response =
-            await fetch(url);
-
+            await fetch(
+                `${baseUrl}?${query.toString()}`
+            );
 
         const text =
             await response.text();
 
-
         let result;
-
 
         try {
 
             result =
                 JSON.parse(text);
 
-        }
-
-        catch (error) {
+        } catch (error) {
 
             throw new Error(
                 "Response API bukan JSON."
             );
 
         }
-
 
         if (
             !result.success
@@ -87,7 +163,6 @@ const API = {
 
         }
 
-
         return result;
 
     },
@@ -99,6 +174,9 @@ const API = {
 
     async post(action, data = {}) {
 
+        const baseUrl =
+            await this.init();
+
         const payload = {
 
             action:
@@ -108,10 +186,9 @@ const API = {
 
         };
 
-
         const response =
             await fetch(
-                CONFIG.API_URL,
+                baseUrl,
                 {
 
                     method:
@@ -132,32 +209,23 @@ const API = {
                 }
             );
 
-
         const text =
             await response.text();
 
-
-        
-
-
         let result;
-
 
         try {
 
             result =
                 JSON.parse(text);
 
-        }
-
-        catch (error) {
+        } catch (error) {
 
             throw new Error(
                 "Response API POST bukan JSON."
             );
 
         }
-
 
         if (
             !result.success
@@ -169,7 +237,6 @@ const API = {
             );
 
         }
-
 
         return result;
 
@@ -196,9 +263,6 @@ const API = {
             this.bootstrapCache
         ) {
 
-           
-
-
             return this.bootstrapCache;
 
         }
@@ -207,17 +271,13 @@ const API = {
         /* ==============================
            REQUEST SEDANG BERJALAN
 
-           Jika beberapa module memanggil
-           bootstrap bersamaan, semuanya
-           menggunakan request yang sama.
+           Beberapa module menggunakan
+           request bootstrap yang sama.
         ============================== */
 
         if (
             this.bootstrapPromise
         ) {
-
-           
-
 
             return await this.bootstrapPromise;
 
@@ -233,19 +293,14 @@ const API = {
 
                 try {
 
-                   
-
-
                     const response =
                         await this.get(
                             "bootstrap"
                         );
 
-
                     const data =
                         response.data ||
                         {};
-
 
                     const result = {
 
@@ -269,30 +324,21 @@ const API = {
 
                     };
 
-
                     this.bootstrapCache =
                         result;
 
-
-
-
                     return result;
 
-                }
-
-                catch (error) {
+                } catch (error) {
 
                     console.error(
                         "API.bootstrap ERROR:",
                         error
                     );
 
-
                     throw error;
 
-                }
-
-                finally {
+                } finally {
 
                     this.bootstrapPromise =
                         null;
@@ -300,7 +346,6 @@ const API = {
                 }
 
             })();
-
 
         return await this.bootstrapPromise;
 
@@ -316,12 +361,8 @@ const API = {
         this.bootstrapCache =
             null;
 
-
         this.bootstrapPromise =
             null;
-
-
-        
 
     },
 
@@ -331,15 +372,15 @@ const API = {
        BERDASARKAN TAHUN
        ================================== */
 
-    async resolvePenjualanDatabase(
-        year
-    ) {
+    async resolvePenjualanDatabase(year) {
 
         return this.get(
             "resolvePenjualanDatabase",
             {
+
                 year:
                     Number(year)
+
             }
         );
 
@@ -351,13 +392,10 @@ const API = {
        BERDASARKAN TAHUN
        ================================== */
 
-    async getDownloadPenjualan(
-        database
-    ) {
+    async getDownloadPenjualan(database) {
 
         database =
             database || {};
-
 
         return this.get(
             "downloadPenjualan",
@@ -390,6 +428,5 @@ const API = {
         );
 
     }
-
 
 };
