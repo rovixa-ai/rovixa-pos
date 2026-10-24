@@ -1,4 +1,3 @@
-
 /* ======================================
    ROVIXA POS
    INSTALLER UI
@@ -120,7 +119,6 @@ Object.assign(Installer, {
 
         if (status) {
             status.classList.add("visible");
-
             status.classList.remove(
                 "error",
                 "success"
@@ -206,11 +204,7 @@ Object.assign(Installer, {
         status.appendChild(paragraph);
 
         status.classList.add("visible");
-
-        status.classList.remove(
-            "error",
-            "success"
-        );
+        status.classList.remove("error", "success");
 
         if (normalizedType === "error") {
             status.classList.add("error");
@@ -373,9 +367,7 @@ Object.assign(Installer, {
             document.createElement("p");
 
         instruction.textContent =
-            "1. Buka pengaturan Google di tab baru. " +
-            "2. Aktifkan Google Apps Script API jika belum aktif. " +
-            "3. Kembali ke halaman installer ini.";
+            "1. Buka pengaturan Google di tab baru. 2. Aktifkan Google Apps Script API jika belum aktif. 3. Kembali ke halaman installer ini.";
 
         instruction.style.fontSize = "12px";
         instruction.style.lineHeight = "1.7";
@@ -396,94 +388,48 @@ Object.assign(Installer, {
 
 
     /* ======================================
-   GOOGLE VERIFICATION
-====================================== */
+       SUCCESS
+       OPEN WEB APP FOR OWNER AUTHORIZATION
+    ====================================== */
 
-openGoogleVerification() {
+    showSuccess() {
 
-    if (!this.webAppUrl) {
-        this.setStatus(
-            "URL Web App tidak tersedia. Periksa hasil deployment.",
-            "error"
+        this.updateInstallationProgress(
+            4,
+            "Instalasi selesai"
         );
-        return;
-    }
 
-    if (!this.tokenClient) {
-        this.setStatus(
-            "Layanan autentikasi Google belum siap. Muat ulang installer lalu coba kembali.",
-            "error"
-        );
-        return;
-    }
+        this.hideActionPanel();
 
-    if (this.busy) {
-        return;
-    }
+        if (!this.webAppUrl) {
 
-    this.oauthPurpose = "verify-webapp";
-    this.setBusy(true);
+            this.setStatus(
+                "Deployment selesai, tetapi URL Web App tidak tersedia. Periksa hasil deployment.",
+                "error"
+            );
 
-    this.setStatus(
-        "Membuka pemilihan akun dan persetujuan izin Google...",
-        "loading"
-    );
-
-    try {
-        this.tokenClient.requestAccessToken({
-            prompt: "consent select_account"
-        });
-    } catch (error) {
-        this.oauthPurpose = "";
-        this.setBusy(false);
+            return;
+        }
 
         this.setStatus(
-            error.message ||
-            "Popup Google gagal dibuka. Izinkan popup untuk situs installer.",
-            "error"
-        );
-    }
-},
-
-
-/* ======================================
-   SUCCESS
-====================================== */
-
-showSuccess() {
-
-    this.updateInstallationProgress(
-        4,
-        "Instalasi selesai"
-    );
-
-    this.setStatus(
-        "Database toko, Apps Script, dan deployment Web App berhasil disiapkan.",
-        "success"
-    );
-
-    this.hideActionPanel();
-
-    const status =
-        document.getElementById("installer-status");
-
-    if (!status) {
-        return;
-    }
-
-    const verifyButton =
-        this.createActionButton(
-            "Verifikasi Google",
-            () => this.openGoogleVerification()
+            "Deployment berhasil. Membuka Web App untuk menyelesaikan otorisasi Google...",
+            "success"
         );
 
-    verifyButton.style.display = "block";
-    verifyButton.style.marginTop = "16px";
+        /*
+         * Buka URL Web App pada tab yang sama.
+         *
+         * Browser menggunakan sesi akun Google yang sedang
+         * digunakan pelanggan untuk menjalankan installer.
+         *
+         * Jika Google memerlukan otorisasi yang belum diberikan,
+         * Google akan menampilkan halaman persetujuan.
+         *
+         * Tidak membuat database baru dan tidak melakukan
+         * deployment ulang.
+         */
 
-    status.appendChild(verifyButton);
-},
-
-
-    
+        window.location.assign(this.webAppUrl);
+    }
 
 });
