@@ -60,9 +60,12 @@ const INSTALLER_CONFIG = {
         "https://support.google.com/cloud/answer/9110914",
 
     OAUTH_SCOPES: [
-        "https://www.googleapis.com/auth/drive",
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/script.projects",
-        "https://www.googleapis.com/auth/script.deployments"
-    ].join(" ")
+    "openid",
+    "email",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/script.projects",
+    "https://www.googleapis.com/auth/script.deployments"
+].join(" ")
 };

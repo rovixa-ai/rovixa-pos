@@ -304,62 +304,63 @@ Object.assign(Installer, {
 
     async getInstallerGoogleEmail() {
 
-        if (this.clientConfigurationEmail) {
-            return this.clientConfigurationEmail;
-        }
+    if (this.clientConfigurationEmail) {
+        return this.clientConfigurationEmail;
+    }
 
-        const existingEmail =
-            this.googleEmail ||
-            this.userEmail ||
-            this.accountEmail ||
-            this.email;
+    const existingEmail =
+        this.googleEmail ||
+        this.userEmail ||
+        this.accountEmail ||
+        this.email;
 
-        if (existingEmail) {
-            this.clientConfigurationEmail =
-                String(existingEmail).trim();
-
-            return this.clientConfigurationEmail;
-        }
-
-        if (!this.accessToken) {
-            throw new Error(
-                "Token akses Google tidak tersedia. Silakan autentikasi kembali."
-            );
-        }
-
-        const response =
-            await fetch(
-                "https://www.googleapis.com/oauth2/v3/userinfo",
-                {
-                    method: "GET",
-                    headers: {
-                        Authorization:
-                            "Bearer " + this.accessToken
-                    }
-                }
-            );
-
-        if (!response.ok) {
-            throw new Error(
-                "Email akun Google tidak dapat dibaca. Pastikan OAuth memiliki " +
-                "scope userinfo.email dan autentikasi ulang jika diminta."
-            );
-        }
-
-        const profile =
-            await response.json();
-
-        if (!profile.email) {
-            throw new Error(
-                "Google tidak mengembalikan alamat email akun."
-            );
-        }
-
+    if (existingEmail) {
         this.clientConfigurationEmail =
-            String(profile.email).trim();
+            String(existingEmail).trim();
 
         return this.clientConfigurationEmail;
-    },
+    }
+
+    if (!this.accessToken) {
+        throw new Error(
+            "Token akses Google tidak tersedia. Silakan autentikasi kembali."
+        );
+    }
+
+    const response = await fetch(
+        "https://openidconnect.googleapis.com/v1/userinfo",
+        {
+            method: "GET",
+            headers: {
+                Authorization: "Bearer " + this.accessToken
+            }
+        }
+    );
+
+    let profile = {};
+
+    try {
+        profile = await response.json();
+    } catch (error) {
+        profile = {};
+    }
+
+    if (!response.ok || !profile.email) {
+        throw new Error(
+            profile.error_description ||
+            profile.error?.message ||
+            "Email akun Google tidak dapat dibaca. " +
+            "Pastikan OAuth memiliki scope openid, email, " +
+            "dan https://www.googleapis.com/auth/userinfo.email. " +
+            "Autentikasi ulang Google, lalu coba simpan kembali."
+        );
+    }
+
+    this.clientConfigurationEmail =
+        String(profile.email).trim();
+
+    return this.clientConfigurationEmail;
+},
 
 
     /* ======================================
