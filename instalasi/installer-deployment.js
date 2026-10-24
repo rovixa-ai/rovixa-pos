@@ -86,7 +86,13 @@ Object.assign(Installer, {
 
             this.setBusy(false);
 
-            this.showSuccess();
+            /*
+             * Deployment berhasil.
+             * Lanjutkan ke langkah otorisasi Web App,
+             * bukan langsung menampilkan instalasi selesai.
+             */
+
+            this.showAuthorizationStep();
 
         } catch (error) {
 
@@ -103,6 +109,7 @@ Object.assign(Installer, {
              * deployment gagal. Pengguna dapat mencoba
              * melanjutkan kembali dari langkah ini.
              */
+
             this.waitingForSpreadsheetOpen = true;
             this.waitingForAppsScriptSettings = true;
 
