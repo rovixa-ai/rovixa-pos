@@ -401,104 +401,49 @@ Object.assign(Installer, {
 
     async openGoogleVerification() {
 
-        if (!this.webAppUrl) {
+    if (!this.webAppUrl) {
+        this.setStatus(
+            "URL Web App tidak tersedia. Periksa hasil deployment.",
+            "error"
+        );
+        return;
+    }
 
-            this.setStatus(
-                "URL Web App tidak tersedia. Periksa kembali hasil deployment.",
-                "error"
-            );
+    if (!this.tokenClient) {
+        this.setStatus(
+            "Layanan autentikasi Google belum siap. Muat ulang installer lalu coba kembali.",
+            "error"
+        );
+        return;
+    }
 
-            return;
-        }
+    if (this.busy) {
+        return;
+    }
 
-        if (!this.tokenClient) {
+    this.oauthPurpose = "verify-webapp";
+    this.setBusy(true);
 
-            this.setStatus(
-                "Layanan autentikasi Google belum siap. Muat ulang installer lalu coba kembali.",
-                "error"
-            );
+    this.setStatus(
+        "Pilih akun Google yang digunakan saat deployment.",
+        "loading"
+    );
 
-            return;
-        }
-
-        if (this.busy) {
-            return;
-        }
-
-        /*
-         * Buka jendela terlebih dahulu agar tidak
-         * diblokir browser setelah proses OAuth.
-         */
-
-        const verificationWindow =
-            window.open(
-                "about:blank",
-                "_blank"
-            );
-
-        if (!verificationWindow) {
-
-            this.setStatus(
-                "Jendela verifikasi diblokir browser. Izinkan pop-up untuk installer, lalu coba kembali.",
-                "error"
-            );
-
-            return;
-        }
-
-        this.verificationWindow =
-            verificationWindow;
-
-        try {
-
-            verificationWindow.document.title =
-                "Verifikasi Google - Rovixa POS";
-
-            verificationWindow.document.body.textContent =
-                "Menunggu pemilihan akun Google...";
-
-        } catch (error) {
-            // Jendela akan diarahkan setelah OAuth selesai.
-        }
-
-        this.oauthPurpose =
-            "verify-webapp";
-
-        this.setBusy(true);
+    try {
+        this.tokenClient.requestAccessToken({
+            prompt: "select_account"
+        });
+    } catch (error) {
+        this.oauthPurpose = "";
+        this.setBusy(false);
 
         this.setStatus(
-            "Silakan pilih akun Google yang digunakan saat deployment untuk melanjutkan verifikasi Web App.",
-            "loading"
+            error.message ||
+            "Popup Google gagal dibuka. Izinkan popup untuk situs installer, lalu coba kembali.",
+            "error"
         );
-
-        try {
-
-            this.tokenClient.requestAccessToken({
-                prompt: "select_account consent"
-            });
-
-        } catch (error) {
-
-            this.oauthPurpose = "";
-
-            this.setBusy(false);
-
-            if (
-                this.verificationWindow &&
-                !this.verificationWindow.closed
-            ) {
-                this.verificationWindow.close();
-            }
-
-            this.verificationWindow = null;
-
-            this.setStatus(
-                error.message ||
-                "Permintaan autentikasi Google gagal dimulai.",
-                "error"
-            );
-        }
-    },
+    }
+},
 
 
     /* ======================================
