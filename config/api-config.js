@@ -8,26 +8,46 @@
 
     "use strict";
 
+
+    /* ======================================
+       CENTRAL CLIENT CONFIGURATION API
+    ====================================== */
+
     const CENTRAL_API_URL =
         "https://script.google.com/macros/s/AKfycbyEGC57wQqgx5LNw_TgfnbFIXPxjrN0H4I_17nT1cI5KOT5UotyBBViOyNTbkAQ8HFD/exec";
 
-    
+
+    /* ======================================
+       CLIENT IDENTIFICATION
+    ====================================== */
 
     const params =
-        new URLSearchParams(window.location.search);
+        new URLSearchParams(
+            window.location.search
+        );
 
     const clientId =
-        (params.get("client") || "").trim();
+        (
+            params.get("client") || ""
+        ).trim();
+
+
+    /* ======================================
+       CONFIGURATION STATE
+    ====================================== */
 
     let resolvePromise = null;
 
+
     const API_CONFIG = {
 
-        SCRIPT_URL: DEFAULT_SCRIPT_URL,
+        SCRIPT_URL: "",
 
-        CENTRAL_API_URL: CENTRAL_API_URL,
+        CENTRAL_API_URL:
+            CENTRAL_API_URL,
 
-        CLIENT_ID: clientId,
+        CLIENT_ID:
+            clientId,
 
         STORE_NAME: "",
 
@@ -35,125 +55,228 @@
 
         ERROR: null,
 
+
+        /* ======================================
+           INITIALIZE CLIENT CONFIGURATION
+        ====================================== */
+
         init() {
 
-            if (resolvePromise) {
-                return resolvePromise;
+            if (
+                this.READY &&
+                this.SCRIPT_URL
+            ) {
+
+                return Promise.resolve(
+                    this
+                );
+
             }
 
-            resolvePromise = new Promise((resolve, reject) => {
+            if (resolvePromise) {
 
-                if (!clientId) {
+                return resolvePromise;
 
-                    this.ERROR =
-                        "ID pelanggan tidak ditemukan pada URL.";
+            }
 
-                    reject(new Error(this.ERROR));
+            if (!this.CLIENT_ID) {
 
-                    return;
+                this.ERROR =
+                    "ID pelanggan tidak ditemukan pada URL.";
 
-                }
+                return Promise.reject(
+                    new Error(
+                        this.ERROR
+                    )
+                );
 
-                const callbackName =
-                    "__treehouseClientConfigCallback";
+            }
 
-                const timeoutId =
-                    window.setTimeout(() => {
+            resolvePromise =
+                new Promise((resolve, reject) => {
+
+                    let completed = false;
+
+                    const callbackName =
+                        "__treehouseClientConfigCallback";
+
+                    const script =
+                        document.createElement("script");
+
+                    const timeoutId =
+                        window.setTimeout(() => {
+
+                            finishError(
+                                "Waktu pengambilan konfigurasi pelanggan habis."
+                            );
+
+                        }, 15000);
+
+
+                    /* ==============================
+                       CLEANUP
+                    ============================== */
+
+                    function cleanup() {
+
+                        window.clearTimeout(
+                            timeoutId
+                        );
+
+                        delete window[
+                            callbackName
+                        ];
+
+                        if (
+                            script.parentNode
+                        ) {
+
+                            script.parentNode.removeChild(
+                                script
+                            );
+
+                        }
+
+                    }
+
+
+                    /* ==============================
+                       HANDLE FAILURE
+                    ============================== */
+
+                    function finishError(message) {
+
+                        if (completed) {
+                            return;
+                        }
+
+                        completed = true;
 
                         cleanup();
 
-                        this.ERROR =
-                            "Waktu pengambilan konfigurasi pelanggan habis.";
+                        API_CONFIG.SCRIPT_URL = "";
 
-                        reject(new Error(this.ERROR));
+                        API_CONFIG.STORE_NAME = "";
 
-                    }, 15000);
+                        API_CONFIG.READY = false;
 
-                const script =
-                    document.createElement("script");
+                        API_CONFIG.ERROR = message;
 
-                let completed = false;
+                        resolvePromise = null;
 
-                function cleanup() {
-
-                    if (completed) {
-                        return;
-                    }
-
-                    completed = true;
-
-                    window.clearTimeout(timeoutId);
-
-                    delete window[callbackName];
-
-                    if (script.parentNode) {
-                        script.parentNode.removeChild(script);
-                    }
-
-                }
-
-                window[callbackName] = (result) => {
-
-                    cleanup();
-
-                    if (
-                        !result ||
-                        result.success !== true ||
-                        !result.scriptUrl
-                    ) {
-
-                        API_CONFIG.ERROR =
-                            result && result.message
-                                ? result.message
-                                : "Konfigurasi pelanggan tidak valid.";
-
-                        reject(new Error(API_CONFIG.ERROR));
-
-                        return;
+                        reject(
+                            new Error(message)
+                        );
 
                     }
 
-                    API_CONFIG.SCRIPT_URL =
-                        result.scriptUrl;
 
-                    API_CONFIG.STORE_NAME =
-                        result.storeName || "";
+                    /* ==============================
+                       JSONP CALLBACK
+                    ============================== */
 
-                    API_CONFIG.CLIENT_ID =
-                        result.clientId || clientId;
+                    window[callbackName] = function (result) {
 
-                    API_CONFIG.READY = true;
+                        if (completed) {
+                            return;
+                        }
 
-                    API_CONFIG.ERROR = null;
+                        if (
+                            !result ||
+                            result.success !== true ||
+                            !result.scriptUrl
+                        ) {
 
-                    resolve(API_CONFIG);
+                            finishError(
+                                result && result.message
+                                    ? result.message
+                                    : "Konfigurasi pelanggan tidak valid."
+                            );
 
-                };
+                            return;
 
-                script.async = true;
+                        }
 
-                script.onerror = () => {
+                        const scriptUrl =
+                            String(
+                                result.scriptUrl
+                            ).trim();
 
-                    cleanup();
+                        if (
+                            !/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/
+                                .test(scriptUrl)
+                        ) {
 
-                    API_CONFIG.ERROR =
-                        "Gagal menghubungi API konfigurasi pelanggan.";
+                            finishError(
+                                "URL Web App pelanggan tidak valid."
+                            );
 
-                    reject(new Error(API_CONFIG.ERROR));
+                            return;
 
-                };
+                        }
 
-                script.src =
-                    CENTRAL_API_URL +
-                    "?action=resolveClient" +
-                    "&client=" +
-                    encodeURIComponent(clientId) +
-                    "&callback=" +
-                    encodeURIComponent(callbackName);
+                        completed = true;
 
-                document.head.appendChild(script);
+                        cleanup();
 
-            });
+                        API_CONFIG.SCRIPT_URL =
+                            scriptUrl;
+
+                        API_CONFIG.STORE_NAME =
+                            String(
+                                result.storeName || ""
+                            ).trim();
+
+                        API_CONFIG.CLIENT_ID =
+                            String(
+                                result.clientId ||
+                                clientId
+                            ).trim();
+
+                        API_CONFIG.READY = true;
+
+                        API_CONFIG.ERROR = null;
+
+                        resolvePromise = null;
+
+                        resolve(
+                            API_CONFIG
+                        );
+
+                    };
+
+
+                    /* ==============================
+                       JSONP SCRIPT
+                    ============================== */
+
+                    script.async = true;
+
+                    script.onerror = function () {
+
+                        finishError(
+                            "Gagal menghubungi API konfigurasi pelanggan."
+                        );
+
+                    };
+
+                    script.src =
+                        CENTRAL_API_URL +
+                        "?action=resolveClient" +
+                        "&client=" +
+                        encodeURIComponent(
+                            API_CONFIG.CLIENT_ID
+                        ) +
+                        "&callback=" +
+                        encodeURIComponent(
+                            callbackName
+                        );
+
+                    document.head.appendChild(
+                        script
+                    );
+
+                });
 
             return resolvePromise;
 
@@ -161,6 +284,13 @@
 
     };
 
-    window.API_CONFIG = API_CONFIG;
+
+    /* ======================================
+       EXPOSE GLOBAL CONFIGURATION
+    ====================================== */
+
+    window.API_CONFIG =
+        API_CONFIG;
+
 
 })(window, document);
