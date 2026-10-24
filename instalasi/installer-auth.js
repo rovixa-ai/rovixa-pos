@@ -5,234 +5,249 @@ INSTALLER GOOGLE AUTHENTICATION
 
 Object.assign(Installer, {
 
+    loadGoogleIdentity() {
 
-loadGoogleIdentity() {
+        if (
+            window.google &&
+            google.accounts &&
+            google.accounts.oauth2
+        ) {
+            this.initializeTokenClient();
+            return;
+        }
 
-    if (
-        window.google &&
-        google.accounts &&
-        google.accounts.oauth2
-    ) {
-        this.initializeTokenClient();
-        return;
-    }
+        const existingScript =
+            document.querySelector(
+                'script[src="https://accounts.google.com/gsi/client"]'
+            );
 
-    const existingScript =
-        document.querySelector(
-            'script[src="https://accounts.google.com/gsi/client"]'
-        );
+        if (existingScript) {
 
-    if (existingScript) {
+            existingScript.addEventListener(
+                "load",
+                () => this.initializeTokenClient(),
+                { once: true }
+            );
 
-        existingScript.addEventListener(
-            "load",
-            () => this.initializeTokenClient(),
-            { once: true }
-        );
+            existingScript.addEventListener(
+                "error",
+                () => {
+                    this.setStatus(
+                        "Google Identity Services gagal dimuat.",
+                        "error"
+                    );
+                },
+                { once: true }
+            );
 
-        existingScript.addEventListener(
-            "error",
-            () => {
-                this.setStatus(
-                    "Google Identity Services gagal dimuat.",
-                    "error"
-                );
-            },
-            { once: true }
-        );
+            return;
+        }
 
-        return;
-    }
+        const script =
+            document.createElement("script");
 
-    const script =
-        document.createElement("script");
+        script.src =
+            "https://accounts.google.com/gsi/client";
 
-    script.src =
-        "https://accounts.google.com/gsi/client";
+        script.async = true;
+        script.defer = true;
 
-    script.async = true;
-    script.defer = true;
+        script.onload = () => {
+            this.initializeTokenClient();
+        };
 
-    script.onload = () => {
-        this.initializeTokenClient();
-    };
+        script.onerror = () => {
+            this.setStatus(
+                "Google Identity Services gagal dimuat.",
+                "error"
+            );
+        };
 
-    script.onerror = () => {
-
-        this.setStatus(
-            "Google Identity Services gagal dimuat.",
-            "error"
-        );
-
-    };
-
-    document.head.appendChild(script);
-},
+        document.head.appendChild(script);
+    },
 
 
-initializeTokenClient() {
+    initializeTokenClient() {
 
-    if (
-        !window.google ||
-        !google.accounts ||
-        !google.accounts.oauth2
-    ) {
+        if (
+            !window.google ||
+            !google.accounts ||
+            !google.accounts.oauth2
+        ) {
+            this.setStatus(
+                "Layanan autentikasi Google belum tersedia.",
+                "error"
+            );
+            return;
+        }
 
-        this.setStatus(
-            "Layanan autentikasi Google belum tersedia.",
-            "error"
-        );
+        this.tokenClient =
+            google.accounts.oauth2.initTokenClient({
 
-        return;
-    }
+                client_id:
+                    INSTALLER_CONFIG.CLIENT_ID,
 
-    this.tokenClient =
-        google.accounts.oauth2.initTokenClient({
+                scope:
+                    INSTALLER_CONFIG.OAUTH_SCOPES,
 
-            client_id:
-                INSTALLER_CONFIG.CLIENT_ID,
+                callback: async (response) => {
 
-            scope:
-                INSTALLER_CONFIG.OAUTH_SCOPES,
+                    const purpose =
+                        this.oauthPurpose;
 
-            callback: async (response) => {
+                    if (
+                        !response ||
+                        response.error ||
+                        !response.access_token
+                    ) {
 
-                const purpose =
-                    this.oauthPurpose;
+                        this.oauthPurpose = "";
+                        this.setBusy(false);
 
-                if (
-                    !response ||
-                    response.error ||
-                    !response.access_token
-                ) {
+                        this.setStatus(
+                            "Otorisasi Google gagal: " +
+                            (
+                                response?.error_description ||
+                                response?.error ||
+                                "Token akses tidak diperoleh."
+                            ),
+                            "error"
+                        );
+
+                        return;
+                    }
+
+                    this.accessToken =
+                        response.access_token;
 
                     this.oauthPurpose = "";
 
-                    this.setBusy(false);
+                    try {
 
-                    if (purpose === "verify-webapp") {
+                        /*
+                         * VERIFIKASI WEB APP
+                         *
+                         * Meminta persetujuan Google dan
+                         * membuka Web App yang sudah ada.
+                         *
+                         * Tidak membuat database baru
+                         * dan tidak melakukan deployment ulang.
+                         */
 
-                        if (
-                            this.verificationWindow &&
-                            !this.verificationWindow.closed
-                        ) {
-                            this.verificationWindow.close();
-                        }
+                        if (purpose === "verify-webapp") {
 
-                        this.verificationWindow = null;
-                    }
+                            this.setBusy(false);
 
-                    this.setStatus(
-                        "Otorisasi Google gagal: " +
-                        (
-                            response?.error_description ||
-                            response?.error ||
-                            "Token akses tidak diperoleh."
-                        ),
-                        "error"
-                    );
+                            if (!this.webAppUrl) {
 
-                    return;
-                }
+                                this.setStatus(
+                                    "URL Web App tidak tersedia. Deployment yang sudah ada tidak diubah.",
+                                    "error"
+                                );
 
-                this.accessToken =
-                    response.access_token;
+                                return;
+                            }
 
-                this.oauthPurpose = "";
-
-                try {
-
-                    /*
-                     * VERIFIKASI WEB APP
-                     *
-                     * Tidak menjalankan instalasi ulang,
-                     * pembuatan database, atau deployment.
-                     *
-                     * Web App dibuka melalui tombol manual
-                     * agar tidak bergantung pada popup kedua.
-                     */
-
-                    if (purpose === "verify-webapp") {
-
-                        this.setBusy(false);
-
-                        if (!this.webAppUrl) {
+                            /*
+                             * Token OAuth sudah diterima.
+                             * Google akan menampilkan halaman
+                             * persetujuan apabila masih diperlukan.
+                             *
+                             * Setelah callback berhasil,
+                             * tampilkan tombol untuk membuka Web App.
+                             */
 
                             this.setStatus(
-                                "URL Web App tidak tersedia. Deployment yang sudah ada tidak diubah.",
-                                "error"
+                                "Otorisasi Google berhasil. Tekan Buka Web App untuk melanjutkan.",
+                                "success"
                             );
+
+                            const content =
+                                this.showActionPanel(
+                                    "Verifikasi Google berhasil",
+                                    "Akses instalasi yang sudah ada. Tidak ada database atau deployment baru yang dibuat."
+                                );
+
+                            if (content) {
+
+                                const openButton =
+                                    this.createActionButton(
+                                        "Buka Web App",
+                                        () => {
+
+                                            if (!this.webAppUrl) {
+
+                                                this.setStatus(
+                                                    "URL Web App tidak tersedia.",
+                                                    "error"
+                                                );
+
+                                                return;
+                                            }
+
+                                            window.open(
+                                                this.webAppUrl,
+                                                "_blank",
+                                                "noopener,noreferrer"
+                                            );
+
+                                        }
+                                    );
+
+                                content.appendChild(
+                                    openButton
+                                );
+                            }
 
                             return;
                         }
 
-                        this.setStatus(
-                            "Akun Google berhasil dipilih. Tekan Buka Web App untuk melanjutkan.",
-                            "success"
-                        );
 
-                        const status =
-                            document.getElementById(
-                                "installer-status"
-                            );
+                        if (purpose === "verify-api") {
 
-                        if (status) {
-
-                            const openButton =
-                                this.createActionButton(
-                                    "Buka Web App",
-                                    () => {
-
-                                        if (!this.webAppUrl) {
-
-                                            this.setStatus(
-                                                "URL Web App tidak tersedia.",
-                                                "error"
-                                            );
-
-                                            return;
-                                        }
-
-                                        window.open(
-                                            this.webAppUrl,
-                                            "_blank",
-                                            "noopener,noreferrer"
-                                        );
-
-                                    }
-                                );
-
-                            openButton.style.display =
-                                "block";
-
-                            openButton.style.marginTop =
-                                "16px";
-
-                            status.appendChild(
-                                openButton
-                            );
+                            await this.verifyAppsScriptApi();
+                            return;
                         }
 
-                        return;
-                    }
 
+                        if (purpose === "install") {
 
-                    if (purpose === "verify-api") {
+                            if (this.spreadsheetId) {
 
-                        await this.verifyAppsScriptApi();
+                                if (!this.scriptId) {
+                                    await this.createBoundScriptFromTemplate();
+                                }
 
-                        return;
-                    }
+                                if (this.scriptId) {
 
+                                    await this.runDeployment();
 
-                    if (purpose === "install") {
+                                } else {
 
-                        if (this.spreadsheetId) {
+                                    throw new Error(
+                                        "Apps Script belum siap. Database yang sudah dibuat tidak akan dibuat ulang."
+                                    );
+                                }
 
-                            if (!this.scriptId) {
+                                return;
+                            }
 
+                            await this.installStoreDatabase();
+
+                        } else if (purpose === "deploy") {
+
+                            if (!this.spreadsheetId) {
+
+                                throw new Error(
+                                    "Spreadsheet belum tersedia. Periksa status instalasi sebelum mencoba kembali."
+                                );
+                            }
+
+                            if (
+                                !this.scriptId &&
+                                this.databaseReadyForScript
+                            ) {
                                 await this.createBoundScriptFromTemplate();
-
                             }
 
                             if (this.scriptId) {
@@ -242,335 +257,313 @@ initializeTokenClient() {
                             } else {
 
                                 throw new Error(
-                                    "Apps Script belum siap. Database yang sudah dibuat tidak akan dibuat ulang."
+                                    "Apps Script belum siap. Silakan periksa pengaturan API lalu ulangi langkah ini."
                                 );
-
                             }
+
+                        } else {
+
+                            this.setBusy(false);
+
+                            this.setStatus(
+                                "Tujuan otorisasi tidak ditemukan. Silakan ulangi langkah terakhir.",
+                                "error"
+                            );
+                        }
+
+                    } catch (error) {
+
+                        this.setBusy(false);
+
+                        if (
+                            error.service === "apps-script" ||
+                            this.waitingForAppsScriptSettings
+                        ) {
+
+                            this.showAppsScriptSettingsStep(
+                                error.message ||
+                                "Google Apps Script API belum dapat digunakan."
+                            );
 
                             return;
                         }
 
-                        await this.installStoreDatabase();
-
-                    } else if (purpose === "deploy") {
-
-                        if (!this.spreadsheetId) {
-
-                            throw new Error(
-                                "Spreadsheet belum tersedia. Periksa status instalasi sebelum mencoba kembali."
-                            );
-
-                        }
-
-                        if (
-                            !this.scriptId &&
-                            this.databaseReadyForScript
-                        ) {
-
-                            await this.createBoundScriptFromTemplate();
-
-                        }
-
-                        if (this.scriptId) {
-
-                            await this.runDeployment();
-
-                        } else {
-
-                            throw new Error(
-                                "Apps Script belum siap. Silakan periksa pengaturan API lalu ulangi langkah ini."
-                            );
-
-                        }
-
-                    } else {
-
-                        this.setBusy(false);
-
                         this.setStatus(
-                            "Tujuan otorisasi tidak ditemukan. Silakan ulangi langkah terakhir.",
+                            error.message ||
+                            "Instalasi gagal.",
                             "error"
                         );
-
                     }
-
-                } catch (error) {
-
-                    this.setBusy(false);
-
-                    if (purpose === "verify-webapp") {
-
-                        if (
-                            this.verificationWindow &&
-                            !this.verificationWindow.closed
-                        ) {
-                            this.verificationWindow.close();
-                        }
-
-                        this.verificationWindow = null;
-                    }
-
-                    if (
-                        error.service === "apps-script" ||
-                        this.waitingForAppsScriptSettings
-                    ) {
-
-                        this.showAppsScriptSettingsStep(
-                            error.message ||
-                            "Google Apps Script API belum dapat digunakan."
-                        );
-
-                        return;
-                    }
-
-                    this.setStatus(
-                        error.message ||
-                        "Instalasi gagal.",
-                        "error"
-                    );
-
                 }
-
-            }
-
-        });
-},
+            });
+    },
 
 
-startInstallation() {
+    openGoogleVerification() {
 
-    if (this.busy) {
-        return;
-    }
+        if (!this.webAppUrl) {
 
-    const nameInput =
-        document.getElementById("store-name");
-
-    const storeName =
-        nameInput?.value?.trim();
-
-    if (!storeName) {
-
-        this.setStatus(
-            "Nama toko wajib diisi.",
-            "error"
-        );
-
-        nameInput?.focus();
-
-        return;
-    }
-
-    if (!this.tokenClient) {
-
-        this.setStatus(
-            "Layanan Google belum siap. Coba kembali.",
-            "error"
-        );
-
-        return;
-    }
-
-    this.storeName = storeName;
-
-    /*
-     * TAHAP PERTAMA:
-     * Tampilkan pengaturan Apps Script terlebih dahulu.
-     * Jangan membuat spreadsheet pada tahap ini.
-     */
-
-    this.waitingForAppsScriptSettings = true;
-
-    this.showAppsScriptSettingsStep(
-        "Sebelum membuat database, periksa pengaturan Google Apps Script API terlebih dahulu. Aktifkan jika diperlukan, lalu kembali ke installer dan lanjutkan."
-    );
-
-},
-
-
-async verifyAppsScriptApi() {
-
-    this.setStatus(
-        "Memeriksa akses Google Apps Script API...",
-        "loading"
-    );
-
-    const templateScriptId =
-        INSTALLER_CONFIG.TEMPLATE_SCRIPT_ID;
-
-    if (!templateScriptId) {
-
-        throw new Error(
-            "TEMPLATE_SCRIPT_ID belum dikonfigurasi."
-        );
-
-    }
-
-    let response;
-
-    try {
-
-        response = await fetch(
-            INSTALLER_CONFIG.SCRIPT_API +
-            "/projects/" +
-            encodeURIComponent(
-                templateScriptId
-            ) +
-            "/content",
-            {
-                method: "GET",
-                headers: {
-                    Authorization:
-                        "Bearer " + this.accessToken
-                }
-            }
-        );
-
-    } catch (error) {
-
-        throw new Error(
-            "Tidak dapat menghubungi Google Apps Script API. Periksa koneksi internet dan konfigurasi API."
-        );
-
-    }
-
-    if (!response.ok) {
-
-        let details = {};
-
-        try {
-            details = await response.json();
-        } catch (error) {
-            details = {};
-        }
-
-        const apiMessage =
-            details.error?.message || "";
-
-        const status =
-            response.status;
-
-        const error = new Error(
-            status === 403
-                ? "Akses Apps Script API ditolak. Pastikan API aktif dan akun Google memiliki izin mengakses project template. " + apiMessage
-                : status === 404
-                    ? "Project Apps Script template tidak ditemukan atau akun tidak memiliki akses."
-                    : "Pemeriksaan Apps Script API gagal (HTTP " +
-                      status +
-                      "). " +
-                      apiMessage
-        );
-
-        error.service = "apps-script";
-        error.status = status;
-
-        throw error;
-
-    }
-
-    const result =
-        await response.json();
-
-    if (!result.files?.length) {
-
-        const error = new Error(
-            "File pada project Apps Script template tidak ditemukan."
-        );
-
-        error.service = "apps-script";
-
-        throw error;
-
-    }
-
-    this.waitingForAppsScriptSettings = false;
-
-    this.setStatus(
-        "Akses Apps Script API berhasil diverifikasi.",
-        "success"
-    );
-
-    if (!this.spreadsheetId) {
-
-        await this.installStoreDatabase();
-
-        return;
-
-    }
-
-    if (!this.scriptId) {
-
-        if (this.databaseReadyForScript) {
-
-            await this.createBoundScriptFromTemplate();
-
-        } else {
-
-            throw new Error(
-                "Spreadsheet sudah dibuat tetapi proses penyalinan database belum selesai. Jangan membuat spreadsheet baru."
+            this.setStatus(
+                "URL Web App tidak tersedia. Periksa hasil deployment.",
+                "error"
             );
 
+            return;
         }
 
-    }
+        if (!this.tokenClient) {
 
-    await this.runDeployment();
+            this.setStatus(
+                "Layanan autentikasi Google belum siap. Muat ulang installer lalu coba kembali.",
+                "error"
+            );
 
-},
+            return;
+        }
 
+        if (this.busy) {
+            return;
+        }
 
-continueAfterAppsScriptSettings() {
-
-    if (this.busy) {
-        return;
-    }
-
-    const nameInput =
-        document.getElementById("store-name");
-
-    const storeName =
-        nameInput?.value?.trim() ||
-        this.storeName ||
-        "";
-
-    if (!storeName) {
+        this.oauthPurpose = "verify-webapp";
+        this.setBusy(true);
 
         this.setStatus(
-            "Nama toko wajib diisi.",
-            "error"
+            "Membuka pemilihan akun dan persetujuan izin Google...",
+            "loading"
         );
 
-        nameInput?.focus();
+        try {
 
-        return;
-    }
+            this.tokenClient.requestAccessToken({
+                prompt: "consent select_account"
+            });
 
-    if (!this.tokenClient) {
+        } catch (error) {
+
+            this.oauthPurpose = "";
+            this.setBusy(false);
+
+            this.setStatus(
+                error.message ||
+                "Popup Google gagal dibuka. Izinkan popup untuk situs installer.",
+                "error"
+            );
+        }
+    },
+
+
+    startInstallation() {
+
+        if (this.busy) {
+            return;
+        }
+
+        const nameInput =
+            document.getElementById("store-name");
+
+        const storeName =
+            nameInput?.value?.trim();
+
+        if (!storeName) {
+
+            this.setStatus(
+                "Nama toko wajib diisi.",
+                "error"
+            );
+
+            nameInput?.focus();
+            return;
+        }
+
+        if (!this.tokenClient) {
+
+            this.setStatus(
+                "Layanan Google belum siap. Coba kembali.",
+                "error"
+            );
+
+            return;
+        }
+
+        this.storeName = storeName;
+
+        this.waitingForAppsScriptSettings = true;
+
+        this.showAppsScriptSettingsStep(
+            "Sebelum membuat database, periksa pengaturan Google Apps Script API terlebih dahulu. Aktifkan jika diperlukan, lalu kembali ke installer dan lanjutkan."
+        );
+    },
+
+
+    async verifyAppsScriptApi() {
 
         this.setStatus(
-            "Layanan Google belum siap. Coba kembali.",
-            "error"
+            "Memeriksa akses Google Apps Script API...",
+            "loading"
         );
 
-        return;
+        const templateScriptId =
+            INSTALLER_CONFIG.TEMPLATE_SCRIPT_ID;
+
+        if (!templateScriptId) {
+
+            throw new Error(
+                "TEMPLATE_SCRIPT_ID belum dikonfigurasi."
+            );
+        }
+
+        let response;
+
+        try {
+
+            response = await fetch(
+                INSTALLER_CONFIG.SCRIPT_API +
+                "/projects/" +
+                encodeURIComponent(templateScriptId) +
+                "/content",
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization:
+                            "Bearer " + this.accessToken
+                    }
+                }
+            );
+
+        } catch (error) {
+
+            throw new Error(
+                "Tidak dapat menghubungi Google Apps Script API. Periksa koneksi internet dan konfigurasi API."
+            );
+        }
+
+        if (!response.ok) {
+
+            let details = {};
+
+            try {
+                details = await response.json();
+            } catch (error) {
+                details = {};
+            }
+
+            const apiMessage =
+                details.error?.message || "";
+
+            const status =
+                response.status;
+
+            const error = new Error(
+                status === 403
+                    ? "Akses Apps Script API ditolak. Pastikan API aktif dan akun Google memiliki izin mengakses project template. " + apiMessage
+                    : status === 404
+                        ? "Project Apps Script template tidak ditemukan atau akun tidak memiliki akses."
+                        : "Pemeriksaan Apps Script API gagal (HTTP " +
+                          status +
+                          "). " +
+                          apiMessage
+            );
+
+            error.service = "apps-script";
+            error.status = status;
+
+            throw error;
+        }
+
+        const result =
+            await response.json();
+
+        if (!result.files?.length) {
+
+            const error = new Error(
+                "File pada project Apps Script template tidak ditemukan."
+            );
+
+            error.service = "apps-script";
+
+            throw error;
+        }
+
+        this.waitingForAppsScriptSettings = false;
+
+        this.setStatus(
+            "Akses Apps Script API berhasil diverifikasi.",
+            "success"
+        );
+
+        if (!this.spreadsheetId) {
+
+            await this.installStoreDatabase();
+            return;
+        }
+
+        if (!this.scriptId) {
+
+            if (this.databaseReadyForScript) {
+
+                await this.createBoundScriptFromTemplate();
+
+            } else {
+
+                throw new Error(
+                    "Spreadsheet sudah dibuat tetapi proses penyalinan database belum selesai. Jangan membuat spreadsheet baru."
+                );
+            }
+        }
+
+        await this.runDeployment();
+    },
+
+
+    continueAfterAppsScriptSettings() {
+
+        if (this.busy) {
+            return;
+        }
+
+        const nameInput =
+            document.getElementById("store-name");
+
+        const storeName =
+            nameInput?.value?.trim() ||
+            this.storeName ||
+            "";
+
+        if (!storeName) {
+
+            this.setStatus(
+                "Nama toko wajib diisi.",
+                "error"
+            );
+
+            nameInput?.focus();
+            return;
+        }
+
+        if (!this.tokenClient) {
+
+            this.setStatus(
+                "Layanan Google belum siap. Coba kembali.",
+                "error"
+            );
+
+            return;
+        }
+
+        this.storeName = storeName;
+        this.oauthPurpose = "verify-api";
+
+        this.setBusy(true);
+
+        this.setStatus(
+            "Meminta izin Google untuk memeriksa Apps Script API...",
+            "loading"
+        );
+
+        this.tokenClient.requestAccessToken({
+            prompt: "consent select_account"
+        });
     }
-
-    this.storeName = storeName;
-
-    this.oauthPurpose = "verify-api";
-
-    this.setBusy(true);
-
-    this.setStatus(
-        "Meminta izin Google untuk memeriksa Apps Script API...",
-        "loading"
-    );
-
-    this.tokenClient.requestAccessToken({
-        prompt: "consent select_account"
-    });
-
-}
-
 
 });

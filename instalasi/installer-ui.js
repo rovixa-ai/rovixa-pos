@@ -396,10 +396,10 @@ Object.assign(Installer, {
 
 
     /* ======================================
-       OPEN GOOGLE VERIFICATION
-    ====================================== */
+   GOOGLE VERIFICATION
+====================================== */
 
-    async openGoogleVerification() {
+openGoogleVerification() {
 
     if (!this.webAppUrl) {
         this.setStatus(
@@ -425,13 +425,13 @@ Object.assign(Installer, {
     this.setBusy(true);
 
     this.setStatus(
-        "Pilih akun Google yang digunakan saat deployment.",
+        "Membuka pemilihan akun dan persetujuan izin Google...",
         "loading"
     );
 
     try {
         this.tokenClient.requestAccessToken({
-            prompt: "select_account"
+            prompt: "consent select_account"
         });
     } catch (error) {
         this.oauthPurpose = "";
@@ -439,50 +439,51 @@ Object.assign(Installer, {
 
         this.setStatus(
             error.message ||
-            "Popup Google gagal dibuka. Izinkan popup untuk situs installer, lalu coba kembali.",
+            "Popup Google gagal dibuka. Izinkan popup untuk situs installer.",
             "error"
         );
     }
 },
 
 
-    /* ======================================
-       SUCCESS
-    ====================================== */
+/* ======================================
+   SUCCESS
+====================================== */
 
-    showSuccess() {
+showSuccess() {
 
-        this.updateInstallationProgress(
-            4,
-            "Instalasi selesai"
-        );
+    this.updateInstallationProgress(
+        4,
+        "Instalasi selesai"
+    );
 
-        this.setStatus(
-            "Database toko, Apps Script, dan deployment Web App berhasil disiapkan.",
-            "success"
-        );
+    this.setStatus(
+        "Database toko, Apps Script, dan deployment Web App berhasil disiapkan.",
+        "success"
+    );
 
-        this.hideActionPanel();
+    this.hideActionPanel();
 
-        const status =
-            document.getElementById(
-                "installer-status"
-            );
+    const status =
+        document.getElementById("installer-status");
 
-        if (!status) {
-            return;
-        }
-
-        const verifyButton =
-            this.createActionButton(
-                "Verifikasi Google",
-                () => this.openGoogleVerification()
-            );
-
-        verifyButton.style.display = "block";
-        verifyButton.style.marginTop = "16px";
-
-        status.appendChild(verifyButton);
+    if (!status) {
+        return;
     }
+
+    const verifyButton =
+        this.createActionButton(
+            "Verifikasi Google",
+            () => this.openGoogleVerification()
+        );
+
+    verifyButton.style.display = "block";
+    verifyButton.style.marginTop = "16px";
+
+    status.appendChild(verifyButton);
+},
+
+
+    
 
 });
