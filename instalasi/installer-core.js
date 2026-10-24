@@ -162,7 +162,70 @@ const Installer = {
     },
 
 
+    /* ======================================
+       STATUS
+    ====================================== */
+
     setStatus(message, type = "info") {
+
+        if (
+            typeof this.updateStatusPanel === "function"
+        ) {
+
+            const titleMap = {
+                info: "Informasi instalasi",
+                loading: "Sedang memproses instalasi",
+                error: "Proses memerlukan perhatian",
+                success: "Proses berhasil"
+            };
+
+            const badgeMap = {
+                info: "Informasi",
+                loading: "Memproses",
+                error: "Perlu tindakan",
+                success: "Berhasil"
+            };
+
+            this.updateStatusPanel(
+                titleMap[type] || titleMap.info,
+                badgeMap[type] || badgeMap.info,
+                type
+            );
+
+            const status =
+                document.getElementById(
+                    "installer-status"
+                );
+
+            if (status) {
+
+                status.replaceChildren();
+
+                const paragraph =
+                    document.createElement("p");
+
+                paragraph.textContent =
+                    message || "";
+
+                status.appendChild(paragraph);
+
+                status.classList.add("visible");
+                status.classList.remove(
+                    "error",
+                    "success"
+                );
+
+                if (type === "error") {
+                    status.classList.add("error");
+                }
+
+                if (type === "success") {
+                    status.classList.add("success");
+                }
+            }
+
+            return;
+        }
 
         const status =
             document.getElementById(
@@ -174,13 +237,24 @@ const Installer = {
         }
 
         status.className =
-            "installer-status installer-status-" +
-            type;
+            "status visible";
+
+        if (type === "error") {
+            status.classList.add("error");
+        }
+
+        if (type === "success") {
+            status.classList.add("success");
+        }
 
         status.textContent =
-            message;
+            message || "";
     },
 
+
+    /* ======================================
+       BUSY STATE
+    ====================================== */
 
     setBusy(busy) {
 
@@ -191,28 +265,61 @@ const Installer = {
                 "install-button"
             );
 
-        if (!button) {
-            return;
+        if (button) {
+
+            button.disabled = busy;
+
+            if (busy) {
+
+                if (!button.dataset.previousText) {
+                    button.dataset.previousText =
+                        button.textContent.trim();
+                }
+
+                button.textContent =
+                    "Memproses...";
+
+            } else {
+
+                button.textContent =
+                    button.dataset.previousText ||
+                    "Hubungkan Google & Mulai Instalasi";
+
+            }
         }
 
-        button.disabled = busy;
+        const form =
+            document.getElementById(
+                "installer-form"
+            );
 
-        if (busy) {
+        const storeNameInput =
+            document.getElementById(
+                "store-name"
+            );
 
-            if (!button.dataset.previousText) {
-                button.dataset.previousText =
-                    button.textContent;
-            }
+        if (storeNameInput) {
+            storeNameInput.disabled =
+                busy || this.databaseReadyForScript;
+        }
 
-            button.textContent =
-                "Memproses...";
+        if (form) {
+            form.setAttribute(
+                "aria-busy",
+                String(busy)
+            );
+        }
 
-        } else {
+        const actionPanel =
+            document.getElementById(
+                "installer-action-panel"
+            );
 
-            button.textContent =
-                button.dataset.previousText ||
-                "Instal Rovixa POS";
-
+        if (actionPanel) {
+            actionPanel.setAttribute(
+                "aria-busy",
+                String(busy)
+            );
         }
     }
 
