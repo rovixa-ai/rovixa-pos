@@ -113,22 +113,51 @@ const App = {
                 "Mengunduh data pengguna..."
             );
 
-            const userResult =
-                await DownloadUsers.download();
+            let userDownloadError = null;
 
-            if (
-                !userResult ||
-                userResult.success !== true
-            ) {
+            if (navigator.onLine) {
+                try {
+                    const userResult =
+                        await DownloadUsers.download();
 
-                throw new Error(
-                    userResult?.message ||
-                    "Download data pengguna gagal."
-                );
-
+                    if (
+                        !userResult ||
+                        userResult.success !== true
+                    ) {
+                        userDownloadError =
+                            new Error(
+                                userResult?.message ||
+                                "Download data pengguna gagal."
+                            );
+                    }
+                } catch (err) {
+                    userDownloadError = err;
+                }
+            } else {
+                userDownloadError =
+                    new Error(
+                        "Perangkat dalam kondisi offline."
+                    );
             }
 
-            
+            if (userDownloadError) {
+                console.warn(
+                    "Download data pengguna dilewati / offline:",
+                    userDownloadError.message || userDownloadError
+                );
+
+                const localUsers =
+                    await LocalDB.getAll("users");
+
+                if (
+                    !Array.isArray(localUsers) ||
+                    !localUsers.length
+                ) {
+                    throw new Error(
+                        "Koneksi internet diperlukan untuk mengunduh akun pengguna pada penggunaan pertama kali."
+                    );
+                }
+            }
 
             /* ==================================
                PERSIAPAN APLIKASI SEBELUM LOGIN
@@ -760,25 +789,59 @@ const App = {
 
         }
 
-        this.updateLoading(
-            "Mengunduh database penjualan..."
-        );
+        const isYearReady =
+            typeof LocalDB !== "undefined" &&
+            typeof LocalDB.isYearDownloaded === "function"
+                ? await LocalDB.isYearDownloaded(currentYear)
+                : false;
 
-        const downloadResult =
-            await Download.download(
-                currentYear
-            );
+        let downloadError = null;
 
-        if (
-            !downloadResult ||
-            downloadResult.success !== true
-        ) {
+        if (navigator.onLine) {
+            try {
+                this.updateLoading(
+                    "Mengunduh database penjualan..."
+                );
 
-            throw new Error(
-                downloadResult?.message ||
-                "Download database penjualan gagal."
-            );
+                const downloadResult =
+                    await Download.download(
+                        currentYear
+                    );
 
+                if (
+                    !downloadResult ||
+                    downloadResult.success !== true
+                ) {
+                    downloadError =
+                        new Error(
+                            downloadResult?.message ||
+                            "Download database penjualan gagal."
+                        );
+                }
+            } catch (err) {
+                downloadError = err;
+            }
+        } else {
+            downloadError =
+                new Error(
+                    "Perangkat dalam kondisi offline."
+                );
+        }
+
+        if (downloadError) {
+            if (isYearReady) {
+                console.warn(
+                    "Download database penjualan dilewati / offline, menggunakan database lokal tahun " +
+                    currentYear + ":",
+                    downloadError.message || downloadError
+                );
+            } else {
+                throw new Error(
+                    "Database penjualan tahun " +
+                    currentYear +
+                    " belum tersedia di perangkat. Diperlukan koneksi internet untuk mengunduh data awal tahun ini."
+                );
+            }
         }
 
         

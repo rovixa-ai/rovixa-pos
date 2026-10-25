@@ -6,6 +6,9 @@
 const StoreConfig = {
 
 
+    STORAGE_KEY:
+        "TREEHOUSE_POS_STORE_CONFIG",
+
     config: {},
 
 
@@ -20,14 +23,23 @@ const StoreConfig = {
             const result =
                 await API.bootstrap();
 
-
             this.config =
-                result.storeConfig ||
+                result?.storeConfig ||
                 {};
 
-
-            
-
+            try {
+                localStorage.setItem(
+                    this.STORAGE_KEY,
+                    JSON.stringify(
+                        this.config
+                    )
+                );
+            } catch (storageError) {
+                console.warn(
+                    "STORE CONFIG CACHE SAVE WARNING:",
+                    storageError
+                );
+            }
 
             return this.config;
 
@@ -35,17 +47,34 @@ const StoreConfig = {
 
         catch (error) {
 
-            console.error(
-                "STORE CONFIG LOAD ERROR:",
+            console.warn(
+                "STORE CONFIG LOAD FAILED, TRYING CACHE:",
                 error
             );
 
+            try {
+                const cached =
+                    localStorage.getItem(
+                        this.STORAGE_KEY
+                    );
+
+                if (cached) {
+                    this.config =
+                        JSON.parse(cached) || {};
+
+                    return this.config;
+                }
+            } catch (cacheError) {
+                console.warn(
+                    "STORE CONFIG CACHE READ WARNING:",
+                    cacheError
+                );
+            }
 
             this.config =
                 {};
 
-
-            throw error;
+            return this.config;
 
         }
 
