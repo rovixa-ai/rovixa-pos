@@ -5,13 +5,52 @@
 
 Object.assign(Sync, {
 
+    generatePembelianID() {
+
+        const now = new Date();
+
+        const year =
+            String(now.getFullYear()).slice(-2);
+
+        const month =
+            String(now.getMonth() + 1).padStart(2, "0");
+
+        const day =
+            String(now.getDate()).padStart(2, "0");
+
+        const hours =
+            String(now.getHours()).padStart(2, "0");
+
+        const minutes =
+            String(now.getMinutes()).padStart(2, "0");
+
+        const seconds =
+            String(now.getSeconds()).padStart(2, "0");
+
+        const random =
+            String(
+                Math.floor(Math.random() * 1000)
+            ).padStart(3, "0");
+
+        return (
+            "PB-" +
+            year +
+            month +
+            day +
+            "-" +
+            hours +
+            minutes +
+            seconds +
+            "-" +
+            random
+        );
+    },
+
+
     async addPembelian(data, options = {}) {
 
         const id =
-            "LOCAL-PB-" +
-            Date.now() +
-            "-" +
-            Math.random().toString(36).slice(2, 7);
+            this.generatePembelianID();
 
         const year =
             PembelianDatabaseConfig.getActiveYear();
@@ -107,16 +146,12 @@ Object.assign(Sync, {
         );
 
         /*
-         * Perilaku lama tetap berlaku untuk pemanggil lain.
-         * Pemanggil yang meminta deferProcess mengatur sinkronisasi
-         * setelah persiapan master selesai.
+         * Perilaku pemanggil lain tetap dipertahankan.
          */
 
         if (!options.deferProcess) {
             this.autoProcess();
         }
-
-        
 
         return pembelian;
     },
@@ -174,7 +209,10 @@ Object.assign(Sync, {
                     { year }
                 );
 
-            if (!resolveResult || !resolveResult.success) {
+            if (
+                !resolveResult ||
+                !resolveResult.success
+            ) {
                 throw new Error(
                     resolveResult?.message ||
                     "Database pembelian tidak dapat ditentukan."
@@ -205,11 +243,15 @@ Object.assign(Sync, {
         const oldItems =
             allDetails
                 .filter(item => {
+
                     const reference =
                         item.pembelianId ||
                         item.transaksiId;
 
-                    return String(reference) === String(id);
+                    return (
+                        String(reference) ===
+                        String(id)
+                    );
                 })
                 .map(item => ({ ...item }));
 
@@ -244,6 +286,7 @@ Object.assign(Sync, {
         let queue;
 
         if (existingQueue) {
+
             queue = {
                 ...existingQueue,
                 status: options.deferProcess
@@ -253,7 +296,9 @@ Object.assign(Sync, {
                 lastError: null,
                 createdAt: new Date().toISOString()
             };
+
         } else {
+
             queue = {
                 id:
                     "SYNC-PB-EDIT-" +
@@ -281,8 +326,6 @@ Object.assign(Sync, {
             this.autoProcess();
         }
 
-        
-
         return updatedPembelian;
     },
 
@@ -302,42 +345,152 @@ Object.assign(Sync, {
         }
 
         /*
-         * Simpan ID server setelah API berhasil agar retry
-         * tidak membuat transaksi server baru berulang kali.
+         * ID transaksi dibuat di frontend.
+         * ID yang sama digunakan untuk database lokal,
+         * server, detail pembelian, dan pembayaran.
+         *
+         * Tidak menggunakan ID baru dari server.
+         * Tidak memindahkan atau mengganti ID transaksi.
          */
-        let serverId = pembelian.serverId || null;
 
-        if (!serverId) {
+        const transactionId =
+            String(pembelian.id || "").trim();
 
-            const result =
-                await API.savePembelian(pembelian);
-
-            if (!result || !result.success) {
-                throw new Error(
-                    result?.message ||
-                    "Gagal menyimpan pembelian ke server."
-                );
-            }
-
-            serverId = result.id;
-
-            if (!serverId) {
-                throw new Error(
-                    "Server tidak mengembalikan ID pembelian."
-                );
-            }
-
-            pembelian.serverId = serverId;
-
-            if (result.status) {
-                pembelian.status = result.status;
-            }
-
-            await DB.put(
-                "pembelian",
-                pembelian
+        if (
+            !/^PB-\d{6}-\d{6}-\d{3}$/.test(transactionId)
+        ) {
+            throw new Error(
+                "Format ID pembelian tidak valid: " +
+                transactionId
             );
         }
+
+        if (
+            String(queue.referenceId) !==
+            transactionId
+        ) {
+            throw new Error(
+                "ID antrean tidak sesuai dengan ID pembelian."
+            );
+        }
+
+        /*
+         * Simpan ke server menggunakan ID transaksi yang sama.
+         * Endpoint server harus idempoten terhadap ID ini.
+         */
+
+        const result =
+            await API.savePembelian({
+                ...pembelian,
+                id: transactionId
+            });
+
+        if (!result || !result.success) {
+            throw new Error(
+                result?.message ||
+                "Gagal menyimpan pembelian ke server."
+            );
+        }
+
+        /*
+         * Pertahankan status yang dikembalikan server
+         * jika tersedia, tanpa mengganti ID transaksi.
+         */
+
+        if (result.status) {
+            pembelian.status = result.status;
+        }
+
+        /*
+         * JANGAN MENAMBAH STOK LOKAL SECARA MANUAL.
+         *
+         * Stok sudah diperbarui oleh server melalui
+         * updateStokPembelian(). Jika proses berikutnya gagal
+         * lalu antrean diulang, penambahan stok lokal manual
+         * dapat menggandakan stok.
+         *
+         * Ambil stok terbaru dari server dan hanya perbarui
+         * field stok pada barang lokal.
+         */
+
+        const bootstrapResult =
+            await API.getBootstrap();
+
+        if (
+            !bootstrapResult ||
+            bootstrapResult.success !== true
+        ) {
+            throw new Error(
+                bootstrapResult?.message ||
+                "Pembelian tersimpan di server, tetapi stok terbaru gagal diambil."
+            );
+        }
+
+        const barangServer =
+            Array.isArray(
+                bootstrapResult.data?.barang
+            )
+                ? bootstrapResult.data.barang
+                : [];
+
+        if (!barangServer.length) {
+            throw new Error(
+                "Pembelian tersimpan di server, tetapi data master Barang dari server kosong."
+            );
+        }
+
+        for (const dataServer of barangServer) {
+
+            if (!dataServer.kode) {
+                continue;
+            }
+
+            const stokServer =
+                Number(dataServer.stok);
+
+            if (!Number.isFinite(stokServer)) {
+                continue;
+            }
+
+            const barangLokal =
+                await DB.get(
+                    "barang",
+                    dataServer.kode
+                );
+
+            if (!barangLokal) {
+                continue;
+            }
+
+            if (
+                Number(barangLokal.stok || 0) !==
+                stokServer
+            ) {
+
+                barangLokal.stok =
+                    stokServer;
+
+                await DB.put(
+                    "barang",
+                    barangLokal
+                );
+            }
+        }
+
+        /*
+         * Tandai stok telah diselaraskan dari server.
+         * Tidak melakukan operasi tambah stok di IndexedDB.
+         */
+
+        pembelian.stockUpdated = true;
+
+        pembelian.stockUpdatedAt =
+            new Date().toISOString();
+
+        await DB.put(
+            "pembelian",
+            pembelian
+        );
 
         const items =
             Array.isArray(pembelian.items)
@@ -345,101 +498,47 @@ Object.assign(Sync, {
                 : [];
 
         /*
-         * Perbarui stok hanya sekali.
-         * Flag disimpan sebelum melanjutkan ke detail dan pembayaran
-         * agar kegagalan di tahap berikutnya tidak menggandakan stok.
+         * Detail menggunakan ID transaksi yang sama.
+         * Gunakan ID detail deterministik agar percobaan ulang
+         * menulis record yang sama, bukan membuat duplikat.
          */
-        if (!pembelian.stockUpdated) {
 
-            for (
-                let index = 0;
-                index < items.length;
-                index++
-            ) {
+        const detailStore =
+            "detailPembelian";
 
-                const item = items[index];
-
-                const kode = item.barang;
-
-                if (!kode) continue;
-
-                const barang =
-                    await DB.get("barang", kode);
-
-                if (!barang) {
-                    console.warn(
-                        "BARANG TIDAK DITEMUKAN:",
-                        kode
-                    );
-                    continue;
-                }
-
-                const allSatuan =
-                    await DB.getAll("satuan");
-
-                const satuan =
-                    allSatuan.find(row =>
-                        String(row.kode) === String(kode) &&
-                        String(row.satuan).toLowerCase() ===
-                            String(item.satuan).toLowerCase()
-                    );
-
-                const isi =
-                    Number(satuan?.isi || 1);
-
-                const qty =
-                    Number(item.qty || 0);
-
-                const jumlahStok =
-                    qty * isi;
-
-                barang.stok =
-                    Number(barang.stok || 0) +
-                    jumlahStok;
-
-                await DB.put(
-                    "barang",
-                    barang
-                );
-
-                
-            }
-
-            pembelian.stockUpdated = true;
-            pembelian.stockUpdatedAt =
-                new Date().toISOString();
-
-            await DB.put(
-                "pembelian",
-                pembelian
-            );
-        }
-
-        /*
-         * Pertahankan ID lokal sampai seluruh proses selesai.
-         * Jangan hapus transaksi lokal sebelum detail dan pembayaran
-         * berhasil disimpan.
-         */
         const oldDetail =
-            await DB.getAll("detailPembelian");
+            await DB.getAll(detailStore);
 
         const oldDetails =
             oldDetail.filter(item => {
+
                 const reference =
                     item.pembelianId ||
                     item.transaksiId;
 
                 return (
-                    String(reference) === String(serverId) ||
-                    String(reference) === String(pembelian.id)
+                    String(reference) === transactionId
                 );
             });
 
-        for (const item of oldDetails) {
-            await DB.delete(
-                "detailPembelian",
-                item.id
+        const expectedDetailIds =
+            new Set(
+                items.map((item, index) =>
+                    transactionId +
+                    "-DETAIL-" +
+                    (index + 1)
+                )
             );
+
+        for (const item of oldDetails) {
+
+            if (!expectedDetailIds.has(String(item.id))) {
+
+                await DB.delete(
+                    detailStore,
+                    item.id
+                );
+            }
         }
 
         for (
@@ -452,11 +551,12 @@ Object.assign(Sync, {
 
             const detail = {
                 id:
-                    serverId +
+                    transactionId +
                     "-DETAIL-" +
                     (index + 1),
-                pembelianId: serverId,
-                transaksiId: serverId,
+
+                pembelianId: transactionId,
+                transaksiId: transactionId,
                 kode: item.barang || "",
                 nama: item.namaBarang || "",
                 satuan: item.satuan || "",
@@ -469,15 +569,17 @@ Object.assign(Sync, {
             };
 
             await DB.put(
-                "detailPembelian",
+                detailStore,
                 detail
             );
         }
 
         /*
-         * Nama object store yang benar adalah pembayaranPembelian,
-         * bukan pembayaran.
+         * Nama object store yang benar adalah pembayaranPembelian.
+         * Gunakan ID pembayaran deterministik agar proses ulang
+         * tidak menggandakan pembayaran.
          */
+
         const paymentStore =
             "pembayaranPembelian";
 
@@ -486,27 +588,40 @@ Object.assign(Sync, {
 
         const oldPaymentList =
             oldPayments.filter(item => {
+
                 const reference =
                     item.pembelianId ||
                     item.transaksiId;
 
                 return (
-                    String(reference) === String(serverId) ||
-                    String(reference) === String(pembelian.id)
+                    String(reference) === transactionId
                 );
             });
-
-        for (const item of oldPaymentList) {
-            await DB.delete(
-                paymentStore,
-                item.id
-            );
-        }
 
         const payments =
             Array.isArray(pembelian.payments)
                 ? pembelian.payments
                 : [];
+
+        const expectedPaymentIds =
+            new Set(
+                payments.map((payment, index) =>
+                    transactionId +
+                    "-PAYMENT-" +
+                    (index + 1)
+                )
+            );
+
+        for (const item of oldPaymentList) {
+
+            if (!expectedPaymentIds.has(String(item.id))) {
+
+                await DB.delete(
+                    paymentStore,
+                    item.id
+                );
+            }
+        }
 
         for (
             let index = 0;
@@ -518,11 +633,12 @@ Object.assign(Sync, {
 
             const paymentData = {
                 id:
-                    serverId +
+                    transactionId +
                     "-PAYMENT-" +
                     (index + 1),
-                pembelianId: serverId,
-                transaksiId: serverId,
+
+                pembelianId: transactionId,
+                transaksiId: transactionId,
                 metode: payment.metode || "Cash",
                 nominal: Number(payment.nominal || 0),
                 kembalian: Number(payment.kembalian || 0)
@@ -535,16 +651,16 @@ Object.assign(Sync, {
         }
 
         /*
-         * Migrasikan ID lokal ke ID server setelah semua langkah
-         * di atas berhasil.
+         * Simpan status transaksi.
+         * ID tetap sama sebelum dan sesudah sinkronisasi.
          */
-        const localId = pembelian.id;
 
-        pembelian.id = serverId;
-        pembelian.serverId = serverId;
+        pembelian.id = transactionId;
+        pembelian.serverId = transactionId;
         pembelian.syncStatus = "synced";
         pembelian.syncedAt = new Date().toISOString();
         pembelian.stockUpdated = true;
+
         pembelian.stockUpdatedAt =
             pembelian.stockUpdatedAt ||
             new Date().toISOString();
@@ -554,29 +670,21 @@ Object.assign(Sync, {
             pembelian
         );
 
-        if (String(localId) !== String(serverId)) {
-            await DB.delete(
-                "pembelian",
-                localId
-            );
-        }
-
         /*
-         * Perbarui referensi antrean agar tetap menunjuk ke transaksi
-         * yang sudah menggunakan ID server.
+         * Referensi antrean tetap menggunakan ID yang sama.
+         * Tidak ada migrasi ID atau penghapusan transaksi lokal.
          */
-        queue.referenceId = serverId;
+
+        queue.referenceId = transactionId;
 
         await DB.put(
             "syncQueue",
             queue
         );
 
-        
-
         return {
             success: true,
-            id: serverId,
+            id: transactionId,
             status: pembelian.status
         };
     },
@@ -646,8 +754,6 @@ Object.assign(Sync, {
                 );
             }
 
-            let jumlahDiperbarui = 0;
-
             for (const dataServer of barangServer) {
 
                 if (!dataServer.kode) {
@@ -676,9 +782,6 @@ Object.assign(Sync, {
                     stokServer
                 ) {
 
-                    const stokSebelumnya =
-                        barangLokal.stok;
-
                     barangLokal.stok =
                         stokServer;
 
@@ -686,21 +789,14 @@ Object.assign(Sync, {
                         "barang",
                         barangLokal
                     );
-
-                    jumlahDiperbarui++;
-
-                    
                 }
             }
-
-            
 
         } catch (stockError) {
 
             /*
              * Kegagalan memperbarui cache stok tidak membatalkan
              * pembelian yang sudah berhasil disimpan di server.
-             * Pesan error dicatat agar dapat diperiksa.
              */
 
             console.error(
@@ -725,8 +821,6 @@ Object.assign(Sync, {
             "pembelian",
             pembelian
         );
-
-        
 
         return result;
     }
