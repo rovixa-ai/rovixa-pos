@@ -1,123 +1,124 @@
 const StoreConfigEvent = {
 
-    event() {
+logoEventsBound: false,
 
-        const saveButton =
-            document.getElementById(
-                "storeConfigSave"
-            );
+event() {
 
-
-        if (saveButton) {
-
-            saveButton.addEventListener(
-                "click",
-                () => StoreConfig.save()
-            );
-
-        }
+    const saveButton =
+        document.getElementById(
+            "storeConfigSave"
+        );
 
 
-        const nameInput =
-            document.getElementById(
-                "storeConfigName"
-            );
+    if (saveButton) {
 
-
-        if (nameInput) {
-
-            nameInput.addEventListener(
-                "keydown",
-                event => {
-
-                    if (
-                        event.key === "Enter"
-                    ) {
-
-                        event.preventDefault();
-
-                        StoreConfig.save();
-
-                    }
-
-                }
-            );
-
-        }
-
-
-        const logoSource =
-            document.getElementById(
-                "storeConfigLogoSource"
-            );
-
-
-        if (logoSource) {
-
-            logoSource.addEventListener(
-                "change",
-                () =>
-                    StoreConfig.logoSourceChanged()
-            );
-
-        }
-
-
-        const logoFile =
-            document.getElementById(
-                "storeConfigLogoFile"
-            );
-
-
-        if (logoFile) {
-
-            logoFile.addEventListener(
-                "change",
-                event =>
-                    StoreConfig.logoFileChanged(
-                        event
-                    )
-            );
-
-        }
-
-
-        const logoDrive =
-            document.getElementById(
-                "storeConfigLogoDrive"
-            );
-
-
-        if (logoDrive) {
-
-            logoDrive.addEventListener(
-                "input",
-                () =>
-                    StoreConfig.logoSourceChanged()
-            );
-
-        }
-
-
-        const logoUrl =
-            document.getElementById(
-                "storeConfigLogoUrl"
-            );
-
-
-        if (logoUrl) {
-
-            logoUrl.addEventListener(
-                "input",
-                () =>
-                    StoreConfig.logoSourceChanged()
-            );
-
-        }
-
-
-        StoreConfig.initAccordion();
+        saveButton.addEventListener(
+            "click",
+            () => StoreConfig.save()
+        );
 
     }
+
+
+    const nameInput =
+        document.getElementById(
+            "storeConfigName"
+        );
+
+
+    if (nameInput) {
+
+        nameInput.addEventListener(
+            "keydown",
+            event => {
+
+                if (
+                    event.key === "Enter"
+                ) {
+
+                    event.preventDefault();
+
+                    StoreConfig.save();
+
+                }
+
+            }
+        );
+
+    }
+
+
+    // ======================================
+    // LOGO EVENTS
+    // Mendukung elemen yang dirender dinamis
+    // ======================================
+
+    if (!this.logoEventsBound) {
+
+        document.addEventListener(
+            "change",
+            event => {
+
+                const target =
+                    event.target;
+
+
+                if (
+                    target.matches(
+                        "#storeConfigLogoSource"
+                    )
+                ) {
+
+                    StoreConfig.logoSourceChanged();
+
+                }
+
+
+                if (
+                    target.matches(
+                        "#storeConfigLogoFile"
+                    )
+                ) {
+
+                    StoreConfig.logoFileChanged(
+                        event
+                    );
+
+                }
+
+            }
+        );
+
+
+        document.addEventListener(
+            "input",
+            event => {
+
+                const target =
+                    event.target;
+
+
+                if (
+                    target.matches(
+                        "#storeConfigLogoDrive, #storeConfigLogoUrl"
+                    )
+                ) {
+
+                    StoreConfig.logoSourceChanged();
+
+                }
+
+            }
+        );
+
+
+        this.logoEventsBound = true;
+
+    }
+
+
+    StoreConfig.initAccordion();
+
+}
 
 };

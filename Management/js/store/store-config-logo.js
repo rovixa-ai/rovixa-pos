@@ -36,25 +36,26 @@ const StoreConfigLogo = {
                 "storeConfigLogoFile"
             );
 
-        if (drive) {
-            drive.closest(".config-field")?.classList.toggle(
-                "is-hidden",
-                value !== "drive"
-            );
-        }
+        this.setFieldVisibility(
+            "storeConfigLogoDriveField",
+            value === "drive"
+        );
 
-        if (url) {
-            url.closest(".config-field")?.classList.toggle(
-                "is-hidden",
-                value !== "url"
-            );
-        }
+        this.setFieldVisibility(
+            "storeConfigLogoUrlField",
+            value === "url"
+        );
 
-        if (file) {
-            file.closest(".config-field")?.classList.toggle(
-                "is-hidden",
-                value !== "upload"
-            );
+        this.setFieldVisibility(
+            "storeConfigLogoUploadField",
+            value === "upload"
+        );
+
+        if (value === "none" || !value) {
+
+            this.hideLogoPreview();
+            return;
+
         }
 
         if (value === "drive") {
@@ -109,6 +110,20 @@ const StoreConfigLogo = {
             return;
         }
 
+        if (
+            !file.type ||
+            !file.type.startsWith("image/")
+        ) {
+
+            StoreConfig.message(
+                "File logo harus berupa gambar.",
+                "error"
+            );
+
+            return;
+
+        }
+
         try {
 
             const value =
@@ -141,6 +156,7 @@ const StoreConfigLogo = {
             (resolve, reject) => {
 
                 if (!file) {
+
                     reject(
                         new Error(
                             "File logo tidak ditemukan."
@@ -148,30 +164,29 @@ const StoreConfigLogo = {
                     );
 
                     return;
+
                 }
 
                 const reader =
                     new FileReader();
 
-                reader.onload =
-                    event => {
+                reader.onload = event => {
 
-                        resolve(
-                            event.target.result
-                        );
+                    resolve(
+                        event.target.result
+                    );
 
-                    };
+                };
 
-                reader.onerror =
-                    () => {
+                reader.onerror = () => {
 
-                        reject(
-                            new Error(
-                                "Gagal membaca file logo."
-                            )
-                        );
+                    reject(
+                        new Error(
+                            "Gagal membaca file logo."
+                        )
+                    );
 
-                    };
+                };
 
                 reader.readAsDataURL(file);
 
@@ -203,8 +218,8 @@ const StoreConfigLogo = {
 
         const logoSource =
             String(
-                config.LOGO_SOURCE ||
-                config.logoSource ||
+                config.LOGO_SOURCE ??
+                config.logoSource ??
                 ""
             )
                 .trim()
@@ -212,22 +227,22 @@ const StoreConfigLogo = {
 
         const logoDrive =
             String(
-                config.LOGO_DRIVE ||
-                config.logoDrive ||
+                config.LOGO_DRIVE ??
+                config.logoDrive ??
                 ""
             ).trim();
 
         const logoUrl =
             String(
-                config.LOGO_URL ||
-                config.logoUrl ||
+                config.LOGO_URL ??
+                config.logoUrl ??
                 ""
             ).trim();
 
         const logoValue =
             String(
-                config.LOGO ||
-                config.logo ||
+                config.LOGO ??
+                config.logo ??
                 ""
             ).trim();
 
@@ -246,27 +261,35 @@ const StoreConfigLogo = {
             url.value = logoUrl;
         }
 
-        StoreConfig.logoValue =
-            logoValue;
+        StoreConfig.logoValue = logoValue;
 
         this.logoSourceChanged();
 
-        if (logoValue) {
+        const selectedSource =
+            String(
+                source?.value || "url"
+            )
+                .trim()
+                .toLowerCase();
+
+        if (selectedSource === "none") {
+
+            this.hideLogoPreview();
+
+        } else if (selectedSource === "upload") {
+
+            this.previewLogo(logoValue);
+
+        } else if (selectedSource === "drive") {
 
             this.previewLogo(
-                logoValue
+                logoDrive || logoValue
             );
 
-        } else if (logoSource === "drive") {
+        } else if (selectedSource === "url") {
 
             this.previewLogo(
-                logoDrive
-            );
-
-        } else if (logoSource === "url") {
-
-            this.previewLogo(
-                logoUrl
+                logoUrl || logoValue
             );
 
         } else {
@@ -274,6 +297,26 @@ const StoreConfigLogo = {
             this.hideLogoPreview();
 
         }
+
+    },
+
+
+    setFieldVisibility(id, visible) {
+
+        const field =
+            document.getElementById(id);
+
+        if (!field) {
+            return;
+        }
+
+        field.style.display =
+            visible ? "" : "none";
+
+        field.classList.toggle(
+            "is-hidden",
+            !visible
+        );
 
     },
 
@@ -290,28 +333,23 @@ const StoreConfigLogo = {
     getGoogleDriveFileId(url) {
 
         const value =
-            String(url || "")
-                .trim();
+            String(url || "").trim();
 
-        const match =
-            value.match(
-                /file\/d\/([a-zA-Z0-9_-]+)/
-            );
+        const patterns = [
+            /\/file\/d\/([a-zA-Z0-9_-]+)/,
+            /\/d\/([a-zA-Z0-9_-]+)/,
+            /[?&]id=([a-zA-Z0-9_-]+)/
+        ];
 
-        if (match && match[1]) {
-            return match[1];
-        }
+        for (const pattern of patterns) {
 
-        const queryMatch =
-            value.match(
-                /[?&]id=([a-zA-Z0-9_-]+)/
-            );
+            const match =
+                value.match(pattern);
 
-        if (
-            queryMatch &&
-            queryMatch[1]
-        ) {
-            return queryMatch[1];
+            if (match && match[1]) {
+                return match[1];
+            }
+
         }
 
         return "";
@@ -322,43 +360,33 @@ const StoreConfigLogo = {
     getLogoImageUrl(value) {
 
         const url =
-            String(value || "")
-                .trim();
+            String(value || "").trim();
 
         if (!url) {
             return "";
         }
 
-        if (
-            this.isGoogleDriveUrl(url)
-        ) {
+        if (this.isGoogleDriveUrl(url)) {
 
             const fileId =
-                this.getGoogleDriveFileId(
-                    url
-                );
+                this.getGoogleDriveFileId(url);
 
             if (!fileId) {
                 return "";
             }
 
             return (
-                "https://drive.google.com/uc" +
-                "?export=view&id=" +
+                "https://drive.google.com/uc?export=view&id=" +
                 encodeURIComponent(fileId)
             );
 
         }
 
-        if (
-            /^https?:\/\//i.test(url)
-        ) {
+        if (/^https?:\/\//i.test(url)) {
             return url;
         }
 
-        if (
-            url.startsWith("data:image/")
-        ) {
+        if (url.startsWith("data:image/")) {
             return url;
         }
 
@@ -384,22 +412,28 @@ const StoreConfigLogo = {
         if (!imageUrl) {
 
             this.hideLogoPreview();
-
             return;
 
         }
 
-        preview.innerHTML = `
-            <img
-                src="${StoreConfig.escapeHtml(imageUrl)}"
-                alt="Logo Toko"
-                style="
-                    width:100%;
-                    height:100%;
-                    object-fit:contain;
-                "
-            />
-        `;
+        this.setFieldVisibility(
+            "storeConfigLogoPreviewField",
+            true
+        );
+
+        preview.innerHTML = "";
+
+        const image =
+            document.createElement("img");
+
+        image.src = imageUrl;
+        image.alt = "Logo Toko";
+
+        image.style.width = "100%";
+        image.style.height = "100%";
+        image.style.objectFit = "contain";
+
+        preview.appendChild(image);
 
     },
 
@@ -411,11 +445,14 @@ const StoreConfigLogo = {
                 "storeConfigLogoPreview"
             );
 
-        if (!preview) {
-            return;
+        if (preview) {
+            preview.innerHTML = "";
         }
 
-        preview.innerHTML = "";
+        this.setFieldVisibility(
+            "storeConfigLogoPreviewField",
+            false
+        );
 
     }
 
