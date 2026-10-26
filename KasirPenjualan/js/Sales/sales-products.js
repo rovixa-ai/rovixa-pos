@@ -19,7 +19,6 @@ Object.assign(
                     "LOAD PRODUCTS"
                 );
 
-
                 /* ==============================
                    AMBIL DATA DARI INDEXEDDB
                 ============================== */
@@ -29,15 +28,10 @@ Object.assign(
                         "barang"
                     );
 
-
                 const satuan =
-    await LocalDB.getAll(
-        "satuanBarang"
-    );
-
-
-
-
+                    await LocalDB.getAll(
+                        "satuanBarang"
+                    );
 
                 /* ==============================
                    MAP SATUAN BERDASARKAN KODE
@@ -45,7 +39,6 @@ Object.assign(
 
                 const satuanMap =
                     new Map();
-
 
                 satuan.forEach(
                     unit => {
@@ -55,11 +48,9 @@ Object.assign(
                                 unit.kode || ""
                             ).trim();
 
-
                         if (!kode) {
                             return;
                         }
-
 
                         if (
                             !satuanMap.has(kode)
@@ -72,7 +63,6 @@ Object.assign(
 
                         }
 
-
                         satuanMap
                             .get(kode)
                             .push(unit);
@@ -80,9 +70,9 @@ Object.assign(
                     }
                 );
 
-
                 /* ==============================
                    GABUNGKAN BARANG + SATUAN
+                   URUTKAN ISI TERKECIL
                 ============================== */
 
                 this.products =
@@ -94,12 +84,64 @@ Object.assign(
                                     product.kode || ""
                                 ).trim();
 
+                            const units =
+                                [
+                                    ...(
+                                        satuanMap.get(
+                                            kode
+                                        ) || []
+                                    )
+                                ].sort(
+                                    (a, b) => {
+
+                                        const isiA =
+                                            Number(
+                                                a.isi
+                                            );
+
+                                        const isiB =
+                                            Number(
+                                                b.isi
+                                            );
+
+                                        const validA =
+                                            Number.isFinite(
+                                                isiA
+                                            );
+
+                                        const validB =
+                                            Number.isFinite(
+                                                isiB
+                                            );
+
+                                        if (
+                                            validA &&
+                                            validB
+                                        ) {
+
+                                            return (
+                                                isiA - isiB
+                                            );
+
+                                        }
+
+                                        if (validA) {
+                                            return -1;
+                                        }
+
+                                        if (validB) {
+                                            return 1;
+                                        }
+
+                                        return 0;
+
+                                    }
+                                );
 
                             return {
 
                                 kode:
                                     kode,
-
 
                                 /* ======================
                                    SESUAI getBootstrap()
@@ -108,49 +150,36 @@ Object.assign(
                                 barcode:
                                     product.barcode || "",
 
-
                                 nama:
                                     product.nama || "",
-
 
                                 kategori:
                                     product.kategori || "",
 
-
                                 satuanDasar:
                                     product.satuanDasar || "",
-
 
                                 stok:
                                     Number(
                                         product.stok
                                     ) || 0,
 
-
                                 status:
                                     product.status || "",
 
-
                                 satuan:
-                                    satuanMap.get(
-                                        kode
-                                    ) || []
+                                    units
 
                             };
 
                         }
                     );
 
-
-               
-
-
                 /* ==================================
                    RENDER
                 ================================== */
 
                 this.renderProducts();
-
 
                 console.timeEnd(
                     "LOAD PRODUCTS"
@@ -165,17 +194,14 @@ Object.assign(
                     error
                 );
 
-
                 const container =
                     document.getElementById(
                         "productList"
                     );
 
-
                 if (!container) {
                     return;
                 }
-
 
                 container.innerHTML = `
 
@@ -217,12 +243,10 @@ Object.assign(
                     "productList"
                 );
 
-
             const count =
                 document.getElementById(
                     "productCount"
                 );
-
 
             if (
                 !container ||
@@ -233,10 +257,8 @@ Object.assign(
 
             }
 
-
             count.textContent =
                 `${products.length} barang`;
-
 
             if (!products.length) {
 
@@ -254,7 +276,6 @@ Object.assign(
 
             }
 
-
             container.innerHTML =
                 products
                     .map(
@@ -266,7 +287,6 @@ Object.assign(
                                 )
                                     ? product.satuan[0]
                                     : null;
-
 
                             /* ==========================
                                TANPA SATUAN
@@ -287,13 +307,11 @@ Object.assign(
                                             ${product.nama}
                                         </div>
 
-
                                         <div
                                             class="product-code"
                                         >
                                             ${product.kode}
                                         </div>
-
 
                                         <div
                                             class="product-bottom"
@@ -304,7 +322,6 @@ Object.assign(
                                             >
                                                 Harga belum tersedia
                                             </span>
-
 
                                             <span
                                                 class="product-stock"
@@ -321,7 +338,6 @@ Object.assign(
                                 `;
 
                             }
-
 
                             /* ==========================
                                NORMAL
@@ -340,13 +356,11 @@ Object.assign(
                                         ${product.nama}
                                     </div>
 
-
                                     <div
                                         class="product-code"
                                     >
                                         ${product.kode}
                                     </div>
-
 
                                     <div
                                         class="product-bottom"
@@ -361,7 +375,6 @@ Object.assign(
                                                 ) || 0
                                             )}
                                         </span>
-
 
                                         <span
                                             class="product-stock"
