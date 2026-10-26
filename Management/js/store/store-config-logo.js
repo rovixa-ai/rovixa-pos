@@ -152,48 +152,174 @@ const StoreConfigLogo = {
 
     readImageFile(file) {
 
-        return new Promise(
-            (resolve, reject) => {
+    return new Promise((resolve, reject) => {
 
-                if (!file) {
+        if (!file) {
+            reject(
+                new Error("File logo tidak ditemukan.")
+            );
+            return;
+        }
 
-                    reject(
-                        new Error(
-                            "File logo tidak ditemukan."
-                        )
+        const reader = new FileReader();
+
+        reader.onerror = () => {
+            reject(
+                new Error("Gagal membaca file logo.")
+            );
+        };
+
+        reader.onload = event => {
+
+            const image = new Image();
+
+            image.onerror = () => {
+                reject(
+                    new Error("Gagal memproses gambar logo.")
+                );
+            };
+
+            image.onload = () => {
+
+                try {
+
+                    const canvas =
+                        document.createElement("canvas");
+
+                    // Batasi dimensi logo agar Base64 lebih kecil.
+                    const maxWidth = 300;
+                    const maxHeight = 300;
+
+                    const scale = Math.min(
+                        maxWidth / image.width,
+                        maxHeight / image.height,
+                        1
                     );
 
-                    return;
+                    canvas.width = Math.max(
+                        1,
+                        Math.round(image.width * scale)
+                    );
+
+                    canvas.height = Math.max(
+                        1,
+                        Math.round(image.height * scale)
+                    );
+
+                    const context =
+                        canvas.getContext("2d");
+
+                    if (!context) {
+                        reject(
+                            new Error(
+                                "Gagal memproses gambar logo."
+                            )
+                        );
+                        return;
+                    }
+
+                    context.drawImage(
+                        image,
+                        0,
+                        0,
+                        canvas.width,
+                        canvas.height
+                    );
+
+                    // JPEG umumnya lebih kecil daripada PNG.
+                    // Gunakan kualitas bertahap sampai di bawah
+                    // batas aman Google Sheets.
+                    const maxCharacters = 45000;
+                    const qualities = [
+                        0.85,
+                        0.70,
+                        0.55,
+                        0.40,
+                        0.25
+                    ];
+
+                    let result = "";
+
+                    for (const quality of qualities) {
+
+                        result = canvas.toDataURL(
+                            "image/jpeg",
+                            quality
+                        );
+
+                        if (
+                            result.length <= maxCharacters
+                        ) {
+                            break;
+                        }
+
+                    }
+
+                    // Jika masih terlalu besar, kecilkan dimensi
+                    // secara bertahap sambil mempertahankan rasio.
+                    while (
+                        result.length > maxCharacters &&
+                        canvas.width > 64 &&
+                        canvas.height > 64
+                    ) {
+
+                        canvas.width = Math.max(
+                            64,
+                            Math.round(canvas.width * 0.75)
+                        );
+
+                        canvas.height = Math.max(
+                            64,
+                            Math.round(canvas.height * 0.75)
+                        );
+
+                        context.drawImage(
+                            image,
+                            0,
+                            0,
+                            canvas.width,
+                            canvas.height
+                        );
+
+                        result = canvas.toDataURL(
+                            "image/jpeg",
+                            0.25
+                        );
+
+                    }
+
+                    if (
+                        !result ||
+                        result.length > maxCharacters
+                    ) {
+                        reject(
+                            new Error(
+                                "Ukuran logo masih terlalu besar. " +
+                                "Silakan gunakan gambar yang lebih kecil."
+                            )
+                        );
+                        return;
+                    }
+
+                    resolve(result);
+
+                } catch (error) {
+
+                    reject(error);
 
                 }
 
-                const reader =
-                    new FileReader();
+            };
 
-                reader.onload = event => {
+            image.src = event.target.result;
 
-                    resolve(
-                        event.target.result
-                    );
+        };
 
-                };
+        reader.readAsDataURL(file);
 
-                reader.onerror = () => {
+    });
 
-                    reject(
-                        new Error(
-                            "Gagal membaca file logo."
-                        )
-                    );
-
-                };
-
-                reader.readAsDataURL(file);
-
-            }
-        );
-
-    },
+},
 
 
     loadLogo() {
