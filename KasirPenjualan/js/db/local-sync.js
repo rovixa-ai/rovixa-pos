@@ -2,7 +2,7 @@
    TREEHOUSE POS
    LOCAL SYNC
    GOOGLE SHEETS → INDEXEDDB
-   ====================================== */
+====================================== */
 
 const LocalSync = {
 
@@ -17,303 +17,479 @@ const LocalSync = {
 
     initOnlineListener() {
 
-        if (
-            this.onlineListenerInitialized
-        ) {
-
+        if (this.onlineListenerInitialized) {
             return;
-
         }
 
-
-        this.onlineListenerInitialized =
-            true;
-
+        this.onlineListenerInitialized = true;
 
         window.addEventListener(
             "online",
             async () => {
 
-               
-
-                if (
-                    this.syncing
-                ) {
-
-                   
-
+                if (this.syncing) {
                     return;
-
                 }
-
 
                 await new Promise(
-                    resolve =>
-                        setTimeout(
-                            resolve,
-                            1000
-                        )
+                    resolve => setTimeout(resolve, 1000)
                 );
 
-
-                if (
-                    !navigator.onLine
-                ) {
-
-                   
-
+                if (!navigator.onLine) {
                     return;
-
                 }
-
 
                 try {
 
-                    this.syncing =
-                        true;
+                    this.syncing = true;
 
+                    await this.syncPendingTransactions();
 
-                   
-
-
-                    const result =
-                        await this
-                            .syncPendingTransactions();
-
-
-                    
-
-
-                    if (
-                        result &&
-                        result.success &&
-                        (
-                            result.synced > 0 ||
-                            result.returnSynced > 0
-                        )
-                    ) {
-
-                       
-
-                    }
-
-                }
-
-                catch (error) {
+                } catch (error) {
 
                     console.error(
                         "LOCAL SYNC AUTO ERROR:",
                         error
                     );
 
-                }
+                } finally {
 
-                finally {
-
-                    this.syncing =
-                        false;
+                    this.syncing = false;
 
                 }
 
             }
         );
 
-
-       
-
     },
 
 
     /* ======================================
        SYNC PRODUCTS
+       GOOGLE SHEETS → INDEXEDDB
+
+       PERLINDUNGAN STOK LOKAL:
+       - Transaksi belum tersinkron tidak kehilangan
+         pengurangan stok lokal.
+       - Retur yang belum tersinkron tidak kehilangan
+         perubahan stok lokal.
+       - Informasi master barang tetap diperbarui
+         dari server.
     ====================================== */
 
-    /* ======================================
-   SYNC PRODUCTS
-   GOOGLE SHEETS → INDEXEDDB
+    async syncProducts() {
 
-   DOWNLOAD ULANG DATA DARI SERVER
-====================================== */
+        try {
 
-async syncProducts() {
+            if (!navigator.onLine) {
 
-    
+                throw new Error(
+                    "Tidak ada koneksi internet."
+                );
 
-    try {
+            }
 
-        if (!navigator.onLine) {
+            if (
+                typeof API === "undefined" ||
+                typeof API.get !== "function"
+            ) {
 
-            throw new Error(
-                "Tidak ada koneksi internet."
+                throw new Error(
+                    "API tidak tersedia."
+                );
+
+            }
+
+            if (
+                typeof LocalDB === "undefined" ||
+                typeof LocalDB.putAll !== "function" ||
+                typeof LocalDB.getAll !== "function"
+            ) {
+
+                throw new Error(
+                    "LocalDB tidak tersedia."
+                );
+
+            }
+
+
+            /* ======================================
+               DOWNLOAD DATA TERBARU DARI SERVER
+            ====================================== */
+
+            const response =
+                await API.get("bootstrap");
+
+            if (
+                !response ||
+                response.success !== true
+            ) {
+
+                throw new Error(
+                    response?.message ||
+                    "Gagal mengunduh data dari spreadsheet."
+                );
+
+            }
+
+            const data =
+                response.data || {};
+
+            if (
+                !Array.isArray(data.barang) ||
+                !Array.isArray(data.satuan)
+            ) {
+
+                throw new Error(
+                    "Data barang atau satuan dari server tidak valid."
+                );
+
+            }
+
+
+            /* ======================================
+               AMBIL DATA LOKAL
+            ====================================== */
+
+            const [
+                localBarang,
+                localPenjualan,
+                localDetailPenjualan
+            ] = await Promise.all([
+
+                LocalDB.getAll("barang"),
+
+                LocalDB.getAll("penjualan"),
+
+                LocalDB.getAll("detailPenjualan")
+
+            ]);
+
+
+            /* ======================================
+               IDENTIFIKASI TRANSAKSI YANG BELUM SYNC
+            ====================================== */
+
+            const pendingTransactionIds =
+                new Set();
+
+            localPenjualan.forEach(
+                transaction => {
+
+                    const id =
+                        String(
+                            transaction.id || ""
+                        ).trim();
+
+                    if (!id) {
+                        return;
+                    }
+
+                    const status =
+                        String(
+                            transaction.status || ""
+                        )
+                            .trim()
+                            .toUpperCase();
+
+                    const transactionPending =
+                        transaction.syncStatus !== "synced";
+
+                    const returnPending =
+                        status === "RETUR" &&
+                        transaction.returnStatus !== "synced";
+
+                    if (
+                        transactionPending ||
+                        returnPending
+                    ) {
+
+                        pendingTransactionIds.add(id);
+
+                    }
+
+                }
             );
 
-        }
 
-        if (
-            typeof API === "undefined" ||
-            typeof API.get !== "function"
-        ) {
+            /* ======================================
+               IDENTIFIKASI BARANG DALAM TRANSAKSI
+               YANG BELUM TERSINKRON
+            ====================================== */
 
-            throw new Error(
-                "API tidak tersedia."
+            const pendingProductCodes =
+                new Set();
+
+            localDetailPenjualan.forEach(
+                detail => {
+
+                    const transactionId =
+                        String(
+                            detail.id || ""
+                        ).trim();
+
+                    if (
+                        !pendingTransactionIds.has(
+                            transactionId
+                        )
+                    ) {
+
+                        return;
+
+                    }
+
+                    const kode =
+                        String(
+                            detail.kode ||
+                            detail.barang ||
+                            ""
+                        ).trim();
+
+                    if (kode) {
+
+                        pendingProductCodes.add(
+                            kode
+                        );
+
+                    }
+
+                }
             );
 
-        }
 
-        if (
-            typeof LocalDB === "undefined" ||
-            typeof LocalDB.putAll !== "function"
-        ) {
+            /* ======================================
+               MAP BARANG LOKAL
 
-            throw new Error(
-                "LocalDB tidak tersedia."
+               Digunakan untuk mempertahankan stok
+               dari transaksi yang belum tersinkron.
+            ====================================== */
+
+            const localBarangMap =
+                new Map();
+
+            localBarang.forEach(
+                barang => {
+
+                    const kode =
+                        String(
+                            barang.kode ||
+                            barang.Kode ||
+                            barang.kodeBarang ||
+                            ""
+                        ).trim();
+
+                    if (!kode) {
+                        return;
+                    }
+
+                    localBarangMap.set(
+                        kode,
+                        barang
+                    );
+
+                }
             );
 
-        }
 
-        /* ======================================
-           DOWNLOAD LANGSUNG DARI SERVER
-           TIDAK MENGGUNAKAN API.bootstrap CACHE
-        ====================================== */
+            /* ======================================
+               GABUNG DATA SERVER DENGAN STOK LOKAL
 
-        const response =
-            await API.get("bootstrap");
+               Master barang mengikuti server.
 
-        if (
-            !response ||
-            response.success !== true
-        ) {
+               Stok untuk barang yang digunakan dalam
+               transaksi pending tetap mengikuti LocalDB.
+            ====================================== */
 
-            throw new Error(
-                response?.message ||
-                "Gagal mengunduh data dari spreadsheet."
+            const barang =
+                data.barang.map(
+                    serverBarang => {
+
+                        const kode =
+                            String(
+                                serverBarang.kode ||
+                                serverBarang.Kode ||
+                                serverBarang.kodeBarang ||
+                                ""
+                            ).trim();
+
+                        if (
+                            !kode ||
+                            !pendingProductCodes.has(kode)
+                        ) {
+
+                            return serverBarang;
+
+                        }
+
+                        const localItem =
+                            localBarangMap.get(kode);
+
+                        if (!localItem) {
+
+                            return serverBarang;
+
+                        }
+
+                        const localStock =
+                            localItem.stok ??
+                            localItem.Stok;
+
+                        if (
+                            localStock === undefined ||
+                            localStock === null
+                        ) {
+
+                            return serverBarang;
+
+                        }
+
+                        const mergedBarang = {
+                            ...serverBarang
+                        };
+
+                        /*
+                        Pertahankan nama properti stok
+                        sesuai struktur data yang tersedia.
+                        */
+
+                        if (
+                            Object.prototype.hasOwnProperty.call(
+                                serverBarang,
+                                "stok"
+                            ) ||
+                            Object.prototype.hasOwnProperty.call(
+                                localItem,
+                                "stok"
+                            )
+                        ) {
+
+                            mergedBarang.stok =
+                                localStock;
+
+                        }
+
+                        if (
+                            Object.prototype.hasOwnProperty.call(
+                                serverBarang,
+                                "Stok"
+                            ) ||
+                            Object.prototype.hasOwnProperty.call(
+                                localItem,
+                                "Stok"
+                            )
+                        ) {
+
+                            mergedBarang.Stok =
+                                localStock;
+
+                        }
+
+                        return mergedBarang;
+
+                    }
+                );
+
+
+            const satuan =
+                data.satuan;
+
+
+            /* ======================================
+               PERBARUI INDEXEDDB
+
+               Data master diperbarui.
+               Stok barang dengan transaksi pending
+               tidak ditimpa oleh stok server yang lama.
+            ====================================== */
+
+            await LocalDB.putAll(
+                "barang",
+                barang
             );
 
-        }
-
-        const data =
-            response.data || {};
-
-        if (
-            !Array.isArray(data.barang) ||
-            !Array.isArray(data.satuan)
-        ) {
-
-            throw new Error(
-                "Data barang atau satuan dari server tidak valid."
-            );
-
-        }
-
-        const barang =
-            data.barang;
-
-        const satuan =
-            data.satuan;
-
-      
-        /* ======================================
-           PERBARUI INDEXEDDB
-        ====================================== */
-
-        await LocalDB.putAll(
-            "barang",
-            barang
-        );
-
-        await LocalDB.putAll(
-            "satuanBarang",
-            satuan
-        );
-
-        /* ======================================
-           PERBARUI CACHE BOOTSTRAP
-           AGAR SESUAI DENGAN HASIL DOWNLOAD
-        ====================================== */
-
-        if (
-            typeof API.clearBootstrapCache === "function"
-        ) {
-
-            API.clearBootstrapCache();
-
-        }
-
-        API.bootstrapCache = {
-
-            barang:
-                barang,
-
-            satuan:
-                satuan,
-
-            storeConfig:
-                data.storeConfig || {}
-
-        };
-
-       
-
-        return {
-
-            success:
-                true,
-
-            barang:
-                barang,
-
-            satuan:
+            await LocalDB.putAll(
+                "satuanBarang",
                 satuan
+            );
 
-        };
 
-    }
+            /* ======================================
+               PERBARUI CACHE BOOTSTRAP
+            ====================================== */
 
-    catch (error) {
+            if (
+                typeof API.clearBootstrapCache === "function"
+            ) {
 
-        console.error(
-            "LOCAL SYNC ERROR:",
-            error
-        );
+                API.clearBootstrapCache();
 
-        return {
+            }
 
-            success:
-                false,
+            API.bootstrapCache = {
 
-            barang:
-                [],
+                barang: barang,
 
-            satuan:
-                [],
+                satuan: satuan,
 
-            error:
+                storeConfig:
+                    data.storeConfig || {}
+
+            };
+
+
+            /* ======================================
+               RESPONSE
+            ====================================== */
+
+            return {
+
+                success: true,
+
+                barang: barang,
+
+                satuan: satuan,
+
+                preservedStock:
+                    pendingProductCodes.size,
+
+                pendingTransactions:
+                    pendingTransactionIds.size
+
+            };
+
+        } catch (error) {
+
+            console.error(
+                "LOCAL SYNC ERROR:",
                 error
+            );
 
-        };
+            return {
 
-    }
+                success: false,
 
-},
+                barang: [],
+
+                satuan: [],
+
+                error: error
+
+            };
+
+        }
+
+    },
 
 
     /* ======================================
        RESOLVE DATABASE
     ====================================== */
 
-    async resolveDatabase(
-        year
-    ) {
+    async resolveDatabase(year) {
 
-        year =
-            Number(
-                year
-            );
+        year = Number(year);
 
-
-        if (
-            !year
-        ) {
+        if (!year) {
 
             throw new Error(
                 "Tahun database Penjualan tidak valid."
@@ -321,27 +497,14 @@ async syncProducts() {
 
         }
 
+        if (this.databaseCache[year]) {
 
-        if (
-            this.databaseCache[year]
-        ) {
-
-
-            return this.databaseCache[
-                year
-            ];
+            return this.databaseCache[year];
 
         }
 
-
-        
-
-
         const resolved =
-            await API.resolvePenjualanDatabase(
-                year
-            );
-
+            await API.resolvePenjualanDatabase(year);
 
         if (
             !resolved ||
@@ -349,48 +512,37 @@ async syncProducts() {
         ) {
 
             throw new Error(
-
                 resolved?.message ||
-
                 "Database Penjualan gagal ditemukan atau dibuat."
-
             );
 
         }
-
 
         const database = {
 
             year:
                 Number(
-                    resolved.year ||
-                    year
+                    resolved.year || year
                 ),
 
             penjualanId:
                 String(
-                    resolved.penjualan ||
-                    ""
+                    resolved.penjualan || ""
                 ).trim(),
 
             detailPenjualanId:
                 String(
-                    resolved.detailPenjualan ||
-                    ""
+                    resolved.detailPenjualan || ""
                 ).trim(),
 
             pembayaranId:
                 String(
-                    resolved.pembayaran ||
-                    ""
+                    resolved.pembayaran || ""
                 ).trim()
 
         };
 
-
-        if (
-            !database.year
-        ) {
+        if (!database.year) {
 
             throw new Error(
                 "Tahun database transaksi tidak ditemukan: " +
@@ -399,10 +551,7 @@ async syncProducts() {
 
         }
 
-
-        if (
-            !database.penjualanId
-        ) {
+        if (!database.penjualanId) {
 
             throw new Error(
                 "Spreadsheet Penjualan transaksi tidak ditemukan: " +
@@ -411,10 +560,7 @@ async syncProducts() {
 
         }
 
-
-        if (
-            !database.detailPenjualanId
-        ) {
+        if (!database.detailPenjualanId) {
 
             throw new Error(
                 "Spreadsheet Detail Penjualan transaksi tidak ditemukan: " +
@@ -423,10 +569,7 @@ async syncProducts() {
 
         }
 
-
-        if (
-            !database.pembayaranId
-        ) {
+        if (!database.pembayaranId) {
 
             throw new Error(
                 "Spreadsheet Pembayaran transaksi tidak ditemukan: " +
@@ -435,38 +578,23 @@ async syncProducts() {
 
         }
 
-
         this.databaseCache[year] = {
 
             year:
-                Number(
-                    database.year
-                ),
+                Number(database.year),
 
             penjualanId:
-                String(
-                    database.penjualanId
-                ).trim(),
+                String(database.penjualanId).trim(),
 
             detailPenjualanId:
-                String(
-                    database.detailPenjualanId
-                ).trim(),
+                String(database.detailPenjualanId).trim(),
 
             pembayaranId:
-                String(
-                    database.pembayaranId
-                ).trim()
+                String(database.pembayaranId).trim()
 
         };
 
-
-       
-
-
-        return this.databaseCache[
-            year
-        ];
+        return this.databaseCache[year];
 
     },
 
@@ -475,15 +603,11 @@ async syncProducts() {
        SYNC TRANSACTION
     ====================================== */
 
-    async syncTransaction(
-        id
-    ) {
+    async syncTransaction(id) {
 
         try {
 
-            if (
-                !id
-            ) {
+            if (!id) {
 
                 throw new Error(
                     "ID transaksi tidak ditemukan."
@@ -491,17 +615,13 @@ async syncProducts() {
 
             }
 
-
             const penjualan =
                 await LocalDB.get(
                     "penjualan",
                     id
                 );
 
-
-            if (
-                !penjualan
-            ) {
+            if (!penjualan) {
 
                 throw new Error(
                     "Transaksi lokal tidak ditemukan: " +
@@ -510,44 +630,29 @@ async syncProducts() {
 
             }
 
-
             if (
-                penjualan.syncStatus ===
-                "synced"
+                penjualan.syncStatus === "synced"
             ) {
 
                 return {
 
-                    success:
-                        true,
+                    success: true,
 
-                    id:
-                        id,
+                    id: id,
 
-                    alreadySynced:
-                        true
+                    alreadySynced: true
 
                 };
 
             }
 
-
             let database =
                 penjualan.database;
 
-
-            if (
-                !database
-            ) {
-
-                
-
+            if (!database) {
 
                 const transactionDate =
-                    new Date(
-                        penjualan.tanggal
-                    );
-
+                    new Date(penjualan.tanggal);
 
                 if (
                     isNaN(
@@ -562,14 +667,10 @@ async syncProducts() {
 
                 }
 
-
                 const transactionYear =
                     transactionDate.getFullYear();
 
-
-                if (
-                    !transactionYear
-                ) {
+                if (!transactionYear) {
 
                     throw new Error(
                         "Tahun transaksi tidak ditemukan: " +
@@ -578,22 +679,15 @@ async syncProducts() {
 
                 }
 
-
-                
-
-
                 database =
                     await this.resolveDatabase(
                         transactionYear
                     );
 
-
                 penjualan.database = {
 
                     year:
-                        Number(
-                            database.year
-                        ),
+                        Number(database.year),
 
                     penjualanId:
                         String(
@@ -612,25 +706,17 @@ async syncProducts() {
 
                 };
 
-
                 await LocalDB.put(
                     "penjualan",
                     penjualan
                 );
 
-
                 database =
                     penjualan.database;
 
-
-             
-
             }
 
-
-            if (
-                !database.year
-            ) {
+            if (!database.year) {
 
                 throw new Error(
                     "Tahun database transaksi tidak ditemukan: " +
@@ -639,10 +725,7 @@ async syncProducts() {
 
             }
 
-
-            if (
-                !database.penjualanId
-            ) {
+            if (!database.penjualanId) {
 
                 throw new Error(
                     "Spreadsheet Penjualan transaksi tidak ditemukan: " +
@@ -651,10 +734,7 @@ async syncProducts() {
 
             }
 
-
-            if (
-                !database.detailPenjualanId
-            ) {
+            if (!database.detailPenjualanId) {
 
                 throw new Error(
                     "Spreadsheet Detail Penjualan transaksi tidak ditemukan: " +
@@ -663,10 +743,7 @@ async syncProducts() {
 
             }
 
-
-            if (
-                !database.pembayaranId
-            ) {
+            if (!database.pembayaranId) {
 
                 throw new Error(
                     "Spreadsheet Pembayaran transaksi tidak ditemukan: " +
@@ -675,30 +752,19 @@ async syncProducts() {
 
             }
 
-
-
-
             const allDetails =
                 await LocalDB.getAll(
                     "detailPenjualan"
                 );
 
-
             const detail =
                 allDetails.filter(
                     item =>
-                        String(
-                            item.id
-                        ).trim() ===
-                        String(
-                            id
-                        ).trim()
+                        String(item.id).trim() ===
+                        String(id).trim()
                 );
 
-
-            if (
-                !detail.length
-            ) {
+            if (!detail.length) {
 
                 throw new Error(
                     "Detail transaksi tidak ditemukan: " +
@@ -707,28 +773,19 @@ async syncProducts() {
 
             }
 
-
             const allPayments =
                 await LocalDB.getAll(
                     "pembayaran"
                 );
 
-
             const payments =
                 allPayments.filter(
                     item =>
-                        String(
-                            item.id
-                        ).trim() ===
-                        String(
-                            id
-                        ).trim()
+                        String(item.id).trim() ===
+                        String(id).trim()
                 );
 
-
-            if (
-                !payments.length
-            ) {
+            if (!payments.length) {
 
                 throw new Error(
                     "Data pembayaran tidak ditemukan: " +
@@ -737,166 +794,114 @@ async syncProducts() {
 
             }
 
-
             const payment = {
 
-                CASH:
-                    0,
+                CASH: 0,
 
-                QRIS:
-                    0,
+                QRIS: 0,
 
-                DEBIT:
-                    0,
+                DEBIT: 0,
 
-                TRANSFER:
-                    0,
+                TRANSFER: 0,
 
-                change:
-                    0
+                change: 0
 
             };
 
+            payments.forEach(item => {
 
-            payments.forEach(
-                item => {
+                const metode =
+                    String(
+                        item.metode || ""
+                    )
+                        .trim()
+                        .toUpperCase();
 
-                    const metode =
-                        String(
-                            item.metode ||
-                            ""
-                        )
-                            .trim()
-                            .toUpperCase();
+                const nominal =
+                    Number(item.nominal) || 0;
 
+                if (
+                    Object.prototype.hasOwnProperty.call(
+                        payment,
+                        metode
+                    )
+                ) {
 
-                    const nominal =
-                        Number(
-                            item.nominal
-                        ) || 0;
-
-
-                    if (
-                        Object.prototype.hasOwnProperty.call(
-                            payment,
-                            metode
-                        )
-                    ) {
-
-                        payment[
-                            metode
-                        ] =
-                            Number(
-                                payment[
-                                    metode
-                                ]
-                            ) +
-                            nominal;
-
-                    }
-
-
-                    if (
-                        metode ===
-                        "CASH"
-                    ) {
-
-                        payment.change +=
-                            Number(
-                                item.kembalian
-                            ) || 0;
-
-                    }
+                    payment[metode] =
+                        Number(payment[metode]) +
+                        nominal;
 
                 }
-            );
 
+                if (metode === "CASH") {
+
+                    payment.change +=
+                        Number(item.kembalian) || 0;
+
+                }
+
+            });
 
             const items =
-                detail.map(
-                    item => {
+                detail.map(item => {
 
-                        return {
+                    return {
 
-                            kode:
-                                String(
-                                    item.kode ||
-                                    ""
-                                ).trim(),
+                        kode:
+                            String(
+                                item.kode || ""
+                            ).trim(),
 
-                            nama:
-                                item.nama ||
-                                "",
+                        nama:
+                            item.nama || "",
 
-                            satuan:
-                                String(
-                                    item.satuan ||
-                                    ""
-                                ).trim(),
+                        satuan:
+                            String(
+                                item.satuan || ""
+                            ).trim(),
 
-                            qty:
-                                Number(
-                                    item.qty
-                                ) || 0,
+                        qty:
+                            Number(item.qty) || 0,
 
-                            konversi:
-                                Number(
-                                    item.konversi
-                                ) || 1,
+                        konversi:
+                            Number(item.konversi) || 1,
 
-                            harga:
-                                Number(
-                                    item.harga
-                                ) || 0,
+                        harga:
+                            Number(item.harga) || 0,
 
-                            discount:
-                                Math.max(
-                                    0,
-                                    Number(
-                                        item.discount
-                                    ) || 0
-                                ),
+                        discount:
+                            Math.max(
+                                0,
+                                Number(item.discount) || 0
+                            ),
 
-                            subtotal:
-                                Number(
-                                    item.subtotal
-                                ) || 0
+                        subtotal:
+                            Number(item.subtotal) || 0
 
-                        };
+                    };
 
-                    }
-                );
-
+                });
 
             const transaction = {
 
-                id:
-                    penjualan.id,
+                id: penjualan.id,
 
-                tanggal:
-                    penjualan.tanggal,
+                tanggal: penjualan.tanggal,
 
                 kasir:
-                    penjualan.kasir ||
-                    "ADMIN",
+                    penjualan.kasir || "ADMIN",
 
                 discount:
-                    Number(
-                        penjualan.disc
-                    ) || 0,
+                    Number(penjualan.disc) || 0,
 
-                items:
-                    items,
+                items: items,
 
-                payment:
-                    payment,
+                payment: payment,
 
                 database: {
 
                     year:
-                        Number(
-                            database.year
-                        ),
+                        Number(database.year),
 
                     penjualanId:
                         String(
@@ -917,14 +922,11 @@ async syncProducts() {
 
             };
 
-
-
             const result =
                 await API.post(
                     "savePenjualan",
                     transaction
                 );
-
 
             if (
                 !result ||
@@ -932,56 +934,38 @@ async syncProducts() {
             ) {
 
                 throw new Error(
-
                     result?.message ||
-
                     "Sinkronisasi transaksi gagal."
-
                 );
 
             }
 
-
-            penjualan.syncStatus =
-                "synced";
-
+            penjualan.syncStatus = "synced";
 
             penjualan.syncedAt =
                 new Date().toISOString();
 
-
             penjualan.serverId =
-                result.id ||
-                id;
-
+                result.id || id;
 
             await LocalDB.put(
                 "penjualan",
                 penjualan
             );
 
-
-           
-
             return {
 
-                success:
-                    true,
+                success: true,
 
-                id:
-                    id,
+                id: id,
 
-                year:
-                    database.year,
+                year: database.year,
 
-                result:
-                    result
+                result: result
 
             };
 
-        }
-
-        catch (error) {
+        } catch (error) {
 
             console.error(
                 "SYNC TRANSACTION ERROR:",
@@ -989,17 +973,13 @@ async syncProducts() {
                 error
             );
 
-
             return {
 
-                success:
-                    false,
+                success: false,
 
-                id:
-                    id,
+                id: id,
 
-                message:
-                    error.message
+                message: error.message
 
             };
 
@@ -1010,107 +990,383 @@ async syncProducts() {
 
     /* ======================================
        SYNC RETUR
-
-       ALUR:
-
-       TRANSAKSI BELUM SYNC
-       ↓
-       SYNC PENJUALAN
-       ↓
-       RETUR SERVER
-       ↓
-       RETURN STATUS = SYNCED
     ====================================== */
 
-    // ======================================
-// SYNC RETUR
-// ======================================
+    async syncReturn(id) {
 
-async syncReturn(id) {
+        try {
 
-    try {
+            if (!id) {
 
-        if (!id) {
+                throw new Error(
+                    "ID transaksi retur tidak ditemukan."
+                );
 
-            throw new Error(
-                "ID transaksi retur tidak ditemukan."
-            );
+            }
 
-        }
+            if (!navigator.onLine) {
 
+                return {
 
-        if (!navigator.onLine) {
+                    success: false,
 
-            return {
-                success: false,
-                offline: true,
-                id: id
+                    offline: true,
+
+                    id: id
+
+                };
+
+            }
+
+            let transaction =
+                await LocalDB.get(
+                    "penjualan",
+                    id
+                );
+
+            if (!transaction) {
+
+                throw new Error(
+                    "Transaksi retur lokal tidak ditemukan: " +
+                    id
+                );
+
+            }
+
+            const status =
+                String(
+                    transaction.status || ""
+                )
+                    .trim()
+                    .toUpperCase();
+
+            if (status !== "RETUR") {
+
+                throw new Error(
+                    "Transaksi " +
+                    id +
+                    " belum berstatus RETUR."
+                );
+
+            }
+
+            if (
+                String(
+                    transaction.returnStatus || ""
+                )
+                    .trim()
+                    .toLowerCase() === "synced"
+            ) {
+
+                return {
+
+                    success: true,
+
+                    id: id,
+
+                    year:
+                        Number(
+                            transaction.database?.year ||
+                            transaction.year ||
+                            new Date(
+                                transaction.tanggal
+                            ).getFullYear()
+                        ),
+
+                    alreadySynced: true
+
+                };
+
+            }
+
+            let database =
+                transaction.database || {};
+
+            if (
+                !database ||
+                !database.year
+            ) {
+
+                const transactionDate =
+                    new Date(
+                        transaction.tanggal
+                    );
+
+                if (
+                    isNaN(
+                        transactionDate.getTime()
+                    )
+                ) {
+
+                    throw new Error(
+                        "Tanggal transaksi retur tidak valid: " +
+                        id
+                    );
+
+                }
+
+                const transactionYear =
+                    transactionDate.getFullYear();
+
+                if (!transactionYear) {
+
+                    throw new Error(
+                        "Tahun transaksi retur tidak ditemukan: " +
+                        id
+                    );
+
+                }
+
+                database =
+                    await this.resolveDatabase(
+                        transactionYear
+                    );
+
+                if (
+                    !database ||
+                    !database.year
+                ) {
+
+                    throw new Error(
+                        "Database retur tahun " +
+                        transactionYear +
+                        " tidak ditemukan: " +
+                        id
+                    );
+
+                }
+
+                transaction = {
+
+                    ...transaction,
+
+                    database: {
+
+                        year:
+                            Number(database.year),
+
+                        penjualanId:
+                            String(
+                                database.penjualanId || ""
+                            ).trim(),
+
+                        detailPenjualanId:
+                            String(
+                                database.detailPenjualanId || ""
+                            ).trim(),
+
+                        pembayaranId:
+                            String(
+                                database.pembayaranId || ""
+                            ).trim()
+
+                    }
+
+                };
+
+                await LocalDB.put(
+                    "penjualan",
+                    transaction
+                );
+
+                database =
+                    transaction.database;
+
+            }
+
+            if (!database.year) {
+
+                throw new Error(
+                    "Tahun database retur tidak ditemukan: " +
+                    id
+                );
+
+            }
+
+            if (!database.penjualanId) {
+
+                throw new Error(
+                    "Spreadsheet Penjualan transaksi tidak ditemukan: " +
+                    id
+                );
+
+            }
+
+            if (!database.detailPenjualanId) {
+
+                throw new Error(
+                    "Spreadsheet Detail Penjualan transaksi tidak ditemukan: " +
+                    id
+                );
+
+            }
+
+            if (!database.pembayaranId) {
+
+                throw new Error(
+                    "Spreadsheet Pembayaran transaksi tidak ditemukan: " +
+                    id
+                );
+
+            }
+
+            if (
+                transaction.syncStatus !== "synced"
+            ) {
+
+                const transactionResult =
+                    await this.syncTransaction(id);
+
+                if (
+                    !transactionResult ||
+                    !transactionResult.success
+                ) {
+
+                    throw new Error(
+                        transactionResult?.message ||
+                        "Transaksi asli gagal disinkronkan sebelum retur."
+                    );
+
+                }
+
+                const refreshedTransaction =
+                    await LocalDB.get(
+                        "penjualan",
+                        id
+                    );
+
+                if (!refreshedTransaction) {
+
+                    throw new Error(
+                        "Transaksi lokal hilang setelah sync transaksi: " +
+                        id
+                    );
+
+                }
+
+                transaction = {
+
+                    ...refreshedTransaction,
+
+                    status: "RETUR",
+
+                    database:
+                        refreshedTransaction.database ||
+                        database
+
+                };
+
+                database =
+                    transaction.database || database;
+
+            }
+
+            const returnDatabase = {
+
+                year:
+                    Number(database.year),
+
+                penjualanId:
+                    String(
+                        database.penjualanId
+                    ).trim(),
+
+                detailPenjualanId:
+                    String(
+                        database.detailPenjualanId
+                    ).trim(),
+
+                pembayaranId:
+                    String(
+                        database.pembayaranId
+                    ).trim()
+
             };
 
-        }
+            const payload = {
 
+                id: id,
 
-        /* ======================================
-           AMBIL TRANSAKSI LOKAL
-        ====================================== */
+                database: returnDatabase
 
-        let transaction =
-            await LocalDB.get(
+            };
+
+            const result =
+                await API.post(
+                    "returPenjualan",
+                    payload
+                );
+
+            if (
+                !result ||
+                result.success !== true
+            ) {
+
+                throw new Error(
+                    result?.message ||
+                    "Sinkronisasi retur gagal."
+                );
+
+            }
+
+            const syncedAt =
+                new Date().toISOString();
+
+            const latestTransaction =
+                await LocalDB.get(
+                    "penjualan",
+                    id
+                );
+
+            if (!latestTransaction) {
+
+                throw new Error(
+                    "Transaksi retur tidak ditemukan saat menyimpan status sync: " +
+                    id
+                );
+
+            }
+
+            const updatedTransaction = {
+
+                ...latestTransaction,
+
+                status: "RETUR",
+
+                database: returnDatabase,
+
+                returnStatus: "synced",
+
+                returnSyncedAt: syncedAt
+
+            };
+
+            await LocalDB.put(
                 "penjualan",
-                id
+                updatedTransaction
             );
 
+            const verifiedTransaction =
+                await LocalDB.get(
+                    "penjualan",
+                    id
+                );
 
-        if (!transaction) {
+            const verifiedStatus =
+                String(
+                    verifiedTransaction?.returnStatus || ""
+                )
+                    .trim()
+                    .toLowerCase();
 
-            throw new Error(
-                "Transaksi retur lokal tidak ditemukan: " +
-                id
-            );
+            if (verifiedStatus !== "synced") {
 
-        }
+                throw new Error(
+                    "Status retur gagal disimpan sebagai synced di LocalDB: " +
+                    id
+                );
 
-
-        /* ======================================
-           VALIDASI STATUS RETUR
-        ====================================== */
-
-        const status =
-            String(
-                transaction.status ||
-                ""
-            )
-            .trim()
-            .toUpperCase();
-
-
-        if (status !== "RETUR") {
-
-            throw new Error(
-                "Transaksi " +
-                id +
-                " belum berstatus RETUR."
-            );
-
-        }
-
-
-        /* ======================================
-           RETUR SUDAH SYNC
-        ====================================== */
-
-        if (
-            String(
-                transaction.returnStatus ||
-                ""
-            )
-            .trim()
-            .toLowerCase() ===
-            "synced"
-        ) {
-
-            
-
+            }
 
             return {
 
@@ -1119,480 +1375,36 @@ async syncReturn(id) {
                 id: id,
 
                 year:
-                    Number(
-                        transaction.database?.year ||
-                        transaction.year ||
-                        new Date(
-                            transaction.tanggal
-                        ).getFullYear()
-                    ),
+                    Number(returnDatabase.year),
 
-                alreadySynced: true
+                alreadyReturned:
+                    result.alreadyReturned === true,
+
+                result: result
+
+            };
+
+        } catch (error) {
+
+            console.error(
+                "SYNC RETUR ERROR:",
+                id,
+                error
+            );
+
+            return {
+
+                success: false,
+
+                id: id,
+
+                message: error.message
 
             };
 
         }
 
-
-        /* ======================================
-           DATABASE SNAPSHOT
-        ====================================== */
-
-        let database =
-            transaction.database || {};
-
-
-        if (
-            !database ||
-            !database.year
-        ) {
-
-           
-
-
-            /* ==================================
-               TENTUKAN TAHUN TRANSAKSI
-            ================================== */
-
-            const transactionDate =
-                new Date(
-                    transaction.tanggal
-                );
-
-
-            if (
-                isNaN(
-                    transactionDate.getTime()
-                )
-            ) {
-
-                throw new Error(
-                    "Tanggal transaksi retur tidak valid: " +
-                    id
-                );
-
-            }
-
-
-            const transactionYear =
-                transactionDate.getFullYear();
-
-
-            if (!transactionYear) {
-
-                throw new Error(
-                    "Tahun transaksi retur tidak ditemukan: " +
-                    id
-                );
-
-            }
-
-
-
-
-            /* ==================================
-               RESOLVE DATABASE
-            ================================== */
-
-            database =
-                await this.resolveDatabase(
-                    transactionYear
-                );
-
-
-            if (
-                !database ||
-                !database.year
-            ) {
-
-                throw new Error(
-                    "Database retur tahun " +
-                    transactionYear +
-                    " tidak ditemukan: " +
-                    id
-                );
-
-            }
-
-
-            /* ==================================
-               SIMPAN SNAPSHOT DATABASE
-            ================================== */
-
-            transaction =
-                {
-
-                    ...transaction,
-
-                    database: {
-
-                        year:
-                            Number(
-                                database.year
-                            ),
-
-                        penjualanId:
-                            String(
-                                database.penjualanId ||
-                                ""
-                            ).trim(),
-
-                        detailPenjualanId:
-                            String(
-                                database.detailPenjualanId ||
-                                ""
-                            ).trim(),
-
-                        pembayaranId:
-                            String(
-                                database.pembayaranId ||
-                                ""
-                            ).trim()
-
-                    }
-
-                };
-
-
-            await LocalDB.put(
-                "penjualan",
-                transaction
-            );
-
-
-            database =
-                transaction.database;
-
-
-           
-
-        }
-
-
-        /* ======================================
-           VALIDASI DATABASE
-        ====================================== */
-
-        if (!database.year) {
-
-            throw new Error(
-                "Tahun database retur tidak ditemukan: " +
-                id
-            );
-
-        }
-
-
-        if (!database.penjualanId) {
-
-            throw new Error(
-                "Spreadsheet Penjualan transaksi tidak ditemukan: " +
-                id
-            );
-
-        }
-
-
-        if (!database.detailPenjualanId) {
-
-            throw new Error(
-                "Spreadsheet Detail Penjualan transaksi tidak ditemukan: " +
-                id
-            );
-
-        }
-
-
-        if (!database.pembayaranId) {
-
-            throw new Error(
-                "Spreadsheet Pembayaran transaksi tidak ditemukan: " +
-                id
-            );
-
-        }
-
-
-        /* ======================================
-           TRANSAKSI ASLI BELUM SYNC
-        ====================================== */
-
-        if (
-            transaction.syncStatus !==
-            "synced"
-        ) {
-
-            
-
-
-            const transactionResult =
-                await this.syncTransaction(
-                    id
-                );
-
-
-            if (
-                !transactionResult ||
-                !transactionResult.success
-            ) {
-
-                throw new Error(
-                    transactionResult?.message ||
-                    "Transaksi asli gagal disinkronkan sebelum retur."
-                );
-
-            }
-
-
-            /* ==================================
-               REFRESH TRANSAKSI TERBARU
-            ================================== */
-
-            const refreshedTransaction =
-                await LocalDB.get(
-                    "penjualan",
-                    id
-                );
-
-
-            if (
-                !refreshedTransaction
-            ) {
-
-                throw new Error(
-                    "Transaksi lokal hilang setelah sync transaksi: " +
-                    id
-                );
-
-            }
-
-
-            transaction =
-                {
-
-                    ...refreshedTransaction,
-
-                    status:
-                        "RETUR",
-
-                    database:
-                        refreshedTransaction.database ||
-                        database
-
-                };
-
-
-            database =
-                transaction.database ||
-                database;
-
-        }
-
-
-        /* ======================================
-           DATABASE FINAL
-        ====================================== */
-
-        const returnDatabase = {
-
-            year:
-                Number(
-                    database.year
-                ),
-
-            penjualanId:
-                String(
-                    database.penjualanId
-                ).trim(),
-
-            detailPenjualanId:
-                String(
-                    database.detailPenjualanId
-                ).trim(),
-
-            pembayaranId:
-                String(
-                    database.pembayaranId
-                ).trim()
-
-        };
-
-
-       
-
-
-        /* ======================================
-           PAYLOAD RETUR
-        ====================================== */
-
-        const payload = {
-
-            id:
-                id,
-
-            database:
-                returnDatabase
-
-        };
-
-
-       
-
-
-        /* ======================================
-           KIRIM RETUR KE SERVER
-        ====================================== */
-
-        const result =
-            await API.post(
-                "returPenjualan",
-                payload
-            );
-
-
-        if (
-            !result ||
-            result.success !== true
-        ) {
-
-            throw new Error(
-                result?.message ||
-                "Sinkronisasi retur gagal."
-            );
-
-        }
-
-
-        /* ======================================
-           SERVER SUDAH BERHASIL
-           TERMASUK alreadyReturned:true
-        ====================================== */
-
-        const syncedAt =
-            new Date().toISOString();
-
-
-        const latestTransaction =
-            await LocalDB.get(
-                "penjualan",
-                id
-            );
-
-
-        if (!latestTransaction) {
-
-            throw new Error(
-                "Transaksi retur tidak ditemukan saat menyimpan status sync: " +
-                id
-            );
-
-        }
-
-
-        const updatedTransaction = {
-
-            ...latestTransaction,
-
-            status:
-                "RETUR",
-
-            database:
-                returnDatabase,
-
-            returnStatus:
-                "synced",
-
-            returnSyncedAt:
-                syncedAt
-
-        };
-
-
-        await LocalDB.put(
-            "penjualan",
-            updatedTransaction
-        );
-
-
-        /* ======================================
-           VERIFIKASI STATUS LOCAL DB
-        ====================================== */
-
-        const verifiedTransaction =
-            await LocalDB.get(
-                "penjualan",
-                id
-            );
-
-
-        const verifiedStatus =
-            String(
-                verifiedTransaction?.returnStatus ||
-                ""
-            )
-            .trim()
-            .toLowerCase();
-
-
-        if (
-            verifiedStatus !==
-            "synced"
-        ) {
-
-            throw new Error(
-                "Status retur gagal disimpan sebagai synced di LocalDB: " +
-                id
-            );
-
-        }
-
-
-       
-
-
-        return {
-
-            success: true,
-
-            id: id,
-
-            year:
-                Number(
-                    returnDatabase.year
-                ),
-
-            alreadyReturned:
-                result.alreadyReturned === true,
-
-            result:
-                result
-
-        };
-
-    }
-    catch (error) {
-
-        console.error(
-            "SYNC RETUR ERROR:",
-            id,
-            error
-        );
-
-
-        return {
-
-            success: false,
-
-            id: id,
-
-            message:
-                error.message
-
-        };
-
-    }
-
-},
+    },
 
 
     /* ======================================
@@ -1603,162 +1415,100 @@ async syncReturn(id) {
 
         try {
 
-            if (
-                !navigator.onLine
-            ) {
+            if (!navigator.onLine) {
 
                 return {
 
-                    success:
-                        false,
+                    success: false,
 
-                    offline:
-                        true,
+                    offline: true,
 
-                    synced:
-                        0,
+                    synced: 0,
 
-                    returnSynced:
-                        0
+                    returnSynced: 0
 
                 };
 
             }
-
 
             const penjualan =
                 await LocalDB.getAll(
                     "penjualan"
                 );
 
-
             const pending =
                 penjualan.filter(
                     item =>
-                        item.syncStatus !==
-                        "synced"
+                        item.syncStatus !== "synced"
                 );
-
 
             const pendingReturn =
-                penjualan.filter(
-                    item => {
+                penjualan.filter(item => {
 
-                        const status =
-                            String(
-                                item.status ||
-                                ""
-                            )
-                                .trim()
-                                .toUpperCase();
+                    const status =
+                        String(
+                            item.status || ""
+                        )
+                            .trim()
+                            .toUpperCase();
 
+                    return (
+                        status === "RETUR" &&
+                        item.returnStatus !== "synced"
+                    );
 
-                        return (
-                            status ===
-                            "RETUR" &&
+                });
 
-                            item.returnStatus !==
-                            "synced"
-                        );
+            let synced = 0;
 
-                    }
-                );
-
-
-           
-
-            let synced =
-                0;
-
-
-            let returnSynced =
-                0;
-
+            let returnSynced = 0;
 
             /* ======================================
-               SYNC TRANSAKSI
-
-               RETUR tidak dikirim sebagai
-               transaksi biasa.
+               SYNC TRANSAKSI PENJUALAN
             ====================================== */
 
-            for (
-                const transaction
-                of pending
-            ) {
+            for (const transaction of pending) {
 
-                if (
-                    !navigator.onLine
-                ) {
-
-                   
-
+                if (!navigator.onLine) {
                     break;
-
                 }
-
 
                 const status =
                     String(
-                        transaction.status ||
-                        ""
+                        transaction.status || ""
                     )
                         .trim()
                         .toUpperCase();
 
-
-                if (
-                    status ===
-                    "RETUR"
-                ) {
-
+                if (status === "RETUR") {
                     continue;
-
                 }
-
 
                 const result =
                     await this.syncTransaction(
                         transaction.id
                     );
 
-
-                if (
-                    result.success
-                ) {
-
+                if (result.success) {
                     synced++;
-
                 }
 
             }
-
 
             /* ======================================
                SYNC RETUR
             ====================================== */
 
-            for (
-                const transaction
-                of pendingReturn
-            ) {
+            for (const transaction of pendingReturn) {
 
-                if (
-                    !navigator.onLine
-                ) {
-
-                  
-
+                if (!navigator.onLine) {
                     break;
-
                 }
-
 
                 const result =
                     await this.syncReturn(
                         transaction.id
                     );
-
 
                 if (
                     result.success &&
@@ -1771,49 +1521,36 @@ async syncReturn(id) {
 
             }
 
-
             return {
 
-                success:
-                    true,
+                success: true,
 
-                total:
-                    pending.length,
+                total: pending.length,
 
-                synced:
-                    synced,
+                synced: synced,
 
-                returnTotal:
-                    pendingReturn.length,
+                returnTotal: pendingReturn.length,
 
-                returnSynced:
-                    returnSynced
+                returnSynced: returnSynced
 
             };
 
-        }
-
-        catch (error) {
+        } catch (error) {
 
             console.error(
                 "SYNC PENDING ERROR:",
                 error
             );
 
-
             return {
 
-                success:
-                    false,
+                success: false,
 
-                message:
-                    error.message,
+                message: error.message,
 
-                synced:
-                    0,
+                synced: 0,
 
-                returnSynced:
-                    0
+                returnSynced: 0
 
             };
 
@@ -1830,82 +1567,53 @@ async syncReturn(id) {
 
         this.initOnlineListener();
 
-
-        if (
-            !navigator.onLine
-        ) {
-
-          
-
+        if (!navigator.onLine) {
 
             return {
 
-                success:
-                    false,
+                success: false,
 
-                offline:
-                    true
+                offline: true
 
             };
 
         }
 
-
-        if (
-            this.syncing
-        ) {
-
-           
-
+        if (this.syncing) {
 
             return {
 
-                success:
-                    false,
+                success: false,
 
-                syncing:
-                    true
+                syncing: true
 
             };
 
         }
-
 
         try {
 
-            this.syncing =
-                true;
-
+            this.syncing = true;
 
             const transactionResult =
-                await this
-                    .syncPendingTransactions();
-
+                await this.syncPendingTransactions();
 
             const productResult =
-                await this
-                    .syncProducts();
-
+                await this.syncProducts();
 
             return {
 
-                success:
-                    true,
+                success: true,
 
-                transactions:
-                    transactionResult,
+                transactions: transactionResult,
 
-                products:
-                    productResult
+                products: productResult
 
             };
 
-        }
+        } finally {
 
-        finally {
-
-            this.syncing =
-                false;
+            this.syncing = false;
 
         }
 
