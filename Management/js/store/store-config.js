@@ -598,12 +598,7 @@ const StoreConfig = {
                     ).trim()
 
             };
-            console.log("LOGO SAVE DIAGNOSTIC:", {
-    source: data.LOGO_SOURCE,
-    logoExists: Boolean(data.LOGO),
-    logoLength: String(data.LOGO || "").length,
-    logoPrefix: String(data.LOGO || "").slice(0, 30)
-});
+            
 
 
             // ==============================
