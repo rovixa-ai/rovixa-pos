@@ -20,7 +20,6 @@ Object.assign(
                 .trim()
                 .toLowerCase();
 
-
             if (!text) {
 
                 this.renderProducts();
@@ -28,7 +27,6 @@ Object.assign(
                 return;
 
             }
-
 
             const result =
                 this.products.filter(
@@ -40,20 +38,17 @@ Object.assign(
                             )
                             .toLowerCase();
 
-
                         const barcode =
                             String(
                                 product.barcode || ""
                             )
                             .toLowerCase();
 
-
                         const nama =
                             String(
                                 product.nama || ""
                             )
                             .toLowerCase();
-
 
                         const foundUnit =
                             Array.isArray(
@@ -70,27 +65,19 @@ Object.assign(
                                     .includes(
                                         text
                                     )
-
                             );
-
 
                         return (
 
-                            kode.includes(
-                                text
-                            )
+                            kode.includes(text)
 
                             ||
 
-                            barcode.includes(
-                                text
-                            )
+                            barcode.includes(text)
 
                             ||
 
-                            nama.includes(
-                                text
-                            )
+                            nama.includes(text)
 
                             ||
 
@@ -101,7 +88,6 @@ Object.assign(
                     }
                 );
 
-
             this.renderProducts(
                 result
             );
@@ -109,156 +95,182 @@ Object.assign(
         },
 
 
-       /* ==================================
-   HANDLE BARCODE
-================================== */
+        /* ==================================
+           HANDLE BARCODE
+        ================================== */
 
-handleBarcode(value, options = {}) {
+        handleBarcode(value, options = {}) {
 
-    const barcode =
-        String(
-            value || ""
-        ).trim();
+            const barcode =
+                String(
+                    value || ""
+                ).trim();
 
-    if (!barcode) {
-        return;
-    }
+            if (!barcode) {
+                return;
+            }
 
-    const clearOptions = {
-        focus: options.focus !== false
-    };
+            const clearOptions = {
+                focus: options.focus !== false
+            };
 
-    /* ==============================
-       BARCODE SATUAN
-    ============================== */
+            /* ==============================
+               BARCODE UTAMA BARANG
+            ============================== */
 
-    for (
-        const product of
-        this.products
-    ) {
-
-        const unit =
-            Array.isArray(
-                product.satuan
-            )
-                ? product.satuan.find(
+            const product =
+                this.products.find(
                     item =>
                         String(
-                            item.barcodeSatuan || ""
+                            item.barcode || ""
                         ).trim() === barcode
-                )
-                : null;
+                );
 
-        if (unit) {
+            if (product) {
 
-            Cart.addItem(
-                product,
-                unit
+                /* ==========================
+                   SATU SATUAN
+                ========================== */
+
+                if (
+                    Array.isArray(
+                        product.satuan
+                    ) &&
+                    product.satuan.length === 1
+                ) {
+
+                    Cart.addItem(
+                        product,
+                        product.satuan[0]
+                    );
+
+                    this.clearSearch(
+                        clearOptions
+                    );
+
+                    return;
+
+                }
+
+                /* ==========================
+                   BANYAK SATUAN
+                ========================== */
+
+                if (
+                    Array.isArray(
+                        product.satuan
+                    ) &&
+                    product.satuan.length > 1
+                ) {
+
+                    UnitModal.open(
+                        product.kode
+                    );
+
+                    this.clearSearch(
+                        clearOptions
+                    );
+
+                    return;
+
+                }
+
+                /* ==========================
+                   SATUAN TIDAK TERSEDIA
+                ========================== */
+
+                Notification.warning(
+                    "Satuan barang tidak tersedia"
+                );
+
+                this.clearSearch(
+                    clearOptions
+                );
+
+                return;
+
+            }
+
+
+            /* ==============================
+               BARCODE SATUAN
+            ============================== */
+
+            for (
+                const item of
+                this.products
+            ) {
+
+                const unit =
+                    Array.isArray(
+                        item.satuan
+                    )
+                        ? item.satuan.find(
+                            satuan =>
+
+                                String(
+                                    satuan.barcodeSatuan || ""
+                                ).trim() === barcode
+                        )
+                        : null;
+
+                if (unit) {
+
+                    Cart.addItem(
+                        item,
+                        unit
+                    );
+
+                    this.clearSearch(
+                        clearOptions
+                    );
+
+                    return;
+
+                }
+
+            }
+
+
+            /* ==============================
+               BARCODE TIDAK DITEMUKAN
+            ============================== */
+
+            Notification.warning(
+                "Barcode tidak ditemukan"
             );
 
             this.clearSearch(
                 clearOptions
             );
 
-            return;
-
-        }
-
-    }
-
-    /* ==============================
-       BARCODE UTAMA
-    ============================== */
-
-    const product =
-        this.products.find(
-            item =>
-                String(
-                    item.barcode || ""
-                ).trim() === barcode
-        );
-
-    if (product) {
-
-        /* ==========================
-           SATU SATUAN
-        ========================== */
-
-        if (
-            Array.isArray(
-                product.satuan
-            ) &&
-            product.satuan.length === 1
-        ) {
-
-            Cart.addItem(
-                product,
-                product.satuan[0]
-            );
-
-            this.clearSearch(
-                clearOptions
-            );
-
-            return;
-
-        }
-
-        /* ==========================
-           BANYAK SATUAN
-        ========================== */
-
-        UnitModal.open(
-            product.kode
-        );
-
-        this.clearSearch(
-            clearOptions
-        );
-
-        return;
-
-    }
-
-    /* ==============================
-       BARCODE TIDAK DITEMUKAN
-    ============================== */
-
-    Notification.warning(
-        "Barcode tidak ditemukan"
-    );
-
-    this.clearSearch(
-        clearOptions
-    );
-
-},
+        },
 
 
         /* ==================================
-   CLEAR SEARCH
-================================== */
+           CLEAR SEARCH
+        ================================== */
 
-clearSearch(options = {}) {
+        clearSearch(options = {}) {
 
-    const search =
-        document.getElementById(
-            "searchProduct"
-        );
+            const search =
+                document.getElementById(
+                    "searchProduct"
+                );
 
-    if (!search) {
-        return;
-    }
+            if (!search) {
+                return;
+            }
 
-    search.value = "";
+            search.value = "";
 
-    this.renderProducts();
+            this.renderProducts();
 
-    if (options.focus !== false) {
-        search.focus();
-    }
+            if (options.focus !== false) {
+                search.focus();
+            }
 
-}
+        }
 
     }
 );
