@@ -1,4 +1,5 @@
-// ======================================
+
+ // ======================================
 // STORE CONFIG
 // TREEHOUSE MANAGEMENT
 // ======================================
@@ -18,16 +19,16 @@ const StoreConfig = {
 
     async init() {
 
-    this.event();
+        this.event();
 
-    const configLoad =
-        this.load();
+        const configLoad =
+            this.load();
 
-    StoreUser.init();
+        StoreUser.init();
 
-    await configLoad;
+        await configLoad;
 
-},
+    },
 
 
     // ==================================
@@ -381,6 +382,69 @@ const StoreConfig = {
 
         try {
 
+            // ==============================
+            // SIAPKAN DATA LOGO
+            // ==============================
+
+            const logoSource =
+                this.value(
+                    "storeConfigLogoSource"
+                )
+                    .trim()
+                    .toLowerCase();
+
+            const logoDrive =
+                this.value(
+                    "storeConfigLogoDrive"
+                ).trim();
+
+            const logoUrl =
+                this.value(
+                    "storeConfigLogoUrl"
+                ).trim();
+
+            let activeLogo = "";
+
+            switch (logoSource) {
+
+                case "none":
+
+                    activeLogo = "";
+
+                    break;
+
+                case "drive":
+
+                    activeLogo = logoDrive;
+
+                    break;
+
+                case "url":
+
+                    activeLogo = logoUrl;
+
+                    break;
+
+                case "upload":
+
+                    activeLogo =
+                        this.logoValue || "";
+
+                    break;
+
+                default:
+
+                    activeLogo = "";
+
+                    break;
+
+            }
+
+
+            // ==============================
+            // DATA KONFIGURASI
+            // ==============================
+
             const data = {
 
                 STORE_NAME:
@@ -414,31 +478,28 @@ const StoreConfig = {
                     ).trim(),
 
 
+                // LOGO
                 LOGO_SOURCE:
-                    this.value(
-                        "storeConfigLogoSource"
-                    ).trim(),
+                    logoSource,
 
                 LOGO_DRIVE:
-                    this.value(
-                        "storeConfigLogoDrive"
-                    ).trim(),
+                    logoDrive,
 
                 LOGO_URL:
-                    this.value(
-                        "storeConfigLogoUrl"
-                    ).trim(),
+                    logoUrl,
 
                 LOGO:
-                    this.logoValue || "",
+                    activeLogo,
 
 
+                // CURRENCY
                 CURRENCY:
                     this.value(
                         "storeConfigCurrency"
                     ).trim(),
 
 
+                // TAX
                 TAX_ENABLED:
                     this.value(
                         "storeConfigTaxEnabled"
@@ -450,12 +511,14 @@ const StoreConfig = {
                     ).trim(),
 
 
+                // DISCOUNT
                 DISCOUNT_ENABLED:
                     this.value(
                         "storeConfigDiscountEnabled"
                     ).trim(),
 
 
+                // PREFIX
                 PRODUCT_PREFIX:
                     this.value(
                         "storeConfigProductPrefix"
@@ -467,6 +530,7 @@ const StoreConfig = {
                     ).trim(),
 
 
+                // RECEIPT
                 RECEIPT_HEADER:
                     this.value(
                         "storeConfigReceiptHeader"
@@ -478,6 +542,7 @@ const StoreConfig = {
                     ).trim(),
 
 
+                // QRIS
                 QRIS_ENABLED:
                     this.value(
                         "storeConfigQrisEnabled"
@@ -519,6 +584,7 @@ const StoreConfig = {
                     ).trim(),
 
 
+                // TIMEZONE
                 TIMEZONE:
                     this.value(
                         "storeConfigTimezone"
@@ -532,6 +598,10 @@ const StoreConfig = {
             };
 
 
+            // ==============================
+            // VALIDASI
+            // ==============================
+
             if (!data.STORE_NAME) {
 
                 throw new Error(
@@ -540,6 +610,43 @@ const StoreConfig = {
 
             }
 
+            if (
+                data.LOGO_SOURCE === "drive" &&
+                !data.LOGO_DRIVE
+            ) {
+
+                throw new Error(
+                    "URL Google Drive untuk logo wajib diisi."
+                );
+
+            }
+
+            if (
+                data.LOGO_SOURCE === "url" &&
+                !data.LOGO_URL
+            ) {
+
+                throw new Error(
+                    "URL logo wajib diisi."
+                );
+
+            }
+
+            if (
+                data.LOGO_SOURCE === "upload" &&
+                !data.LOGO
+            ) {
+
+                throw new Error(
+                    "Silakan pilih file logo terlebih dahulu."
+                );
+
+            }
+
+
+            // ==============================
+            // SIMPAN KE SERVER
+            // ==============================
 
             const response =
                 await API.saveStoreConfig(
@@ -559,6 +666,10 @@ const StoreConfig = {
 
             }
 
+
+            // ==============================
+            // PERBARUI KONFIGURASI LOKAL
+            // ==============================
 
             this.config = {
                 ...this.config,
