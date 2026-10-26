@@ -108,7 +108,8 @@
     font-size: 17px;
     line-height: 1.3;
     font-weight: 700;
-
+    text-align: center;
+    
     color: #074e34;
 }
 
@@ -120,6 +121,7 @@
 
     font-size: 11px;
     line-height: 1.5;
+    text-align: center;
 
     color: #718078;
 }

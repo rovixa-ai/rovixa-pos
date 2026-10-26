@@ -116,7 +116,8 @@
         color: #074e34;
 
         font-size: 21px;
-        font-weight: 750;
+        font-weight: 700;
+        text-align: center;
         letter-spacing: -0.04em;
         line-height: 1.35;
     }
@@ -128,6 +129,7 @@
 
         font-size: 12px;
         font-weight: 450;
+        text-align: center;
         line-height: 1.6;
     }
 
