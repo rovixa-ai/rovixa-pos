@@ -448,6 +448,65 @@
         background: #f3faf6;
     }
 
+
+
+/* ======================================
+   TABLE ROW
+   MODERN ANDROID TOUCH INTERACTION
+====================================== */
+
+.barang-page .barang-table tbody tr {
+    position: relative;
+
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+
+    transition:
+        background-color  180ms ease,
+        box-shadow 180ms ease;
+}
+
+/* Transisi warna setiap sel dalam baris */
+
+.barang-page .barang-table tbody tr td {
+    transition:
+        background-color 160ms ease,
+        color 160ms ease;
+}
+
+/* ======================================
+   ROW TOUCH FEEDBACK
+====================================== */
+
+.barang-page .barang-table tbody tr:active td {
+    background-color: #eaf8f0;
+
+    transition-duration: 60ms;
+}
+
+/* ======================================
+   ROW HOVER
+   KHUSUS PERANGKAT DENGAN MOUSE
+====================================== */
+
+@media (hover: hover) and (pointer: fine) {
+    .barang-page .barang-table tbody tr:hover td {
+        background-color: #f3faf6;
+    }
+}
+
+/* ======================================
+   REDUCE MOTION ACCESSIBILITY
+====================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    .barang-page .barang-table tbody tr,
+    .barang-page .barang-table tbody tr td {
+        transition: none !important;
+    }
+}
+
+
 /* ======================================
    EMPTY STATE
 ====================================== */

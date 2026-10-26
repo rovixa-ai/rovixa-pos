@@ -185,123 +185,219 @@
 
 /* ======================================
    MENU ITEM
+   MODERN ANDROID TOUCH INTERACTION
 ====================================== */
 
-    .laporan-page .laporan-menu-item {
-        position: relative;
+.laporan-page .laporan-menu-item {
+    position: relative;
 
-        width: 100%;
-        min-width: 0;
-        min-height: 43px;
+    width: 100%;
+    min-width: 0;
+    min-height: 43px;
 
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 
-        padding: 0 7px;
+    padding: 0 7px;
 
-        border: 1px solid #d6e2dd;
-        border-radius: 9px;
+    overflow: hidden;
+    isolation: isolate;
 
-        background: #ffffff;
+    border: 1px solid #d6e2dd;
+    border-radius: 10px;
 
-        color: #52645a;
+    background: #ffffff;
 
-        font-family: inherit;
-        font-size: 10px;
-        font-weight: 700;
-        line-height: 1.3;
+    color: #52645a;
 
-        text-align: center;
-        white-space: normal;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.3;
 
-        cursor: pointer;
+    text-align: center;
+    white-space: normal;
 
-        -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
 
-        transition:
-            color 180ms ease,
-            background 180ms ease,
-            border-color 180ms ease,
-            box-shadow 180ms ease,
-            transform 180ms ease;
-    }
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 
+    transition:
+        color 180ms ease,
+        background-color 180ms ease,
+        border-color 180ms ease,
+        box-shadow 180ms ease,
+        transform 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* ======================================
+   RIPPLE EFFECT
+====================================== */
+
+.laporan-page .laporan-menu-item::after {
+    content: "";
+
+    position: absolute;
+    z-index: -1;
+
+    top: 50%;
+    left: 50%;
+
+    width: 10px;
+    height: 10px;
+
+    border-radius: 50%;
+
+    background: rgba(16, 185, 129, 0.18);
+
+    opacity: 0;
+
+    transform: translate(-50%, -50%) scale(0);
+
+    pointer-events: none;
+}
+
+/* Ripple saat disentuh */
+
+.laporan-page .laporan-menu-item:active::after {
+    animation: laporan-mobile-ripple 450ms ease-out;
+}
+
+/* ======================================
+   HOVER
+   KHUSUS PERANGKAT DENGAN MOUSE
+====================================== */
+
+@media (hover: hover) and (pointer: fine) {
     .laporan-page .laporan-menu-item:hover {
         color: #047857;
 
         background: #f0fdf4;
 
-        border-color: rgba(16, 185, 129, 0.3);
-    }
+        border-color: rgba(16, 185, 129, 0.35);
 
-    .laporan-page .laporan-menu-item:focus-visible {
-        outline: 3px solid rgba(16, 185, 129, 0.18);
-        outline-offset: 2px;
+        box-shadow:
+            0 3px 9px rgba(16, 185, 129, 0.08);
+
+        transform: translateY(-1px);
     }
+}
+
+/* ======================================
+   FOCUS KEYBOARD
+====================================== */
+
+.laporan-page .laporan-menu-item:focus-visible {
+    outline: 3px solid rgba(16, 185, 129, 0.22);
+    outline-offset: 2px;
+}
 
 /* ======================================
    MENU ACTIVE
 ====================================== */
 
-    .laporan-page .laporan-menu-item.active {
-        color: #047857;
+.laporan-page .laporan-menu-item.active {
+    color: #047857;
 
-        background: linear-gradient(
-            135deg,
-            #ecfdf5 0%,
-            #d1fae5 100%
-        );
+    background: linear-gradient(
+        135deg,
+        #ecfdf5 0%,
+        #d1fae5 100%
+    );
 
-        border-color: #a7e8ca;
+    border-color: #a7e8ca;
 
-        box-shadow:
-            0 4px 10px rgba(16, 185, 129, 0.08);
+    box-shadow:
+        0 2px 7px rgba(16, 185, 129, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.laporan-page .laporan-menu-item.active::before {
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+    bottom: 4px;
+
+    width: 18px;
+    height: 2px;
+
+    border-radius: 10px;
+
+    background: linear-gradient(
+        90deg,
+        #059669,
+        #34d399
+    );
+
+    transform: translateX(-50%);
+
+    animation: laporan-mobile-indicator 220ms ease-out;
+}
+
+/* ======================================
+   TOUCH PRESS
+====================================== */
+
+.laporan-page .laporan-menu-item:active {
+    transform: scale(0.96);
+
+    background-color: #ecfdf5;
+
+    box-shadow:
+        0 1px 3px rgba(15, 23, 42, 0.04);
+
+    transition-duration: 80ms;
+}
+
+/* ======================================
+   RIPPLE ANIMATION
+====================================== */
+
+@keyframes laporan-mobile-ripple {
+    0% {
+        opacity: 0.7;
+        transform: translate(-50%, -50%) scale(0);
     }
 
-    .laporan-page .laporan-menu-item.active::before {
-        content: "";
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(15);
+    }
+}
 
-        position: absolute;
-        left: 50%;
-        bottom: 4px;
+/* ======================================
+   ACTIVE INDICATOR ANIMATION
+====================================== */
 
+@keyframes laporan-mobile-indicator {
+    from {
+        opacity: 0;
+        width: 5px;
+    }
+
+    to {
+        opacity: 1;
         width: 18px;
-        height: 2px;
-
-        transform: translateX(-50%);
-
-        border-radius: 10px;
-
-        background: linear-gradient(
-            90deg,
-            #059669,
-            #34d399
-        );
     }
+}
 
 /* ======================================
-   MENU PRESS
+   REDUCE MOTION ACCESSIBILITY
 ====================================== */
 
-    .laporan-page .laporan-menu-item:active {
-        transform: scale(0.97);
+@media (prefers-reduced-motion: reduce) {
+    .laporan-page .laporan-menu-item,
+    .laporan-page .laporan-menu-item::after,
+    .laporan-page .laporan-menu-item.active::before {
+        animation: none !important;
+        transition: none !important;
     }
-
-/* ======================================
-   CONTENT
-====================================== */
-
-    .laporan-page .laporan-content {
-        width: 100%;
-        min-width: 0;
-        max-width: 100%;
-
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-    }
+}
 
 }
 
