@@ -1083,6 +1083,7 @@
 
     .mobile-header-store {
         flex: 1 1 auto;
+        min-height: 50px;
         min-width: 0;
         width: 0;
         overflow: hidden;
@@ -1169,7 +1170,7 @@
 
     .mobile-header {
         gap: 6px;
-        padding: 0 12px;
+        padding: 4px 16px;
     }
 
     .mobile-header-store {
@@ -1177,13 +1178,13 @@
     }
 
     .mobile-header-logo {
-        flex: 0 0 28px;
-        width: 28px;
-        height: 28px;
+        flex: 0 0 36px;
+        width: 36px;
+        height: 36px;
     }
 
     .mobile-header-store-name {
-        font-size: 12px;
+        font-size: 14px;
     }
 
     .mobile-header-user {
@@ -1193,7 +1194,7 @@
         min-width: 0;
         max-width: 52%;
 
-        height: 30px;
+        height: 36px;
         gap: 4px;
 
         padding: 0 4px 0 5px;
@@ -1215,9 +1216,9 @@
     .mobile-header-logout {
         flex: 0 0 22px;
 
-        width: 22px;
+        width: 28px;
         min-width: 22px;
-        height: 22px;
+        height: 28px;
 
         margin: 0;
         padding: 3px;
