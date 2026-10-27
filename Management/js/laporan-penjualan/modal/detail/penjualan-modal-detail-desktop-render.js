@@ -26,8 +26,12 @@ const LaporanPenjualanDetailModalDesktopRender = {
             ></div>
 
 
-            <div
-                class="laporan-penjualan-detail-dialog"
+           <div
+                class="laporan-penjualan-detail-dialog ${
+                    String(row.status || "").trim().toUpperCase() === "RETUR"
+                        ? "modal-retur"
+                        : ""
+                }"
             >
 
 
@@ -115,17 +119,21 @@ const LaporanPenjualanDetailModalDesktopRender = {
 
 
                     <div>
-
                         <span>
                             Status
                         </span>
 
-                        <strong>
+                        <strong class="${
+                            String(row.status || "")
+                                .trim()
+                                .toUpperCase() === "RETUR"
+                                    ? "status-retur"
+                                    : "status-normal"
+                        }">
                             ${modal.escape(
                                 row.status || "-"
                             )}
                         </strong>
-
                     </div>
 
                 </div>

@@ -100,13 +100,7 @@ render() {
 
                     
 
-                    <button
-                        type="button"
-                        id="customerScreenButton"
-                        class="sales-mobile-customer-button"
-                    >
-                        Customer Screen
-                    </button>
+                    
 
                 </div>
 
@@ -148,6 +142,14 @@ render() {
                             src="icons/camera.png"
                             alt="Camera"
                         >
+                    </button>
+
+                    <button
+                        type="button"
+                        id="customerScreenButton"
+                        class="sales-mobile-customer-button"
+                    >
+                        Customer Screen
                     </button>
 
                 </div>

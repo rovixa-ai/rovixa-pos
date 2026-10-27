@@ -1,3 +1,4 @@
+
 /* ======================================
    TREEHOUSE POS
    LAPORAN MOBILE
@@ -156,69 +157,65 @@
     }
 
 /* ======================================
-   LAPORAN MENU
+   PREMIUM MOBILE MENU
 ====================================== */
 
-    .laporan-page .laporan-sidebar {
-        width: 100%;
-        min-width: 0;
+.laporan-page .laporan-sidebar {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 9px;
 
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 7px;
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
 
-        padding: 8px;
+    background:
+        linear-gradient(145deg, #ffffff 0%, #f5faf7 100%);
 
-        background: linear-gradient(
-            145deg,
-            #ffffff 0%,
-            #f8fbfa 100%
-        );
+    border: 1px solid #d6e2dd;
+    border-radius: 17px;
 
-        border: 1px solid #d6e2dd;
-        border-radius: 13px;
-
-        box-shadow:
-            0 5px 12px rgba(15, 23, 42, 0.035),
-            0 1px 3px rgba(15, 23, 42, 0.02);
-    }
+    box-shadow:
+        0 8px 22px rgba(15, 23, 42, 0.055),
+        0 2px 5px rgba(15, 23, 42, 0.025);
+}
 
 /* ======================================
-   MENU ITEM
-   MODERN ANDROID TOUCH INTERACTION
+   MENU CARD
 ====================================== */
 
 .laporan-page .laporan-menu-item {
     position: relative;
+    isolation: isolate;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 
     width: 100%;
     min-width: 0;
-    min-height: 43px;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-
-    padding: 0 7px;
+    min-height: 88px;
+    padding: 11px 4px 10px;
 
     overflow: hidden;
-    isolation: isolate;
-
-    border: 1px solid #d6e2dd;
-    border-radius: 10px;
-
-    background: #ffffff;
 
     color: #52645a;
+    background: linear-gradient(160deg, #ffffff 0%, #f8fbf9 100%);
+
+    border: 1px solid #e0eae4;
+    border-radius: 14px;
+
+    box-shadow:
+        0 3px 8px rgba(15, 23, 42, 0.035),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
 
     font-family: inherit;
     font-size: 10px;
     font-weight: 700;
     line-height: 1.3;
-
     text-align: center;
-    white-space: normal;
 
     cursor: pointer;
 
@@ -226,105 +223,142 @@
     touch-action: manipulation;
 
     transition:
-        color 180ms ease,
-        background-color 180ms ease,
+        background 180ms ease,
         border-color 180ms ease,
         box-shadow 180ms ease,
         transform 180ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 /* ======================================
-   RIPPLE EFFECT
+   ICON CONTAINER
 ====================================== */
 
-.laporan-page .laporan-menu-item::after {
-    content: "";
+.laporan-page .laporan-menu-icon {
+    position: relative;
+    z-index: 1;
 
-    position: absolute;
-    z-index: -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    top: 50%;
-    left: 50%;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
 
-    width: 10px;
-    height: 10px;
+    border: 1px solid #d9f2e4;
+    border-radius: 13px;
 
-    border-radius: 50%;
+    background: linear-gradient(
+        145deg,
+        #ecfdf5 0%,
+        #d9fbe8 100%
+    );
 
-    background: rgba(16, 185, 129, 0.18);
+    box-shadow:
+        0 3px 7px rgba(5, 150, 105, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
 
-    opacity: 0;
+    font-size: 24px;
+    line-height: 1;
 
-    transform: translate(-50%, -50%) scale(0);
-
-    pointer-events: none;
+    transition:
+        transform 180ms ease,
+        background 180ms ease,
+        box-shadow 180ms ease;
 }
 
-/* Ripple saat disentuh */
+.laporan-page .laporan-menu-text {
+    position: relative;
+    z-index: 1;
 
-.laporan-page .laporan-menu-item:active::after {
-    animation: laporan-mobile-ripple 450ms ease-out;
+    display: block;
+    max-width: 100%;
+
+    color: inherit;
+
+    font-size: 10px;
+    font-weight: 750;
+    line-height: 1.3;
+    text-align: center;
+
+    overflow-wrap: anywhere;
 }
 
 /* ======================================
-   HOVER
-   KHUSUS PERANGKAT DENGAN MOUSE
+   HOVER - MOUSE
 ====================================== */
 
 @media (hover: hover) and (pointer: fine) {
     .laporan-page .laporan-menu-item:hover {
-        color: #047857;
+        transform: translateY(-2px);
 
-        background: #f0fdf4;
+        border-color: #a7e8ca;
 
-        border-color: rgba(16, 185, 129, 0.35);
+        background: linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #effcf5 100%
+        );
 
         box-shadow:
-            0 3px 9px rgba(16, 185, 129, 0.08);
+            0 7px 15px rgba(5, 150, 105, 0.09),
+            0 2px 4px rgba(15, 23, 42, 0.025);
+    }
 
-        transform: translateY(-1px);
+    .laporan-page .laporan-menu-item:hover .laporan-menu-icon {
+        transform: translateY(-2px) scale(1.04);
     }
 }
 
 /* ======================================
-   FOCUS KEYBOARD
-====================================== */
-
-.laporan-page .laporan-menu-item:focus-visible {
-    outline: 3px solid rgba(16, 185, 129, 0.22);
-    outline-offset: 2px;
-}
-
-/* ======================================
-   MENU ACTIVE
+   ACTIVE MENU
 ====================================== */
 
 .laporan-page .laporan-menu-item.active {
     color: #047857;
 
     background: linear-gradient(
-        135deg,
-        #ecfdf5 0%,
-        #d1fae5 100%
+        145deg,
+        #f0fdf6 0%,
+        #dcfce9 100%
+    );
+
+    border-color: #86ddb5;
+
+    box-shadow:
+        0 5px 13px rgba(5, 150, 105, 0.11),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.laporan-page .laporan-menu-item.active .laporan-menu-icon {
+    color: #047857;
+
+    background: linear-gradient(
+        145deg,
+        #d1fae5 0%,
+        #a7f3d0 100%
     );
 
     border-color: #a7e8ca;
 
     box-shadow:
-        0 2px 7px rgba(16, 185, 129, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        0 4px 9px rgba(5, 150, 105, 0.13),
+        inset 0 1px 0 rgba(255, 255, 255, 0.85);
+
+    transform: scale(1.04);
 }
 
 .laporan-page .laporan-menu-item.active::before {
     content: "";
 
     position: absolute;
+    z-index: 2;
 
     left: 50%;
     bottom: 4px;
 
-    width: 18px;
-    height: 2px;
+    width: 22px;
+    height: 3px;
 
     border-radius: 10px;
 
@@ -335,69 +369,123 @@
     );
 
     transform: translateX(-50%);
-
-    animation: laporan-mobile-indicator 220ms ease-out;
 }
 
 /* ======================================
-   TOUCH PRESS
+   TOUCH FEEDBACK
 ====================================== */
 
 .laporan-page .laporan-menu-item:active {
-    transform: scale(0.96);
+    transform: scale(0.95);
 
-    background-color: #ecfdf5;
+    background: #eaf9f0;
 
     box-shadow:
         0 1px 3px rgba(15, 23, 42, 0.04);
 
-    transition-duration: 80ms;
+    transition-duration: 70ms;
 }
 
+.laporan-page .laporan-menu-item:active .laporan-menu-icon {
+    transform: scale(0.91);
+}
+
+/* ======================================
+   KEYBOARD FOCUS
+====================================== */
+
+.laporan-page .laporan-menu-item:focus-visible {
+    outline: 3px solid rgba(16, 185, 129, 0.3);
+    outline-offset: 2px;
+}
+
+/* ======================================
+   SMALL MOBILE
+====================================== */
+
+@media (max-width: 380px) {
+    .laporan-page .laporan-sidebar {
+        gap: 6px;
+        padding: 8px;
+    }
+
+    .laporan-page .laporan-menu-item {
+        min-height: 78px;
+        gap: 6px;
+        padding: 8px 3px;
+        border-radius: 12px;
+        font-size: 9px;
+    }
+
+    .laporan-page .laporan-menu-icon {
+        width: 36px;
+        height: 36px;
+        flex-basis: 36px;
+        border-radius: 11px;
+        font-size: 21px;
+    }
+
+    .laporan-page .laporan-menu-text {
+        font-size: 9px;
+    }
+}
+
+/* ======================================
+   REDUCED MOTION
+====================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    .laporan-page .laporan-menu-item,
+    .laporan-page .laporan-menu-icon {
+        transition: none !important;
+        animation: none !important;
+    }
+}
 /* ======================================
    RIPPLE ANIMATION
 ====================================== */
 
-@keyframes laporan-mobile-ripple {
-    0% {
-        opacity: 0.7;
-        transform: translate(-50%, -50%) scale(0);
-    }
+    @keyframes laporan-mobile-ripple {
+        0% {
+            opacity: 0.7;
+            transform: translate(-50%, -50%) scale(0);
+        }
 
-    100% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(15);
+        100% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(15);
+        }
     }
-}
 
 /* ======================================
    ACTIVE INDICATOR ANIMATION
 ====================================== */
 
-@keyframes laporan-mobile-indicator {
-    from {
-        opacity: 0;
-        width: 5px;
-    }
+    @keyframes laporan-mobile-indicator {
+        from {
+            opacity: 0;
+            width: 5px;
+        }
 
-    to {
-        opacity: 1;
-        width: 18px;
+        to {
+            opacity: 1;
+            width: 18px;
+        }
     }
-}
 
 /* ======================================
    REDUCE MOTION ACCESSIBILITY
 ====================================== */
 
-@media (prefers-reduced-motion: reduce) {
-    .laporan-page .laporan-menu-item,
-    .laporan-page .laporan-menu-item::after,
-    .laporan-page .laporan-menu-item.active::before {
-        animation: none !important;
-        transition: none !important;
+    @media (prefers-reduced-motion: reduce) {
+        .laporan-page .laporan-menu-item,
+        .laporan-page .laporan-menu-item::after,
+        .laporan-page .laporan-menu-item.active::before,
+        .laporan-page .laporan-menu-icon {
+            animation: none !important;
+            transition: none !important;
+        }
     }
-}
 
 }
 
@@ -441,9 +529,20 @@
     }
 
     .laporan-page .laporan-menu-item {
-        min-height: 39px;
-        padding: 0 4px;
+        min-height: 62px;
+        padding: 6px 3px;
         border-radius: 8px;
+        font-size: 9px;
+    }
+
+    .laporan-page .laporan-menu-icon {
+        width: 27px;
+        height: 27px;
+        min-height: 27px;
+        font-size: 21px;
+    }
+
+    .laporan-page .laporan-menu-text {
         font-size: 9px;
     }
 

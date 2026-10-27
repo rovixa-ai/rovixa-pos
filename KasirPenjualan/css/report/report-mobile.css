@@ -94,31 +94,56 @@
 }
 
 /* ======================================
-   HEADER
+   HEADER STICKY — FIX OVERLAPPING CONTENT
 ====================================== */
 
 .report-header-mobile {
+    position: sticky;
+    top: -16px;
+    z-index: 9999;
+    isolation: isolate;
+
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: stretch;
     flex-shrink: 0;
     gap: 12px;
+
     width: 100%;
     min-width: 0;
-    margin: 0;
-    padding: 0 0 14px;
+    margin: -16px 0 0;
+    padding: 16px 0 14px;
+
+    background: #ffffff;
     border-bottom: 1px solid #dce8e2;
+
+    box-shadow: 0 4px 12px rgba(15, 35, 27, 0.08);
+
     box-sizing: border-box;
-    position: relative;
+}
+
+.report-header-mobile::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: #ffffff;
+    pointer-events: none;
 }
 
 .report-header-mobile .report-modal-close-mobile {
     position: absolute;
-    top: 0;
+    top: 16px;
     right: 0;
     margin: 0;
     z-index: 2;
+}
+
+/* Pastikan elemen setelah header berada di lapisan normal */
+.report-page-mobile > :not(.report-header-mobile) {
+    position: relative;
+    z-index: 0;
 }
 
 .report-header-content-mobile {
@@ -149,20 +174,21 @@
     align-items: center;
     justify-content: flex-start;
     gap: 10px;
+
     width: 100%;
     min-width: 0;
     margin: 0;
+
     box-sizing: border-box;
 }
 
 .report-header-actions-mobile .report-button-mobile {
     flex: 0 1 auto;
     min-width: 90px;
-
 }
-
 /* ======================================
-   BUTTON
+   BUTTON MOBILE
+   PREMIUM EMERALD DESIGN
 ====================================== */
 
 .report-button-mobile {
@@ -170,27 +196,42 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
+
     min-width: 0;
     max-width: 160px;
     min-height: 40px;
+
     margin: 0;
-    padding: 9px 12px;
-    border: 0px solid #d6e2dd;
+    padding: 9px 14px;
+
+    border: 1px solid #d6e2dd;
     border-radius: 10px;
-    background: linear-gradient(145deg, #ffffff 0%, #f8fbfa 100%);
-    color: #ffffff;
+
+    background: linear-gradient(
+        145deg,
+        #ffffff 0%,
+        #f4f9f6 100%
+    );
+
+    color: #34463d;
+
     font-family: inherit;
     font-size: 12px;
-    line-height: 1.3;
-    font-weight: 700;
+    line-height: 1.4;
+    font-weight: 600;
+
     white-space: normal;
     text-align: center;
     overflow-wrap: anywhere;
+
     cursor: pointer;
+
     box-shadow:
-        0 4px 10px rgba(15, 23, 42, 0.035),
-        0 1px 3px rgba(15, 23, 42, 0.025);
+        0 2px 5px rgba(15, 35, 27, 0.04),
+        0 1px 2px rgba(15, 35, 27, 0.025);
+
     box-sizing: border-box;
+
     transition:
         background 0.2s ease,
         border-color 0.2s ease,
@@ -200,48 +241,106 @@
 }
 
 .report-button-mobile img {
+    display: block;
+
     width: 20px;
     height: 20px;
-    display: block;
+
     flex-shrink: 0;
+
     object-fit: contain;
 }
 
 .report-button-mobile:hover {
-    background: #f0f8f4;
+    background: linear-gradient(
+        145deg,
+        #f0faf5 0%,
+        #e7f5ed 100%
+    );
+
     border-color: #a7cbb8;
     color: #047857;
+
+    box-shadow:
+        0 4px 9px rgba(5, 150, 105, 0.08);
 }
 
 .report-button-mobile:active {
     transform: translateY(1px);
+    box-shadow: none;
 }
 
-.report-button-mobile.primary {
-    min-height: 40px;
-    padding: 9px 12px;
-    border-color: #059669;
-    background: linear-gradient(135deg, #03fd789c 0%, #05966896 100%);
-    color: #f3f9f7;
-    box-shadow:
-        0 5px 12px rgba(5, 150, 105, 0.17),
-        inset 0 1px 0 rgba(255, 255, 255, 0.16);
+/* ======================================
+   PRIMARY BUTTON
+====================================== */
 
+.report-button-mobile.primary {
     position: relative;
+    z-index: 2;
+
+    min-height: 40px;
     margin-left: auto;
     margin-right: 0;
-    z-index: 2;
+    padding: 9px 14px;
+
+    border: 1px solid #059669;
+
+    background: linear-gradient(
+        135deg,
+        #10b981 0%,
+        #059669 100%
+    );
+
+    color: #ffffff;
+
+    font-weight: 700;
+
+    box-shadow:
+        0 4px 10px rgba(5, 150, 105, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .report-button-mobile.primary:hover {
     border-color: #047857;
-    background: linear-gradient(135deg, #058f9627 0%, #047857 100%);
+
+    background: linear-gradient(
+        135deg,
+        #059669 0%,
+        #047857 100%
+    );
+
+    color: #ffffff;
+
+    box-shadow:
+        0 6px 14px rgba(5, 150, 105, 0.22);
+
+    transform: translateY(-1px);
 }
+
+.report-button-mobile.primary:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* ======================================
+   FOCUS ACCESSIBILITY
+====================================== */
 
 .report-button-mobile:focus-visible,
 .report-modal-close-mobile:focus-visible {
     outline: 2px solid #10b981;
-    outline-offset: 2px;
+    outline-offset: 3px;
+}
+
+/* ======================================
+   DISABLED STATE
+====================================== */
+
+.report-button-mobile:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none;
 }
 
 /* ======================================
@@ -281,24 +380,35 @@
 
 /* ======================================
    FILTER
+   TWO-COLUMN LAYOUT
 ====================================== */
 
 .report-filter-mobile {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
     gap: 12px;
+
+    flex-shrink: 0;
     width: 100%;
     min-width: 0;
+
     margin: 0;
     padding: 14px 12px;
-    background: linear-gradient(145deg, #ffffff 0%, #f8fbfa 100%);
+
+    background: linear-gradient(
+        145deg,
+        #ffffff 0%,
+        #f8fbfa 100%
+    );
+
     border: 1px solid #dce8e2;
     border-radius: 14px;
+
     box-shadow:
         0 8px 20px rgba(15, 23, 42, 0.035),
         0 2px 5px rgba(15, 23, 42, 0.02);
+
     box-sizing: border-box;
 }
 
@@ -306,9 +416,11 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+
     width: 100%;
     min-width: 0;
     max-width: none;
+
     margin: 0;
     box-sizing: border-box;
 }
@@ -323,20 +435,26 @@
 .report-filter-group-mobile input,
 .report-filter-group-mobile select {
     display: block;
+
     width: 100%;
     min-width: 0;
     max-width: 100%;
     height: 42px;
+
     margin: 0;
     padding: 0 10px;
+
     font-family: inherit;
     font-size: 14px;
     color: #17221e;
+
     background: #ffffff;
     border: 1px solid #d6e2dd;
     border-radius: 9px;
+
     outline: none;
     box-sizing: border-box;
+
     transition:
         border-color 0.2s ease,
         box-shadow 0.2s ease,
@@ -359,8 +477,10 @@
     display: none;
     align-items: stretch;
     gap: 8px;
+
     width: 100%;
     min-width: 0;
+
     margin: 0;
     box-sizing: border-box;
 }
@@ -369,6 +489,24 @@
     flex: 1 1 0;
     width: auto;
     min-width: 0;
+}
+
+/* LAYAR SANGAT KECIL */
+@media (max-width: 340px) {
+    .report-filter-mobile {
+        gap: 8px;
+        padding: 12px 8px;
+    }
+
+    .report-filter-group-mobile label {
+        font-size: 11px;
+    }
+
+    .report-filter-group-mobile input,
+    .report-filter-group-mobile select {
+        padding: 0 6px;
+        font-size: 12px;
+    }
 }
 
 /* ======================================

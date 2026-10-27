@@ -33,49 +33,41 @@ const LaporanMobileRender = {
                     id="laporan-sidebar-menu"
                 >
 
-                    <button
+                  <button
                         type="button"
                         class="laporan-menu-item active"
                         data-laporan="pembelian"
                     >
-
-                        Pembelian
-
+                        <span class="laporan-menu-icon">🛒</span>
+                        <span class="laporan-menu-text">Pembelian</span>
                     </button>
-
 
                     <button
                         type="button"
                         class="laporan-menu-item"
                         data-laporan="penjualan"
                     >
-
-                        Penjualan
-
+                        <span class="laporan-menu-icon">🛍️</span>
+                        <span class="laporan-menu-text">Penjualan</span>
                     </button>
-
 
                     <button
                         type="button"
                         class="laporan-menu-item"
                         data-laporan="expense"
                     >
-
-                        Expense
-
+                        <span class="laporan-menu-icon">💸</span>
+                        <span class="laporan-menu-text">Expense</span>
                     </button>
-
 
                     <button
                         type="button"
                         class="laporan-menu-item"
                         data-laporan="profit"
                     >
-
-                        Profit
-
+                        <span class="laporan-menu-icon">📈</span>
+                        <span class="laporan-menu-text">Profit</span>
                     </button>
-
                 </nav>
 
 

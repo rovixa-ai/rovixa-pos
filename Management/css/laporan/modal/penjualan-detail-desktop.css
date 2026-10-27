@@ -238,6 +238,12 @@
 }
 
 
+
+.status-retur {
+    color: #dc2626 !important;
+}
+
+
 /* ==========================================
    SECTION
 ========================================== */
@@ -563,6 +569,38 @@
     transform: translateY(0);
 }
 
+
+/* WATERMARK RETUR — TANPA MENGUBAH POSISI MODAL */
+
+.laporan-penjualan-detail-dialog.modal-retur {
+    position: fixed;
+    isolation: isolate;
+}
+
+.laporan-penjualan-detail-dialog.modal-retur::after {
+    content: "RETUR";
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%) rotate(-30deg);
+
+    padding: 8px 24px;
+    border: 5px solid rgba(220, 38, 38, 0.13);
+    border-radius: 12px;
+
+    color: rgba(220, 38, 38, 0.13);
+    font-size: clamp(48px, 9vw, 100px);
+    font-weight: 900;
+    letter-spacing: 8px;
+    line-height: 1.2;
+    white-space: nowrap;
+
+    pointer-events: none;
+    user-select: none;
+    z-index: 10;
+}
 
 /* ==========================================
    DESKTOP - COMPACT HEIGHT

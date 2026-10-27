@@ -610,6 +610,11 @@
     white-space: normal;
 }
 
+.report-status.retur {
+    color: #dc2626 !important;
+    font-weight: 600;
+}
+
 /* ======================================
    RESPONSIVE DESKTOP
 ====================================== */

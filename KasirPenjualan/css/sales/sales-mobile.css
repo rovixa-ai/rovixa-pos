@@ -305,6 +305,17 @@
         display: flex;
         align-items: stretch;
         gap: 6px;
+
+        margin-top: 16px;
+        margin-bottom: 4px;
+
+        background: linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #f8fbfa 100%
+        );
+        border: 1px solid #fafdfcf8;
+
     }
 
     .sales-mobile-search-input {

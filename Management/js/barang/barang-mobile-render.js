@@ -23,12 +23,13 @@ const BarangMobileRender = {
 
 
                     <button
+                        type="button"
                         class="btn-primary"
                         id="barang-tambah"
+                        aria-label="Tambah Barang Baru"
                     >
-
-                        + Barang Baru
-
+                        <span aria-hidden="true">＋</span>
+                        <span>Tambah Barang</span>
                     </button>
 
                 </div>

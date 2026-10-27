@@ -40,6 +40,8 @@
         display: flex;
         flex-direction: column;
 
+        position: relative;
+
         width: 100%;
         max-width: 100%;
         min-width: 0;
@@ -494,6 +496,11 @@
         color: #87968e;
         background: #f8fcf9;
     }
+
+    .report-status.retur {
+    color: #dc2626 !important;
+    font-weight: 600;
+}
 
 
     /* ======================================
@@ -961,6 +968,36 @@
         outline-offset: 2px;
     }
 
+    /* WATERMARK RETUR */
+.report-detail-modal {
+    position: relative;
+}
+
+.report-detail-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%) rotate(-30deg);
+
+    color: rgba(220, 38, 38, 0.22);
+    border: 5px solid rgba(220, 38, 38, 0.22);
+    border-radius: 12px;
+
+    padding: 8px 24px;
+
+    font-size: clamp(48px, 9vw, 100px);
+    font-weight: 900;
+    letter-spacing: 8px;
+    line-height: 1.2;
+    white-space: nowrap;
+
+    pointer-events: none;
+    user-select: none;
+
+    z-index: 4;
+}
+
 
     /* ======================================
        SMALL MOBILE
@@ -1019,7 +1056,7 @@
         .report-detail-actions button {
             min-height: 42px;
             padding: 9px 5px;
-            font-size: 11px;
+            font-size: 14px;
         }
     }
 

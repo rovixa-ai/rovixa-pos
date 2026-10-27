@@ -186,6 +186,8 @@ Object.assign(Report, {
 
     showDetail(data) {
 
+        
+        
         const items =
             Array.isArray(
                 data.items
@@ -459,6 +461,8 @@ Object.assign(Report, {
 
                 `;
 
+                
+
 
         /*==================================
           PAYMENT HTML
@@ -557,8 +561,14 @@ Object.assign(Report, {
         ==================================*/
 
         const modal =
-            document.createElement(
-                "div"
+            document.createElement("div");
+
+        modal.className =
+            "report-detail-overlay" +
+            (
+                statusUpper === "RETUR"
+                    ? " modal-retur"
+                    : ""
             );
 
 
@@ -886,6 +896,20 @@ Object.assign(Report, {
             </div>
 
         `;
+
+        if (statusUpper === "RETUR") {
+    const watermark = document.createElement("div");
+
+    watermark.className = "report-detail-watermark";
+    watermark.textContent = "RETUR";
+    watermark.setAttribute("aria-hidden", "true");
+
+    const detailModal = modal.querySelector(".report-detail-modal");
+
+    if (detailModal) {
+        detailModal.appendChild(watermark);
+    }
+}
 
 
         /*==================================

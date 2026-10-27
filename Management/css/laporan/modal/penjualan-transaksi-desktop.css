@@ -677,6 +677,18 @@
     font-weight: 700;
 }
 
+.penjualan-transaksi-table-wrapper tbody td:last-child.status-normal {
+    color: #047857;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.penjualan-transaksi-table-wrapper tbody td:last-child.status-retur {
+    color: #dc2626;
+    font-size: 10px;
+    font-weight: 700;
+}
+
 
 /* ==========================================
    EMPTY STATE

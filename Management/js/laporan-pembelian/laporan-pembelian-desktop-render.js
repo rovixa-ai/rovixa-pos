@@ -28,7 +28,13 @@ const LaporanPembelianDesktopRender = {
                             id="laporanPembelianLaporan"
                             class="laporan-laporan-button"
                         >
-                            Print
+                            <img
+                                src="icons/print.png"
+                                alt=""
+                                class="laporan-laporan-icon"
+                                aria-hidden="true"
+                            >
+                            <span>Print</span>
                         </button>
 
                     </div>

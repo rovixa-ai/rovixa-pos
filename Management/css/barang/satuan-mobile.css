@@ -133,60 +133,7 @@
         line-height: 1.6;
     }
 
-/* ======================================
-   PRIMARY BUTTON
-====================================== */
 
-    .satuan-page .satuan-header .btn-primary {
-        position: relative;
-        z-index: 1;
-
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 7px;
-
-        width: 100%;
-        min-width: 0;
-        min-height: 43px;
-
-        padding: 0 14px;
-
-        border: 1px solid #059669;
-        border-radius: 10px;
-
-        background: linear-gradient(
-            135deg,
-            #10b981 0%,
-            #059669 100%
-        );
-
-        color: #ffffff;
-
-        font-family: inherit;
-        font-size: 13px;
-        font-weight: 700;
-        line-height: 1.3;
-
-        white-space: nowrap;
-
-        box-shadow:
-            0 4px 10px rgba(5, 150, 105, 0.16),
-            inset 0 1px 0 rgba(255, 255, 255, 0.18);
-
-        cursor: pointer;
-
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    .satuan-page .satuan-header .btn-primary:active {
-        transform: scale(0.99);
-    }
-
-    .satuan-page .satuan-header .btn-primary:focus-visible {
-        outline: 3px solid rgba(16, 185, 129, 0.22);
-        outline-offset: 2px;
-    }
 
 /* ======================================
    TOOLBAR
@@ -207,8 +154,8 @@
             #f8fbfa 100%
         );
 
-        border: 1px solid #d6e2dd;
-        border-radius: 13px;
+        border: 0.5px solid #d6e2dd;
+        border-radius: 50px;
 
         box-shadow:
             0 5px 12px rgba(15, 23, 42, 0.035),
@@ -228,8 +175,8 @@
 
         padding: 0 12px;
 
-        border: 1px solid #d6e2dd;
-        border-radius: 9px;
+        border: 0.5px solid #d6e2ddda;
+        border-radius: 50px;
 
         background: #ffffff;
 

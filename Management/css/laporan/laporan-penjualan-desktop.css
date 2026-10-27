@@ -158,6 +158,13 @@
         filter 0.2s ease;
 }
 
+.laporan-laporan-icon {
+    display: block;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    object-fit: contain;
+}
 
 .laporan-penjualan .laporan-laporan-button:hover {
     filter: brightness(1.03);

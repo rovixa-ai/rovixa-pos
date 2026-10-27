@@ -46,24 +46,7 @@ const ReportMobileRender = {
                                     ×
                                 </button>
 
-                            <div class="report-header-actions-mobile">
-
-                                <button
-                                    type="button"
-                                    class="report-button-mobile primary"
-                                    id="reportLaporanButton"
-                                >
-                                    <img
-                                        src="icons/print.png"
-                                        alt="Print"
-                                    >
-
-                                    <span>Print</span>
-                                </button>
-
-                                
-
-                            </div>
+                            
 
                         </div>
 
@@ -94,19 +77,27 @@ const ReportMobileRender = {
 
                             </div>
 
-                            <div class="report-filter-actions-mobile">
+                           
+                        </div>
+
+                         <div class="report-header-actions-mobile">
 
                                 <button
                                     type="button"
-                                    class="report-button-mobile"
-                                    id="reportResetButton"
+                                    class="report-button-mobile primary"
+                                    id="reportLaporanButton"
                                 >
-                                    Reset
+                                    <img
+                                        src="icons/print.png"
+                                        alt="Print"
+                                    >
+
+                                    <span>Print</span>
                                 </button>
 
-                            </div>
+                                
 
-                        </div>
+                            </div>
 
                         <div
                             class="report-summary-mobile"

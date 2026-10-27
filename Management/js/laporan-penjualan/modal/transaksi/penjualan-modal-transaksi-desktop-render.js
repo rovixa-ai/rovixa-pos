@@ -538,14 +538,17 @@ const PenjualanTransaksiModalDesktopRender = {
                                                             </td>
 
 
-                                                            <td>
-
-                                                                ${modal.escape(
-                                                                    transaction.status ||
-                                                                    "-"
-                                                                )}
-
-                                                            </td>
+                                                            <td class="${
+                                                                    String(transaction.status || "")
+                                                                        .trim()
+                                                                        .toUpperCase() === "RETUR"
+                                                                            ? "status-retur"
+                                                                            : "status-normal"
+                                                                }">
+                                                                    ${modal.escape(
+                                                                        transaction.status || "-"
+                                                                    )}
+                                                                </td>
 
                                                         </tr>
 
