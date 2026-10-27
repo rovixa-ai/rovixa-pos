@@ -2,170 +2,165 @@
 // TREEHOUSE POS
 // SALES
 // RENDER SELECTOR
-// ORIENTATION RESPONSIVE
+// RESPONSIVE TANPA RELOAD
 // ======================================
 
 Object.assign(
     Sales,
     {
-        renderResizeHandler: null,
-        renderResizeTimer: null,
-        renderObserver: null,
+
+        /* ==================================
+           STATUS RENDER
+        ================================== */
+
         currentRenderMode: null,
+
+        renderResizeHandler: null,
+
+        renderResizeTimer: null,
+
+        renderObserver: null,
+
 
         /* ==================================
            DETEKSI MODE TAMPILAN
         ================================== */
 
         getRenderMode() {
-            const isMobile = window.matchMedia(
-                "(max-width: 768px)"
-            ).matches;
 
-            const isPortrait = window.matchMedia(
-                "(orientation: portrait)"
-            ).matches;
+            const isMobile =
+                window.innerWidth <= 768;
+
+            const isPortrait =
+                window.matchMedia(
+                    "(orientation: portrait)"
+                ).matches;
 
             if (isMobile && isPortrait) {
                 return "mobile";
             }
 
             return "desktop";
+
         },
+
 
         /* ==================================
            RENDER HALAMAN SALES
         ================================== */
 
         render() {
-            const container = document.getElementById(
-                "pageContent"
-            );
+
+            const container =
+                document.getElementById(
+                    "pageContent"
+                );
 
             if (!container) {
+
                 console.error(
                     "pageContent tidak ditemukan."
                 );
+
                 return;
+
             }
 
-            const renderMode = this.getRenderMode();
-
-            const pageSelector =
-                renderMode === "mobile"
-                    ? ".sales-mobile-page"
-                    : ".sales-desktop-page";
-
-            /*
-             * Pastikan struktur halaman sesuai mode.
-             * Jika mode sama dan struktur benar,
-             * jangan mengganti DOM.
-             */
-
-            if (
-                this.currentRenderMode === renderMode &&
-                container.querySelector(pageSelector)
-            ) {
-                return;
-            }
+            const renderMode =
+                this.getRenderMode();
 
             let html = "";
 
-            /* ==================================
-               MOBILE PORTRAIT
-            ================================== */
-
             if (renderMode === "mobile") {
+
                 if (
-                    typeof SalesMobileRender === "undefined"
+                    typeof SalesMobileRender ===
+                    "undefined"
                 ) {
+
                     console.error(
                         "SalesMobileRender tidak tersedia."
                     );
+
                     return;
+
                 }
 
-                html = SalesMobileRender.render();
-            }
+                html =
+                    SalesMobileRender.render();
 
-            /* ==================================
-               DESKTOP / MOBILE LANDSCAPE
-            ================================== */
+            } else {
 
-            else {
                 if (
-                    typeof SalesDesktopRender === "undefined"
+                    typeof SalesDesktopRender ===
+                    "undefined"
                 ) {
+
                     console.error(
                         "SalesDesktopRender tidak tersedia."
                     );
+
                     return;
+
                 }
 
-                html = SalesDesktopRender.render();
-            }
+                html =
+                    SalesDesktopRender.render();
 
-            /*
-             * Ganti struktur tampilan saja.
-             * Jangan reset Sales.products,
-             * Sales.cart, atau Sales.discount.
-             */
+            }
 
             container.innerHTML = html;
 
-            this.currentRenderMode = renderMode;
-
-            /* ==================================
-               PULIHKAN DAFTAR BARANG
-            ================================== */
+            this.currentRenderMode =
+                renderMode;
 
             if (
-                typeof this.renderProducts === "function"
+                typeof this.renderProducts ===
+                "function"
             ) {
-                this.renderProducts();
-            }
 
-            /* ==================================
-               PULIHKAN KERANJANG
-            ================================== */
+                this.renderProducts();
+
+            }
 
             if (
                 typeof Cart !== "undefined" &&
                 typeof Cart.render === "function"
             ) {
+
                 Cart.render();
+
             }
 
-            /* ==================================
-               PASANG ULANG EVENT SALES
-            ================================== */
+            if (
+                typeof this.event === "function"
+            ) {
 
-            if (typeof this.event === "function") {
                 this.event();
-            }
 
-            /* ==================================
-               PASANG ULANG EVENT KERANJANG
-            ================================== */
+            }
 
             if (
                 typeof Cart !== "undefined" &&
                 typeof Cart.event === "function"
             ) {
+
                 Cart.event();
+
             }
+
         },
 
+
         /* ==================================
-           EVENT PERUBAHAN ORIENTASI
+           PANTAU PERUBAHAN MODE
+           TANPA RELOAD HALAMAN
         ================================== */
 
         watchRenderMode() {
-            /*
-             * Hindari pemasangan listener ganda.
-             */
 
             if (this.renderResizeHandler) {
+
                 window.removeEventListener(
                     "resize",
                     this.renderResizeHandler
@@ -175,50 +170,55 @@ Object.assign(
                     "orientationchange",
                     this.renderResizeHandler
                 );
+
             }
 
             if (this.renderResizeTimer !== null) {
-                clearTimeout(this.renderResizeTimer);
+
+                clearTimeout(
+                    this.renderResizeTimer
+                );
+
                 this.renderResizeTimer = null;
+
             }
 
+            this.currentRenderMode =
+                this.getRenderMode();
+
             this.renderResizeHandler = () => {
-                if (this.renderResizeTimer !== null) {
-                    clearTimeout(this.renderResizeTimer);
-                }
 
-                this.renderResizeTimer = setTimeout(() => {
-                    this.renderResizeTimer = null;
+                if (
+                    this.renderResizeTimer !== null
+                ) {
 
-                    const nextMode = this.getRenderMode();
-
-                    const container = document.getElementById(
-                        "pageContent"
+                    clearTimeout(
+                        this.renderResizeTimer
                     );
 
-                    if (!container) {
-                        return;
-                    }
+                }
 
-                    const expectedSelector =
-                        nextMode === "mobile"
-                            ? ".sales-mobile-page"
-                            : ".sales-desktop-page";
+                this.renderResizeTimer =
+                    setTimeout(() => {
 
-                    const currentPageExists =
-                        Boolean(
-                            container.querySelector(
-                                expectedSelector
-                            )
-                        );
+                        this.renderResizeTimer = null;
 
-                    if (
-                        nextMode !== this.currentRenderMode ||
-                        !currentPageExists
-                    ) {
+                        const nextMode =
+                            this.getRenderMode();
+
+                        if (
+                            nextMode ===
+                            this.currentRenderMode
+                        ) {
+
+                            return;
+
+                        }
+
                         this.render();
-                    }
-                }, 150);
+
+                    }, 200);
+
             };
 
             window.addEventListener(
@@ -230,6 +230,8 @@ Object.assign(
                 "orientationchange",
                 this.renderResizeHandler
             );
+
         }
+
     }
 );
