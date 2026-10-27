@@ -99,7 +99,7 @@ input:focus-visible {
     background: linear-gradient(145deg, #10b981, #047857);
     box-shadow: 0 7px 18px rgba(5, 150, 105, 0.2);
     font-size: 25px;
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .brand-info {
@@ -111,7 +111,7 @@ input:focus-visible {
 .brand-name {
     color: var(--text);
     font-size: 14px;
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: 1.4px;
 }
 
@@ -178,7 +178,7 @@ input:focus-visible {
     margin-bottom: 12px;
     color: var(--primary);
     font-size: 11px;
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: 1.5px;
 }
 
@@ -219,7 +219,7 @@ h1 {
 .progress-title {
     color: var(--text);
     font-size: 12px;
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .progress-caption {
@@ -274,7 +274,7 @@ h1 {
     background: #ffffff;
     color: #87958d;
     font-size: 12px;
-    font-weight: 800;
+    font-weight: 700;
     transition:
         color 0.2s,
         background 0.2s,
@@ -330,7 +330,7 @@ label {
     margin: 0;
     color: var(--text);
     font-size: 13px;
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .required-label {
@@ -400,7 +400,7 @@ button {
     background: linear-gradient(135deg, #10b981, #059669);
     box-shadow: 0 5px 13px rgba(5, 150, 105, 0.14);
     font-size: 13px;
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1.5;
     text-align: center;
     cursor: pointer;
@@ -498,7 +498,7 @@ button:disabled {
     background: #e8f5ee;
     color: var(--success);
     font-size: 10px;
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .status {
@@ -519,14 +519,14 @@ button:disabled {
 }
 
 .status strong {
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .status a {
     display: inline-block;
     margin-top: 7px;
     color: var(--primary-dark);
-    font-weight: 800;
+    font-weight: 700;
     text-decoration: underline;
     text-underline-offset: 3px;
     overflow-wrap: anywhere;
@@ -619,7 +619,7 @@ button:disabled {
 #installer-action-content a {
     color: #92400e;
     font-size: 12px;
-    font-weight: 800;
+    font-weight: 700;
     overflow-wrap: anywhere;
 }
 
@@ -708,7 +708,7 @@ button:disabled {
     border-radius: 50%;
     color: #52635a;
     font-size: 11px;
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .help-note p {

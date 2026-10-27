@@ -252,7 +252,7 @@
         padding-right: 4px;
         color: #17221e;
         font-size: 12px;
-        font-weight: 750;
+        font-weight: 700;
         line-height: 1.4;
     }
 
@@ -392,7 +392,7 @@
     .config-field label {
         color: #68766f;
         font-size: 10px;
-        font-weight: 750;
+        font-weight: 700;
         letter-spacing: 0.035em;
         line-height: 1.4;
         text-transform: uppercase;

@@ -652,7 +652,7 @@
 
 .penjualan-transaksi-table-wrapper td strong {
     color: #26372e;
-    font-weight: 750;
+    font-weight: 700;
 }
 
 .penjualan-transaksi-table-wrapper tbody td:nth-child(6) strong {
@@ -674,7 +674,7 @@
 .penjualan-transaksi-table-wrapper tbody td:last-child {
     color: #047857;
     font-size: 10px;
-    font-weight: 750;
+    font-weight: 700;
 }
 
 
