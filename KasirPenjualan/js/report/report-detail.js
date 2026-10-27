@@ -912,23 +912,7 @@ Object.assign(Report, {
 }
 
 
-        /*==================================
-          REPORT MODAL UTAMA
-          KUNCI INTERAKSI SEMENTARA
-        ==================================*/
-
-        const reportModalOverlay =
-            document.getElementById(
-                "reportModalOverlay"
-            );
-
-
-        if (reportModalOverlay) {
-
-            reportModalOverlay.style.pointerEvents =
-                "none";
-
-        }
+       
 
 
         /*==================================
