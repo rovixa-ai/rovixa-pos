@@ -951,29 +951,20 @@ Object.assign(Report, {
         function closeModal() {
 
             if (closed) {
-
                 return;
-
             }
 
-
             closed = true;
-
 
             document.removeEventListener(
                 "keydown",
                 escHandler
             );
 
-
             modal.remove();
 
-
             if (reportModalOverlay) {
-
-                reportModalOverlay.style.pointerEvents =
-                    "";
-
+                reportModalOverlay.style.pointerEvents = "auto";
             }
 
         }
