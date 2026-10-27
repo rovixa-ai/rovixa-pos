@@ -1,5 +1,4 @@
-
- // ======================================
+// ======================================
 // SALES
 // EVENTS
 // ======================================
@@ -7,13 +6,11 @@
 Object.assign(
     Sales,
     {
-
         /* ==================================
            EVENT
         ================================== */
 
         event() {
-
             const search =
                 document.getElementById(
                     "searchProduct"
@@ -39,10 +36,7 @@ Object.assign(
             search.addEventListener(
                 "keydown",
                 e => {
-
-                    if (
-                        e.key !== "Enter"
-                    ) {
+                    if (e.key !== "Enter") {
                         return;
                     }
 
@@ -51,7 +45,6 @@ Object.assign(
                     this.handleBarcode(
                         search.value
                     );
-
                 }
             );
 
@@ -65,11 +58,9 @@ Object.assign(
                 );
 
             if (discount) {
-
                 discount.addEventListener(
                     "input",
                     e => {
-
                         this.discount =
                             Number(
                                 e.target.value
@@ -85,10 +76,8 @@ Object.assign(
                         ) {
                             CustScreen.send();
                         }
-
                     }
                 );
-
             }
 
             /* ==================================
@@ -101,18 +90,13 @@ Object.assign(
                 );
 
             if (barcodeButton) {
-
                 barcodeButton.addEventListener(
                     "click",
                     () => {
-
                         this.clearSearch();
-
                         search.focus();
-
                     }
                 );
-
             }
 
             /* ==================================
@@ -125,28 +109,22 @@ Object.assign(
                 );
 
             if (cameraButton) {
-
                 cameraButton.addEventListener(
                     "click",
                     () => {
-
                         if (
                             typeof SalesBarcodeScanner ===
                                 "undefined"
                         ) {
-
                             console.error(
                                 "SalesBarcodeScanner tidak tersedia."
                             );
-
                             return;
                         }
 
                         SalesBarcodeScanner.open();
-
                     }
                 );
-
             }
 
             /* ==================================
@@ -159,171 +137,135 @@ Object.assign(
                 );
 
             if (paymentButton) {
-
                 paymentButton.addEventListener(
                     "click",
                     () => {
                         PaymentModal.open();
                     }
                 );
-
             }
 
             /* ==================================
                RELOAD STOK BARANG
-               SERVER -> DATABASE LOKAL
+               SERVER → INDEXEDDB → DAFTAR BARANG
             ================================== */
 
-/* ==================================
-   RELOAD STOK BARANG
-   SERVER → INDEXEDDB → DAFTAR BARANG
-================================== */
+            const reloadStockButton =
+                document.getElementById(
+                    "sales-reload-stock"
+                );
 
-const reloadStockButton =
-    document.getElementById(
-        "sales-reload-stock"
-    );
+            if (reloadStockButton) {
+                reloadStockButton.addEventListener(
+                    "click",
+                    async () => {
+                        if (reloadStockButton.disabled) {
+                            return;
+                        }
 
-if (reloadStockButton) {
+                        if (
+                            typeof LocalSync === "undefined" ||
+                            typeof LocalSync.syncProducts !==
+                                "function"
+                        ) {
+                            Dialog.error(
+                                "Fungsi sinkronisasi barang tidak tersedia."
+                            );
+                            return;
+                        }
 
-    reloadStockButton.addEventListener(
-        "click",
-        async () => {
+                        if (
+                            typeof this.loadProducts !==
+                                "function"
+                        ) {
+                            Dialog.error(
+                                "Fungsi pemuatan daftar barang tidak tersedia."
+                            );
+                            return;
+                        }
 
-            if (reloadStockButton.disabled) {
-                return;
+                        const originalContent =
+                            reloadStockButton.innerHTML;
+
+                        reloadStockButton.disabled = true;
+
+                        reloadStockButton.classList.add(
+                            "is-reloading"
+                        );
+
+                        reloadStockButton.setAttribute(
+                            "aria-busy",
+                            "true"
+                        );
+
+                        try {
+                            const result =
+                                await LocalSync.syncProducts();
+
+                            if (
+                                !result ||
+                                result.success !== true
+                            ) {
+                                throw new Error(
+                                    result?.error?.message ||
+                                    result?.error ||
+                                    "Sinkronisasi barang gagal."
+                                );
+                            }
+
+                            await this.loadProducts();
+
+                            const searchInput =
+                                document.getElementById(
+                                    "searchProduct"
+                                );
+
+                            if (
+                                typeof this.search ===
+                                    "function"
+                            ) {
+                                this.search(
+                                    searchInput?.value || ""
+                                );
+                            }
+
+                            Dialog.success(
+                                "Sinkronisasi berhasil.\n" +
+                                result.barang.length +
+                                " barang dan " +
+                                result.satuan.length +
+                                " satuan barang diperbarui."
+                            );
+                        } catch (error) {
+                            console.error(
+                                "Gagal reload stok barang:",
+                                error
+                            );
+
+                            Dialog.error(
+                                "Gagal menyinkronkan stok barang.\n\n" +
+                                (
+                                    error.message ||
+                                    "Terjadi kesalahan."
+                                )
+                            );
+                        } finally {
+                            reloadStockButton.disabled = false;
+
+                            reloadStockButton.classList.remove(
+                                "is-reloading"
+                            );
+
+                            reloadStockButton.removeAttribute(
+                                "aria-busy"
+                            );
+
+                            reloadStockButton.innerHTML =
+                                originalContent;
+                        }
+                    }
+                );
             }
-
-            if (
-                typeof LocalSync === "undefined" ||
-                typeof LocalSync.syncProducts !== "function"
-            ) {
-
-                Dialog.error(
-                    "Fungsi sinkronisasi barang tidak tersedia."
-                );
-
-                return;
-            }
-
-            if (
-                typeof this.loadProducts !== "function"
-            ) {
-
-                Dialog.error(
-                    "Fungsi pemuatan daftar barang tidak tersedia."
-                );
-
-                return;
-            }
-
-            const originalContent =
-                reloadStockButton.innerHTML;
-
-            reloadStockButton.disabled = true;
-
-            reloadStockButton.classList.add(
-                "is-reloading"
-            );
-
-            reloadStockButton.setAttribute(
-                "aria-busy",
-                "true"
-            );
-
-            try {
-
-                /* ==============================
-                   DOWNLOAD ULANG DARI SERVER
-                   SIMPAN KE INDEXEDDB
-                ============================== */
-
-                const result =
-                    await LocalSync.syncProducts();
-
-                if (
-                    !result ||
-                    result.success !== true
-                ) {
-
-                    throw new Error(
-                        result?.error?.message ||
-                        result?.error ||
-                        "Sinkronisasi barang gagal."
-                    );
-
-                }
-
-                /* ==============================
-                   MUAT ULANG DAFTAR BARANG
-                   DARI INDEXEDDB
-                ============================== */
-
-                await this.loadProducts();
-
-                /* ==============================
-                   PULIHKAN PENCARIAN AKTIF
-                ============================== */
-
-                const searchInput =
-                    document.getElementById(
-                        "searchProduct"
-                    );
-
-                if (
-                    typeof this.search === "function"
-                ) {
-
-                    this.search(
-                        searchInput?.value || ""
-                    );
-
-                }
-
-                Dialog.success(
-                    "Sinkronisasi berhasil.\n" +
-                    result.barang.length +
-                    " barang dan " +
-                    result.satuan.length +
-                    " satuan barang diperbarui."
-                );
-
-            } catch (error) {
-
-                console.error(
-                    "Gagal reload stok barang:",
-                    error
-                );
-
-                Dialog.error(
-                    "Gagal menyinkronkan stok barang.\n\n" +
-                    (
-                        error.message ||
-                        "Terjadi kesalahan."
-                    )
-                );
-
-            } finally {
-
-                reloadStockButton.disabled = false;
-
-                reloadStockButton.classList.remove(
-                    "is-reloading"
-                );
-
-                reloadStockButton.removeAttribute(
-                    "aria-busy"
-                );
-
-                reloadStockButton.innerHTML =
-                    originalContent;
-
-            }
-
-        }
-    );
-
-}
 
             /* ==================================
                PRODUCT LIST
@@ -335,11 +277,9 @@ if (reloadStockButton) {
                 );
 
             if (productList) {
-
                 productList.addEventListener(
                     "click",
                     e => {
-
                         const card =
                             e.target.closest(
                                 ".product-card"
@@ -360,17 +300,13 @@ if (reloadStockButton) {
                         const kode =
                             card.dataset.kode;
 
-                        UnitModal.open(
-                            kode
-                        );
-
+                        UnitModal.open(kode);
                     }
                 );
-
             }
 
             /* ==================================
-               MOBILE CART
+               MOBILE CART ELEMENTS
             ================================== */
 
             const mobileCartButton =
@@ -405,37 +341,38 @@ if (reloadStockButton) {
 
             /* ==================================
                MOBILE CART BUTTON STATE
+               KELOLA OBSERVER SEBELUM MEMBUAT BARU
             ================================== */
+
+            if (this.renderObserver) {
+                this.renderObserver.disconnect();
+                this.renderObserver = null;
+            }
 
             if (
                 mobileSalesCartButton &&
                 mobileSalesCartCount
             ) {
+                const updateMobileCartButton = () => {
+                    const count =
+                        Number(
+                            mobileSalesCartCount.textContent
+                        ) || 0;
 
-                const updateMobileCartButton =
-                    () => {
-
-                        const count =
-                            Number(
-                                mobileSalesCartCount
-                                    .textContent
-                            ) || 0;
-
-                        mobileSalesCartButton.classList.toggle(
-                            "cart-has-items",
-                            count > 0
-                        );
-
-                    };
+                    mobileSalesCartButton.classList.toggle(
+                        "cart-has-items",
+                        count > 0
+                    );
+                };
 
                 updateMobileCartButton();
 
-                const observer =
+                this.renderObserver =
                     new MutationObserver(
                         updateMobileCartButton
                     );
 
-                observer.observe(
+                this.renderObserver.observe(
                     mobileSalesCartCount,
                     {
                         childList: true,
@@ -443,7 +380,6 @@ if (reloadStockButton) {
                         subtree: true
                     }
                 );
-
             }
 
             /* ==================================
@@ -456,28 +392,22 @@ if (reloadStockButton) {
                 );
 
             if (customerScreenButton) {
-
                 customerScreenButton.addEventListener(
                     "click",
                     () => {
-
                         if (
                             typeof CustScreen === "undefined" ||
                             typeof CustScreen.open !== "function"
                         ) {
-
                             console.error(
                                 "CustScreen tidak tersedia."
                             );
-
                             return;
                         }
 
                         CustScreen.open();
-
                     }
                 );
-
             }
 
             /* ==================================
@@ -485,7 +415,6 @@ if (reloadStockButton) {
             ================================== */
 
             const toggleMobileCart = () => {
-
                 if (!pos) {
                     return;
                 }
@@ -496,13 +425,10 @@ if (reloadStockButton) {
                     );
 
                 if (isCartOpen) {
-
                     pos.classList.remove(
                         "mobile-cart-open"
                     );
-
                 } else {
-
                     pos.classList.add(
                         "mobile-cart-open"
                     );
@@ -510,9 +436,7 @@ if (reloadStockButton) {
                     if (cartPanel) {
                         cartPanel.scrollTop = 0;
                     }
-
                 }
-
             };
 
             /* ==================================
@@ -520,21 +444,17 @@ if (reloadStockButton) {
             ================================== */
 
             if (mobileCartButton) {
-
                 mobileCartButton.addEventListener(
                     "click",
                     toggleMobileCart
                 );
-
             }
 
             if (mobileSalesCartButton) {
-
                 mobileSalesCartButton.addEventListener(
                     "click",
                     toggleMobileCart
                 );
-
             }
 
             /* ==================================
@@ -542,11 +462,9 @@ if (reloadStockButton) {
             ================================== */
 
             if (mobileCartBack) {
-
                 mobileCartBack.addEventListener(
                     "click",
                     () => {
-
                         if (!pos) {
                             return;
                         }
@@ -554,13 +472,9 @@ if (reloadStockButton) {
                         pos.classList.remove(
                             "mobile-cart-open"
                         );
-
                     }
                 );
-
             }
-
         }
-
     }
 );
