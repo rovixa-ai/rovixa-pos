@@ -5,12 +5,8 @@
    CSS KHUSUS MOBILE
 ====================================== */
 
-
-/* ======================================
-   MOBILE HEADER
-====================================== */
-
-@media (max-width: 768px) {
+@media (max-width: 768px),
+       (orientation: landscape) and (pointer: coarse) {
 
     .app-mobile-render-container {
         width: 100%;

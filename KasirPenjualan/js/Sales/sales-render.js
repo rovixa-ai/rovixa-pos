@@ -26,7 +26,15 @@ Object.assign(
             const isMobile =
                 window.matchMedia(
                     "(max-width: 768px)"
-                ).matches;
+                ).matches ||
+                (
+                    window.matchMedia(
+                        "(pointer: coarse)"
+                    ).matches &&
+                    window.matchMedia(
+                        "(max-width: 1366px)"
+                    ).matches
+                );
 
             if (isMobile) {
 
