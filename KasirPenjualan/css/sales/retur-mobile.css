@@ -4,8 +4,7 @@
    MOBILE CSS
 ====================================== */
 
-@media (max-width: 768px),
-       (orientation: landscape) and (pointer: coarse) {
+@media (max-width: 768px) {
 
     /* ======================================
        OVERLAY
