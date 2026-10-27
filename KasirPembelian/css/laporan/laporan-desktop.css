@@ -498,7 +498,7 @@
         border: 1px solid #ccefe0;
         border-radius: 20px;
         font-size: 12px;
-        font-weight: 750;
+        font-weight: 700;
         white-space: nowrap;
     }
 
@@ -560,7 +560,7 @@
         text-align: left;
         white-space: nowrap;
         font-size: 12px;
-        font-weight: 800;
+        font-weight: 700;
     }
 
     .laporan-pembelian-modal .laporan-table tbody td {
@@ -594,7 +594,7 @@
 
     .laporan-pembelian-modal .laporan-table tbody td:nth-child(7) {
         color: #047857;
-        font-weight: 750;
+        font-weight: 700;
     }
 
     /* ======================================

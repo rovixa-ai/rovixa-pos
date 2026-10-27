@@ -100,7 +100,9 @@
     margin: 0;
 
     font-size: 17px;
-    font-weight: 750;
+    font-weight: 700;
+
+    text-align: center;
 
     letter-spacing: -0.2px;
 
@@ -111,6 +113,8 @@
     margin: 4px 0 0;
 
     font-size: 11px;
+
+    text-align: center;
 
     color: #718078;
 }
@@ -371,7 +375,7 @@
     max-width: 100%;
 
     font-size: 17px;
-    font-weight: 750;
+    font-weight: 700;
 
     line-height: 1.2;
 
@@ -493,7 +497,7 @@
     color: #52645c;
 
     font-size: 9px;
-    font-weight: 750;
+    font-weight: 700;
 
     text-align: left;
 

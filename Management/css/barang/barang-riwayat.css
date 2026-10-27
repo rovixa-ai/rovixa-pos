@@ -73,7 +73,7 @@
     margin: 0;
     color: #0a4d34;
     font-size: 22px;
-    font-weight: 750;
+    font-weight: 700;
     line-height: 1.35;
     letter-spacing: -0.4px;
 }
@@ -222,7 +222,7 @@
 
 .barang-riwayat-page .barang-riwayat-jenis {
     font-size: 13px;
-    font-weight: 750;
+    font-weight: 700;
     line-height: 1.5;
 }
 
@@ -307,7 +307,7 @@
 .barang-riwayat-page .barang-riwayat-stok-item strong {
     color: #17221e;
     font-size: 19px;
-    font-weight: 750;
+    font-weight: 700;
     line-height: 1.3;
     overflow-wrap: anywhere;
 }
@@ -340,7 +340,7 @@
     margin-bottom: 6px;
     color: #84928a;
     font-size: 10px;
-    font-weight: 750;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -394,7 +394,7 @@
 .barang-riwayat-page .barang-riwayat-empty strong {
     color: #374840;
     font-size: 14px;
-    font-weight: 750;
+    font-weight: 700;
 }
 
 .barang-riwayat-page .barang-riwayat-empty p {

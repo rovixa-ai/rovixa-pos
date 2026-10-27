@@ -92,7 +92,7 @@
     color: #059669;
 
     font-size: 27px;
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .th-dialog-icon.is-confirm {
@@ -131,7 +131,7 @@
     color: #17221e;
 
     font-size: 20px;
-    font-weight: 750;
+    font-weight: 700;
     line-height: 1.35;
 
     overflow-wrap: anywhere;
@@ -328,7 +328,7 @@
     color: #059669;
 
     font-size: 16px;
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .th-toast.is-error .th-toast-icon {

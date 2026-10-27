@@ -284,7 +284,7 @@
 
         font-family: inherit;
         font-size: 12px;
-        font-weight: 750;
+        font-weight: 700;
 
         white-space: nowrap;
 
@@ -348,7 +348,7 @@
         color: var(--app-emerald-dark);
 
         font-size: 12px;
-        font-weight: 750;
+        font-weight: 700;
 
         box-shadow:
             0 4px 12px rgba(5, 150, 105, 0.045);
@@ -403,7 +403,7 @@
 
         font-family: inherit;
         font-size: 12px;
-        font-weight: 750;
+        font-weight: 700;
 
         white-space: nowrap;
 

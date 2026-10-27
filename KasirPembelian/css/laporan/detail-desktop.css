@@ -320,7 +320,7 @@
     .laporan-pembelian-detail-total > div:last-child strong {
         color: var(--primary-color, #16a34a);
         font-size: 18px;
-        font-weight: 800;
+        font-weight: 700;
     }
 
     /* ==============================

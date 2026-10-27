@@ -142,7 +142,7 @@
 
         font-size: 18px;
         line-height: 1.35;
-        font-weight: 800;
+        font-weight: 700;
         letter-spacing: -0.3px;
 
         color: #035336;
@@ -312,7 +312,7 @@
     .report-detail-info strong {
         font-size: 13px;
         line-height: 1.5;
-        font-weight: 750;
+        font-weight: 700;
 
         color: #17221e;
 
@@ -348,7 +348,7 @@
 
         font-size: 15px;
         line-height: 1.4;
-        font-weight: 800;
+        font-weight: 700;
         letter-spacing: -0.2px;
 
         color: #17221e;
@@ -421,7 +421,7 @@
 
         font-size: 11px;
         line-height: 1.4;
-        font-weight: 800;
+        font-weight: 700;
 
         text-align: left;
         white-space: nowrap;
@@ -597,7 +597,7 @@
 
         font-size: 12px;
         line-height: 1.5;
-        font-weight: 750;
+        font-weight: 700;
 
         text-align: right;
         white-space: normal;
@@ -634,7 +634,7 @@
     .payment-row.payment-total span,
     .payment-row.payment-total strong {
         color: #047857;
-        font-weight: 800;
+        font-weight: 700;
     }
 
     .payment-row.payment-change {
@@ -656,7 +656,7 @@
     .payment-row.payment-change span,
     .payment-row.payment-change strong {
         color: #15803d;
-        font-weight: 800;
+        font-weight: 700;
     }
 
     .payment-empty {
@@ -768,7 +768,7 @@
 
         font-size: 13px;
         line-height: 1.5;
-        font-weight: 750;
+        font-weight: 700;
 
         text-align: right;
         white-space: normal;
@@ -807,14 +807,14 @@
 
     .report-detail-total .grand-total span {
         font-size: 13px;
-        font-weight: 800;
+        font-weight: 700;
 
         color: #176b4d;
     }
 
     .report-detail-total .grand-total strong {
         font-size: 17px;
-        font-weight: 850;
+        font-weight: 700;
         letter-spacing: -0.25px;
 
         color: #047857;
@@ -871,7 +871,7 @@
         font-family: inherit;
         font-size: 12px;
         line-height: 1.4;
-        font-weight: 800;
+        font-weight: 700;
 
         text-align: center;
         white-space: normal;

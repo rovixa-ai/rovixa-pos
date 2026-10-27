@@ -652,7 +652,7 @@
     .sales-mobile-product-list .product-price {
         color: #059669;
         font-size: 13px;
-        font-weight: 800;
+        font-weight: 700;
         line-height: 1.3;
         letter-spacing: -0.02em;
 
@@ -910,7 +910,7 @@
     .sales-mobile-cart-items .cart-item-price {
         color: #059669;
         font-size: 13px;
-        font-weight: 800;
+        font-weight: 700;
 
         overflow-wrap: anywhere;
     }
@@ -1073,7 +1073,7 @@
     .sales-mobile-total-row strong:last-child {
         color: #059669;
         font-size: 21px;
-        font-weight: 800;
+        font-weight: 700;
         letter-spacing: -0.035em;
 
         text-align: right;
@@ -1118,7 +1118,7 @@
 
         color: #ffffff;
         font-size: 14px;
-        font-weight: 800;
+        font-weight: 700;
 
         box-shadow:
             0 6px 14px rgba(5, 150, 105, 0.17),
@@ -1229,7 +1229,7 @@
 
         color: #03714e;
         font-size: 18px;
-        font-weight: 800;
+        font-weight: 700;
         line-height: 1.25;
         letter-spacing: -0.035em;
 
