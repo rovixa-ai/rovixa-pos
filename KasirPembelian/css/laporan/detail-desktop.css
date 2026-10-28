@@ -34,37 +34,49 @@
     }
 
     /* ==============================
-       DIALOG
-    ============================== */
+   DIALOG
+============================== */
 
-    .laporan-pembelian-detail-dialog {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        flex-direction: column;
-        width: min(1180px, 100%);
-        max-width: 1180px;
-        max-height: calc(100vh - 48px);
-        min-height: 0;
-        overflow: hidden;
-        background: var(--card-background, #ffffff);
-        border: 1px solid var(--border-color, #e5e7eb);
-        border-radius: 16px;
-        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
-        animation: laporanPembelianDetailDesktopIn 0.2s ease-out;
+.laporan-pembelian-detail-dialog {
+    position: relative;
+    z-index: 1;
+
+    display: flex;
+    flex-direction: column;
+
+    width: min(1180px, 100%);
+    max-width: 1180px;
+
+    max-height: calc(100vh - 48px);
+    max-height: calc(100dvh - 48px);
+
+    min-height: 0;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+
+    background: var(--card-background, #ffffff);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 16px;
+
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
+
+    animation: laporanPembelianDetailDesktopIn 0.2s ease-out;
+}
+
+@keyframes laporanPembelianDetailDesktopIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.99);
     }
 
-    @keyframes laporanPembelianDetailDesktopIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px) scale(0.99);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
+}
 
     /* ==============================
        HEADER

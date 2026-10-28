@@ -45,36 +45,48 @@
     ====================================== */
 
     .sales-mobile-header {
-        position: relative;
-        z-index: 5;
+        position: sticky;
+    top: 0;
+    z-index: 10000;
 
-        width: 100%;
-        flex-shrink: 0;
+    flex: 0 0 auto;
 
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
+    width: 100%;
+    min-width: 0;
+    min-height: 58px;
 
-        padding: 12px;
+    margin: 0;
+    padding: 0;
 
-        background: linear-gradient(
-            145deg,
-            #ffffff 0%,
-            #f8fbfa 100%
+    box-sizing: border-box;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.94) 0%,
+            rgba(240, 253, 247, 0.88) 100%
         );
 
-        border-bottom: 1px solid #d6e2dd;
+    
 
-        box-shadow:
-            0 4px 14px rgba(15, 23, 42, 0.035);
-    }
+    box-shadow:
+        0 4px 16px rgba(15, 23, 42, 0.035),
+        0 1px 0 rgba(255, 255, 255, 0.8) inset;
+
+    backdrop-filter: blur(18px) saturate(155%);
+    -webkit-backdrop-filter: blur(18px) saturate(155%);
+}
 
    .sales-mobile-brand {
     display: flex;
+    margin-top: 14px;
+    padding: 8px 12px;
     align-items: center;
     gap: 10px;
     width: 100%;
     min-width: 0;
+    border-bottom: 1px solid rgba(16, 185, 129, 0.16);
+
 }
 
 /* LOGO */
@@ -294,121 +306,146 @@
 
 
     /* ======================================
-       SEARCH AREA
-    ====================================== */
+   SEARCH AREA
+====================================== */
 
-    .sales-mobile-search-area {
-        width: 100%;
-        min-width: 0;
-        flex-shrink: 0;
+.sales-mobile-search-area {
+    width: 100%;
+    min-width: 0;
+    flex-shrink: 0;
 
-        display: flex;
-        align-items: stretch;
-        gap: 6px;
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
 
-        margin-top: 16px;
-        margin-bottom: 4px;
+    margin-top: 12px;
+    margin-bottom: 4px;
 
-        background: linear-gradient(
-            145deg,
-            #ffffff 0%,
-            #f8fbfa 100%
-        );
-        border: 1px solid #fafdfcf8;
+    background: linear-gradient(
+        145deg,
+        #ffffff 0%,
+        #f8fbfa 100%
+    );
 
-    }
+    border: 1px solid #fafdfcf8;
+}
 
-    .sales-mobile-search-input {
-        width: 100%;
-        min-width: 0;
-        height: 42px;
-        flex: 1;
+/* ======================================
+   SEARCH WRAPPER
+====================================== */
 
-        padding: 0 11px;
+.sales-mobile-search-wrapper {
+    position: relative;
 
-        border: 1px solid #d6e2dd;
-        border-radius: 9px;
+    width: 100%;
+    min-width: 0;
+    flex: 1;
+}
 
-        outline: none;
+/* ======================================
+   SEARCH INPUT
+====================================== */
 
-        background: #ffffff;
-        color: #17221e;
-        font-size: 13px;
-
-        box-shadow:
-            0 2px 5px rgba(15, 23, 42, 0.025);
-
-        transition:
-            border-color 0.2s ease,
-            box-shadow 0.2s ease;
-    }
-
-    .sales-mobile-search-input:focus {
-        border-color: #10b981;
-
-        box-shadow:
-            0 0 0 3px rgba(16, 185, 129, 0.11);
-    }
-
-    .sales-mobile-search-input::placeholder {
-        color: #94a39b;
-    }
-
-   .sales-mobile-barcode-button img ,
-    .sales-mobile-camera-button img {
-    width: 30px;
-    height: 30px;
+.sales-mobile-search-input {
     display: block;
+
+    width: 100%;
+    min-width: 0;
+    height: 42px;
+
+    box-sizing: border-box;
+
+    padding: 0 48px 0 11px;
+
+    border: 1px solid #d6e2dd;
+    border-radius: 9px;
+
+    outline: none;
+
+    background: #ffffff;
+    color: #17221e;
+    font-size: 13px;
+
+    box-shadow:
+        0 2px 5px rgba(15, 23, 42, 0.025);
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.sales-mobile-search-input:focus {
+    border-color: #10b981;
+
+    box-shadow:
+        0 0 0 3px rgba(16, 185, 129, 0.11);
+}
+
+.sales-mobile-search-input::placeholder {
+    color: #94a39b;
+}
+
+/* ======================================
+   CAMERA BUTTON INSIDE SEARCH
+====================================== */
+
+.sales-mobile-camera-button {
+    position: absolute;
+
+    top: 50%;
+    right: 4px;
+
+    transform: translateY(-50%);
+
+    width: 36px;
+    height: 36px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 7px;
+
+    background: transparent;
+
+    cursor: pointer;
+
+    box-shadow: none;
+
+    transition:
+        background 0.2s ease,
+        transform 0.15s ease;
+}
+
+.sales-mobile-camera-button img {
+    display: block;
+
+    width: 26px;
+    height: 26px;
+
     object-fit: contain;
 }
 
-    .sales-mobile-barcode-button,
-    .sales-mobile-camera-button {
-        height: 42px;
-        flex-shrink: 0;
+.sales-mobile-camera-button:hover {
+    background: rgba(16, 185, 129, 0.1);
+}
 
-        display: flex;
-        align-items: center;
-        justify-content: center;
+.sales-mobile-camera-button:active {
+    transform: translateY(-50%) scale(0.94);
+}
 
-        padding: 0 10px;
+/* ======================================
+   CUSTOMER SCREEN BUTTON
+====================================== */
 
-        border: 0px solid #059669;
-        border-radius: 9px;
-
-        background: transparent;
-
-        color: #ffffff;
-        font-size: 12px;
-        font-weight: 700;
-
-        cursor: pointer;
-
-        box-shadow:
-            0 3px 8px rgba(5, 150, 105, 0.12);
-
-        transition:
-            background 0.2s ease,
-            box-shadow 0.2s ease,
-            transform 0.15s ease;
-    }
-
-    .sales-mobile-camera-button {
-        width: 42px;
-        padding: 0;
-        font-size: 19px;
-    }
-
-    .sales-mobile-barcode-button:active,
-    .sales-mobile-camera-button:active {
-        background: linear-gradient(
-            135deg,
-            #059669 0%,
-            #047857 100%
-        );
-
-        transform: scale(0.96);
-    }
+#customerScreenButton {
+    flex-shrink: 0;
+}
 
 
     /* ======================================

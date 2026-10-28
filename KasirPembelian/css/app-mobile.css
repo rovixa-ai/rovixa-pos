@@ -281,7 +281,7 @@ body {
     margin: 0;
     padding: 4px 3px;
 
-    color: var(--app-emerald-dark);
+    color:#68766f;
 
     background:
         linear-gradient(
@@ -294,7 +294,7 @@ body {
     border-radius: 10px;
 
     font-family: inherit;
-    font-size: 10px;
+    font-size: 20px;
     font-weight: 700;
     line-height: 1.2;
 
@@ -307,11 +307,13 @@ body {
     box-sizing: border-box;
 }
 
+
+
 .header-report-button p {
     margin: 2px 0 0;
     padding: 0;
 
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 700;
     line-height: 1;
 }
@@ -415,6 +417,7 @@ body {
     margin: 0;
     padding: 4px 3px;
 
+
     background:
         linear-gradient(
             145deg,
@@ -433,6 +436,16 @@ body {
         0 3px 9px rgba(220, 38, 38, 0.055);
 
     box-sizing: border-box;
+}
+
+.header-logout-button p {
+    margin: 2px 0 0;
+    padding: 0;
+
+    font-size: 8px;
+    color: #dc2626;
+    font-weight: 700;
+    line-height: 1;
 }
 
 .header-logout-button:hover {
@@ -462,25 +475,14 @@ body {
     display: block;
 
     flex: 0 0 auto;
+    margin-top: 1px;
 
-    width: 19px;
-    height: 19px;
+    width: 20px;
+    height: 20px;
 
     object-fit: contain;
 }
 
-.header-logout-text {
-    display: block;
-
-    font-size: 9px;
-    font-weight: 600;
-    line-height: 1.2;
-
-    color: #dc2626;
-
-    text-align: center;
-    white-space: nowrap;
-}
 
 /* ======================================
    MOBILE MENU BUTTON

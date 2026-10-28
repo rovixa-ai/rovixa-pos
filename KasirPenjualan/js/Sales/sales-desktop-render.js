@@ -129,41 +129,32 @@ const SalesDesktopRender = {
                         class="sales-desktop-product-panel"
                     >
 
-                        <div
-                            class="sales-desktop-search-area"
-                        >
+                       <div class="sales-desktop-search-area">
 
-                            <input
-                                type="text"
-                                id="searchProduct"
-                                class="sales-desktop-search-input"
-                                placeholder="Cari kode, barcode, atau nama barang..."
-                                autocomplete="off"
-                            >
+                            <div class="sales-desktop-search-wrapper">
 
-                            <button
-                                type="button"
-                                id="barcodeButton"
-                                class="sales-desktop-barcode-button"
-                            >
-                                <img
-                                    src="icons/barcode.png"
-                                    alt="Barcode"
+                                <input
+                                    type="text"
+                                    id="searchProduct"
+                                    class="sales-desktop-search-input"
+                                    placeholder="Cari kode, barcode, atau nama barang..."
+                                    autocomplete="off"
                                 >
-                            </button>
 
-                            <button
-                                type="button"
-                                id="cameraButton"
-                                class="sales-desktop-camera-button"
-                                aria-label="Scan barcode"
-                                title="Scan barcode"
-                            >
-                                <img
-                                    src="icons/camera.png"
-                                    alt="Scan barcode"
+                                <button
+                                    type="button"
+                                    id="cameraButton"
+                                    class="sales-desktop-camera-button"
+                                    aria-label="Scan barcode"
+                                    title="Scan barcode"
                                 >
-                            </button>
+                                    <img
+                                        src="icons/camera.png"
+                                        alt="Scan barcode"
+                                    >
+                                </button>
+
+                            </div>
 
                         </div>
 

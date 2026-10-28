@@ -111,38 +111,30 @@ render() {
 
                 <div class="sales-mobile-search-area">
 
-                    <input
-                        type="text"
-                        id="searchProduct"
-                        class="sales-mobile-search-input"
-                        placeholder="Cari kode, barcode, atau nama barang..."
-                        autocomplete="off"
-                    >
+                    <div class="sales-mobile-search-wrapper">
 
-                    <button
-                        type="button"
-                        id="barcodeButton"
-                        class="sales-mobile-barcode-button"
-                        aria-label="Input barcode"
-                    >
-                        <img
-                            src="icons/barcode.png"
-                            alt="Barcode"
+                        <input
+                            type="text"
+                            id="searchProduct"
+                            class="sales-mobile-search-input"
+                            placeholder="Cari kode, barcode, atau nama barang..."
+                            autocomplete="off"
                         >
-                    </button>
 
-                    <button
-                        type="button"
-                        id="cameraButton"
-                        class="sales-mobile-camera-button"
-                        aria-label="Scan barcode"
-                        title="Scan barcode"
-                    >
-                        <img
-                            src="icons/camera.png"
-                            alt="Camera"
+                        <button
+                            type="button"
+                            id="cameraButton"
+                            class="sales-mobile-camera-button"
+                            aria-label="Scan barcode"
+                            title="Scan barcode"
                         >
-                    </button>
+                            <img
+                                src="icons/camera.png"
+                                alt="Camera"
+                            >
+                        </button>
+
+                    </div>
 
                     <button
                         type="button"
@@ -154,6 +146,7 @@ render() {
 
                 </div>
 
+                
             </header>
 
             <!-- ==============================

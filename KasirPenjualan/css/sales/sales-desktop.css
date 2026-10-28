@@ -390,28 +390,44 @@
 
 
 /* ======================================
-   SEARCH AREA
+   DESKTOP SEARCH AREA
 ====================================== */
 
 .sales-desktop-search-area {
-    width: 100%;
+    width: 50%;
+    min-width: 0;
 
-    display: grid;
-    grid-template-columns:
-        minmax(0, 1fr)
-        100px
-        44px;
-
-    gap: 9px;
-    flex-shrink: 0;
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
 }
 
-.sales-desktop-search-input {
+/* ======================================
+   SEARCH WRAPPER
+====================================== */
+
+.sales-desktop-search-wrapper {
+    position: relative;
+
     width: 100%;
     min-width: 0;
-    height: 44px;
+    flex: 1;
+}
 
-    padding: 0 14px;
+/* ======================================
+   SEARCH INPUT
+====================================== */
+
+.sales-desktop-search-input {
+    display: block;
+
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    height: 42px;
+
+    box-sizing: border-box;
+    padding: 0 48px 0 11px;
 
     border: 1px solid #d6e2dd;
     border-radius: 9px;
@@ -422,92 +438,75 @@
     color: #17221e;
     font-size: 13px;
 
+    box-shadow:
+        0 2px 5px rgba(15, 23, 42, 0.025);
+
     transition:
         border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
-}
-
-.sales-desktop-search-input::placeholder {
-    color: #94a39b;
+        box-shadow 0.2s ease;
 }
 
 .sales-desktop-search-input:focus {
     border-color: #10b981;
 
     box-shadow:
-        0 0 0 3px rgba(16, 185, 129, 0.12);
+        0 0 0 3px rgba(16, 185, 129, 0.11);
 }
 
-.sales-desktop-barcode-button,
+.sales-desktop-search-input::placeholder {
+    color: #94a39b;
+}
+
+/* ======================================
+   CAMERA BUTTON INSIDE SEARCH
+====================================== */
+
 .sales-desktop-camera-button {
-    height: 44px;
+    position: absolute;
+
+    top: 50%;
+    right: 4px;
+
+    transform: translateY(-50%);
+
+    width: 36px;
+    height: 36px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    border-radius: 9px;
+    padding: 0;
 
-    font-size: 12px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition:
-        background 0.2s ease,
-        border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        transform 0.2s ease;
-}
-
-.sales-desktop-barcode-button {
-    padding: 0 12px;
-
-    border: 0px solid #071f17;
+    border: none;
+    border-radius: 7px;
 
     background: transparent;
 
-    color: #ffffff;
+    cursor: pointer;
+    box-shadow: none;
 
-    box-shadow:
-        0 4px 10px rgba(5, 150, 105, 0.14);
+    transition:
+        background 0.2s ease,
+        transform 0.15s ease;
 }
 
-.sales-desktop-barcode-button:hover {
-    background: #ecfdf5;
-    border-color: #047857;
+.sales-desktop-camera-button img {
+    display: block;
 
-    box-shadow:
-        0 6px 14px rgba(5, 150, 105, 0.2);
+    width: 26px;
+    height: 26px;
 
-    transform: translateY(-1px);
-}
-
-.sales-desktop-camera-button {
-    width: 44px;
-    padding: 0;
-
-    border: 1px solid #d6e2dd;
-
-    background: linear-gradient(
-        145deg,
-        #ffffff 0%,
-        #f8fbfa 100%
-    );
-
-    color: #176b4d;
-    font-size: 19px;
+    object-fit: contain;
 }
 
 .sales-desktop-camera-button:hover {
-    background: #ecfdf5;
-    border-color: #6ee7b7;
-
-    box-shadow:
-        0 4px 10px rgba(16, 185, 129, 0.08);
+    background: rgba(16, 185, 129, 0.1);
 }
 
+.sales-desktop-camera-button:active {
+    transform: translateY(-50%) scale(0.94);
+}
 
 /* ======================================
    PRODUCT HEADER
