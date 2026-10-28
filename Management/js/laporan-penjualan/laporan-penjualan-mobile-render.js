@@ -47,13 +47,7 @@ const LaporanPenjualanMobileRender = {
 
                 <div class="laporan-card">
 
-                    <div class="laporan-card-header">
-
-                        <h3>
-                            Filter Laporan
-                        </h3>
-
-                    </div>
+                    
 
 
                     <div class="laporan-form-grid">

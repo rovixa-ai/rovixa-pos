@@ -326,9 +326,9 @@
         justify-content: center;
 
         flex: 0 0 20px;
-        width: 20px;
-        min-width: 20px;
-        height: 20px;
+        width: 30px;
+        min-width: 30px;
+        height: 30px;
 
         border-radius: 50%;
 
@@ -357,9 +357,9 @@
 
         overflow: hidden;
 
-        color: #34423b;
+        color: #10bb66;
 
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 700;
         line-height: 1.2;
 
@@ -953,9 +953,9 @@
 
     .mobile-header-logout {
         flex: 0 0 26px;
-        width: 46px;
-        min-width: 46px;
-        height: 46px;
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
 
         padding: 4px;
     }

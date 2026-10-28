@@ -16,13 +16,20 @@ Object.assign(LaporanPembelian, {
             return;
         }
 
-        const daily =
-            this.report &&
-            Array.isArray(
-                this.report.daily
-            )
-                ? this.report.daily
-                : [];
+        
+const daily =
+    this.report &&
+    Array.isArray(
+        this.report.daily
+    )
+        ? [...this.report.daily].sort(
+            (a, b) =>
+                String(b.tanggal || "").localeCompare(
+                    String(a.tanggal || "")
+                )
+        )
+        : [];
+
 
         if (count) {
 

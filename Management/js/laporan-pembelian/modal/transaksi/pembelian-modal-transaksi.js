@@ -16,11 +16,19 @@ const PembelianTransaksiModal = {
 
 
         this.data =
-            Array.isArray(
-                transactions
-            )
-                ? transactions
-                : [];
+    Array.isArray(transactions)
+        ? [...transactions].sort(
+            (a, b) =>
+                String(b.id || "").localeCompare(
+                    String(a.id || ""),
+                    undefined,
+                    {
+                        numeric: true,
+                        sensitivity: "base"
+                    }
+                )
+        )
+        : [];
 
 
         const modal =

@@ -151,7 +151,7 @@
 
     color: #718078;
 
-    font-size: 9px;
+    font-size: 10px;
 
     line-height: 1.5;
 }
@@ -384,7 +384,7 @@
 
     color: #26332e;
 
-    font-size: 10px;
+    font-size: 12px;
 
     transition:
         border-color 0.2s ease,
@@ -545,7 +545,7 @@
 
     color: #17221e;
 
-    font-size: 11px;
+    font-size: 17px;
 
     line-height: 1.25;
 
@@ -638,7 +638,7 @@
 
     color: #34423c;
 
-    font-size: 9px;
+    font-size: 11px;
 
     white-space: nowrap;
 
@@ -680,7 +680,7 @@
 
     .laporan-pembelian .laporan-page-header p {
 
-        font-size: 8px;
+        font-size: 10px;
     }
 
 
@@ -728,6 +728,6 @@
 
     .laporan-pembelian .laporan-summary-item strong {
 
-        font-size: 10px;
+        font-size: 15px;
     }
 }

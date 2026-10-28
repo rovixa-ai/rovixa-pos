@@ -37,7 +37,7 @@ const LaporanProfitMobileRender = {
                     <div class="laporan-profit-filter-item">
 
                         <label for="laporanProfitTanggal">
-                            Periode
+                            Bulan
                         </label>
 
                         <input

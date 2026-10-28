@@ -110,11 +110,10 @@
 }
 
 .laporan-expense-page-header p {
-    margin: 4px 0 0;
+    margin: 5px 0 0;
 
     font-size: 11px;
 
-    text-align: center;
 
     color: #718078;
 }
@@ -556,13 +555,13 @@
     }
 
     .laporan-expense-page-header {
-        min-height: 66px;
+        min-height: 82px;
 
-        padding: 14px;
+        padding: 13px 12px;
     }
 
     .laporan-expense-page-header h2 {
-        font-size: 16px;
+        font-size: 15px;
     }
 
     .laporan-expense-page-header p {

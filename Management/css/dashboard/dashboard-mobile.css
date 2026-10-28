@@ -8,7 +8,7 @@
 /* ======================================
    PAGE
 ====================================== */
-
+@media (max-width: 768px) {
 .dashboard-mobile-content {
     width: 100%;
     display: flex;
@@ -1115,6 +1115,7 @@
     line-height: 1;
 }
 
+}
 
 /* ======================================
    SMALL MOBILE

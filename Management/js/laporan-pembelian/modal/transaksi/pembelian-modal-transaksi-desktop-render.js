@@ -5,12 +5,17 @@ const PembelianTransaksiModalDesktopRender = {
         transactions
     ) {
 
-        const data =
-            Array.isArray(
-                transactions
-            )
-                ? transactions
-                : [];
+       
+const data =
+    Array.isArray(transactions)
+        ? [...transactions].sort(
+            (a, b) =>
+                String(b.id || "").localeCompare(
+                    String(a.id || "")
+                )
+        )
+        : [];
+
 
 
         const modal =
