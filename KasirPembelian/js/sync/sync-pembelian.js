@@ -391,10 +391,11 @@ const pembelian = {
          */
 
         const result =
-            await API.savePembelian({
-                ...pembelian,
-                id: transactionId
-            });
+    await API.savePembelian({
+        ...pembelian,
+        id: transactionId,
+        tanggalJam: pembelian.tanggalJam || ""
+    });
 
         if (!result || !result.success) {
             throw new Error(

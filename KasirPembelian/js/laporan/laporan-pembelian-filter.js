@@ -483,15 +483,30 @@ Object.assign(LaporanPembelian, {
 
 
                     });
-console.log(
-    "DATA PEMBELIAN ASLI:",
-    pembelian[0]
-);
 
-console.log(
-    "DATA TRANSAKSI HASIL FILTER:",
-    transactions[0]
-);
+                    transactions.sort((a, b) => {
+    const tanggalA = String(
+        a.tanggal || ""
+    ).trim();
+
+    const tanggalB = String(
+        b.tanggal || ""
+    ).trim();
+
+    const waktuA = String(
+        a.tanggalJam || ""
+    ).trim();
+
+    const waktuB = String(
+        b.tanggalJam || ""
+    ).trim();
+
+    const tanggalWaktuA = `${tanggalA} ${waktuA}`;
+    const tanggalWaktuB = `${tanggalB} ${waktuB}`;
+
+    return tanggalWaktuB.localeCompare(tanggalWaktuA);
+});
+
             /*
             ==================================
             HITUNG SUMMARY
