@@ -108,16 +108,27 @@ Object.assign(Sync, {
             pembayaranId
         };
 
-        const pembelian = {
-            ...data,
-            id,
-            database: databaseSnapshot,
-            syncStatus: "pending",
-            stockUpdated: false,
-            stockUpdatedAt: null,
-            createdAt: new Date().toISOString(),
-            syncedAt: null
-        };
+        const now = new Date();
+
+const pembelian = {
+    ...data,
+    id,
+
+    tanggalJam:
+        data.tanggalJam ||
+        [
+            String(now.getHours()).padStart(2, "0"),
+            String(now.getMinutes()).padStart(2, "0"),
+            String(now.getSeconds()).padStart(2, "0")
+        ].join(":"),
+
+    database: databaseSnapshot,
+    syncStatus: "pending",
+    stockUpdated: false,
+    stockUpdatedAt: null,
+    createdAt: now.toISOString(),
+    syncedAt: null
+};
 
         await DB.put(
             "pembelian",

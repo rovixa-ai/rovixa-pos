@@ -243,89 +243,164 @@
         outline-offset: 2px;
     }
 
-    /* ======================================
-       FILTER FORM
-    ====================================== */
+   /* ======================================
+   FILTER FORM
+====================================== */
 
-    .laporan-pembelian-modal .laporan-form-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: 15px;
-        width: 100%;
-        min-width: 0;
-    }
+.laporan-pembelian-modal .laporan-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 22px;
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 20px;
+}
 
-    .laporan-pembelian-modal .laporan-form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 7px;
-        min-width: 0;
-    }
+.laporan-pembelian-modal .laporan-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    min-width: 0;
+}
 
-    .laporan-pembelian-modal .laporan-form-group label {
-        color: #35463e;
-        font-size: 12px;
-        font-weight: 700;
-        line-height: 1.4;
-    }
+.laporan-pembelian-modal .laporan-form-group label {
+    display: flex;
+    align-items: center;
+    min-height: 18px;
+    margin: 0;
+    color: #35463e;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 18px;
+}
 
-    .laporan-pembelian-modal .laporan-form-group input,
-    .laporan-pembelian-modal .laporan-form-group select {
-        display: block;
-        width: 100%;
-        min-width: 0;
-        height: 43px;
-        padding: 0 11px;
-        color: #17221e;
-        background: #ffffff;
-        border: 1px solid #d6e2dd;
-        border-radius: 9px;
-        outline: none;
-        box-sizing: border-box;
-        font-family: inherit;
-        font-size: 14px;
-        transition:
-            border-color 0.2s ease,
-            box-shadow 0.2s ease;
-    }
+/* INPUT SUPPLIER */
 
-    .laporan-pembelian-modal .laporan-form-group input:focus,
-    .laporan-pembelian-modal .laporan-form-group select:focus {
-        border-color: #10b981;
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
-    }
+.laporan-pembelian-modal .laporan-form-group select {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: 44px;
+    margin: 0;
+    padding: 0 13px;
+    color: #17221e;
+    background: #ffffff;
+    border: 1px solid #d6e2dd;
+    border-radius: 10px;
+    outline: none;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 14px;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
 
-    /* ======================================
-       RESET BUTTON
-    ====================================== */
+.laporan-pembelian-modal .laporan-form-group select:hover {
+    border-color: #a9c7b8;
+}
 
-    .laporan-pembelian-modal .laporan-filter-action {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        margin-top: 15px;
-    }
+.laporan-pembelian-modal .laporan-form-group select:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+}
 
-    .laporan-pembelian-modal .laporan-reset-button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 90px;
-        height: 39px;
-        padding: 0 16px;
-        color: #405149;
-        background: #ffffff;
-        border: 1px solid #d6e2dd;
-        border-radius: 9px;
-        font-family: inherit;
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-    }
+/* ======================================
+   TANGGAL + TOMBOL RESET
+====================================== */
 
-    .laporan-pembelian-modal .laporan-reset-button:active {
-        background: #f0f5f2;
-    }
+.laporan-pembelian-modal .laporan-tanggal-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    height: 44px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #d6e2dd;
+    border-radius: 10px;
+    background: #ffffff;
+    box-sizing: border-box;
+    overflow: hidden;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.laporan-pembelian-modal .laporan-tanggal-wrapper:hover {
+    border-color: #a9c7b8;
+}
+
+.laporan-pembelian-modal .laporan-tanggal-wrapper:focus-within {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+}
+
+/* INPUT TANGGAL */
+
+.laporan-pembelian-modal .laporan-tanggal-wrapper input[type="date"] {
+    display: block;
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    margin: 0;
+    padding: 0 10px 0 13px;
+    color: #17221e;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    outline: none;
+    box-shadow: none;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.laporan-pembelian-modal .laporan-tanggal-wrapper input[type="date"]:focus {
+    border: none;
+    outline: none;
+    box-shadow: none;
+}
+
+/* TOMBOL RESET */
+
+.laporan-pembelian-modal .laporan-tanggal-wrapper .laporan-reset-button {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    min-width: 0;
+    margin: 0 6px 0 0;
+    padding: 0 10px;
+    color: #bb1414;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.laporan-pembelian-modal .laporan-tanggal-wrapper .laporan-reset-button:hover {
+    background: #d1fae5;
+    border-color: #6ee7b7;
+}
+
+.laporan-pembelian-modal .laporan-tanggal-wrapper .laporan-reset-button:active {
+    transform: scale(0.96);
+}
 
     /* ======================================
        SUMMARY GRID

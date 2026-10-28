@@ -261,6 +261,7 @@ body {
 
 /* ======================================
    REPORT BUTTON
+   UKURAN SAMA DENGAN LOGOUT
 ====================================== */
 
 .header-report-button {
@@ -268,13 +269,17 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 2px;
 
-    flex: 0 0 auto;
+    flex: 0 0 48px;
 
-    min-width: 38px;
-    min-height: 34px;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
 
-    padding: 4px 8px;
+    margin: 0;
+    padding: 4px 3px;
 
     color: var(--app-emerald-dark);
 
@@ -291,7 +296,7 @@ body {
     font-family: inherit;
     font-size: 10px;
     font-weight: 700;
-    line-height: 1.3;
+    line-height: 1.2;
 
     white-space: nowrap;
     cursor: pointer;
@@ -314,6 +319,10 @@ body {
 .header-report-button:hover {
     background: #ecfdf5;
     border-color: rgba(16, 185, 129, 0.4);
+}
+
+.header-report-button:active {
+    transform: scale(0.94);
 }
 
 .header-report-button:focus-visible {
@@ -373,8 +382,8 @@ body {
 
     flex: 0 0 auto;
 
-    width: 6px;
-    height: 6px;
+    min-width: 8px;
+    min-height: 8px;
 
     border-radius: 50%;
 
@@ -386,22 +395,25 @@ body {
 
 /* ======================================
    HEADER LOGOUT BUTTON
+   ICON DI ATAS, TEKS DI BAWAH
 ====================================== */
 
 .header-logout-button {
     display: inline-flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 2px;
 
-    flex: 0 0 34px;
+    flex: 0 0 48px;
 
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
-    min-height: 34px;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
 
     margin: 0;
-    padding: 7px;
+    padding: 4px 3px;
 
     background:
         linear-gradient(
@@ -451,15 +463,28 @@ body {
 
     flex: 0 0 auto;
 
-    width: 18px;
-    height: 18px;
+    width: 19px;
+    height: 19px;
 
     object-fit: contain;
 }
 
+.header-logout-text {
+    display: block;
+
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1.2;
+
+    color: #dc2626;
+
+    text-align: center;
+    white-space: nowrap;
+}
+
 /* ======================================
    MOBILE MENU BUTTON
-   TETAP TERSEDIA UNTUK NAVIGASI MOBILE
+   TETAP SEPERTI SEMULA
 ====================================== */
 
 .mobile-menu-button {

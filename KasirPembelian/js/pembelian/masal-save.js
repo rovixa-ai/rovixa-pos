@@ -889,7 +889,19 @@ Object.assign(PembelianMassal, {
                 }
             }
 
-            
+            /* ======================================
+               REFRESH LAPORAN DARI INDEXEDDB
+               TANPA MENUNGGU SINKRONISASI
+            ====================================== */
+
+            void this.refreshLaporanPembelian().catch(error => {
+
+                console.error(
+                    "REFRESH LAPORAN PEMBELIAN LOKAL ERROR:",
+                    error
+                );
+
+            });
 
             /* ======================================
                SELESAIKAN SIMPAN
@@ -931,8 +943,7 @@ Object.assign(PembelianMassal, {
             }
 
             /* ======================================
-               SINKRONISASI DAN LAPORAN
-               BERJALAN DI LATAR BELAKANG
+               SINKRONISASI DI LATAR BELAKANG
             ====================================== */
 
             void (async () => {
@@ -987,8 +998,6 @@ Object.assign(PembelianMassal, {
                     }
 
                     await this.waitForSyncIdle();
-
-                    await this.refreshLaporanPembelian();
 
                 } catch (error) {
 

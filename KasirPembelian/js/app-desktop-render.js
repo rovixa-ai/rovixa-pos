@@ -62,7 +62,8 @@ const AppDesktopRender = {
                     class="header-report-button"
                     id="header-laporan-pembelian"
                 >
-                    Laporan Pembelian
+                <span>📊</span>
+                    <span>Laporan</span>
                 </button>
 
                 <div class="header-admin">

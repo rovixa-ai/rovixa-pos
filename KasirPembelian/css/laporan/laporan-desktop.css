@@ -255,13 +255,14 @@
         outline-offset: 3px;
     }
 
-    /* ======================================
+ /* ======================================
    FILTER FORM
 ====================================== */
 
 .laporan-pembelian-modal .laporan-form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
     gap: 22px;
     width: 100%;
     min-width: 0;
@@ -276,18 +277,24 @@
 }
 
 .laporan-pembelian-modal .laporan-form-group label {
+    display: flex;
+    align-items: center;
+    min-height: 18px;
+    margin: 0;
     color: #35463e;
     font-size: 13px;
     font-weight: 700;
-    line-height: 1.4;
+    line-height: 18px;
 }
 
-.laporan-pembelian-modal .laporan-form-group input,
+/* INPUT SUPPLIER */
+
 .laporan-pembelian-modal .laporan-form-group select {
     display: block;
     width: 100%;
     min-width: 0;
     height: 44px;
+    margin: 0;
     padding: 0 13px;
     color: #17221e;
     background: #ffffff;
@@ -302,19 +309,17 @@
         box-shadow 0.2s ease;
 }
 
-.laporan-pembelian-modal .laporan-form-group input:hover,
 .laporan-pembelian-modal .laporan-form-group select:hover {
     border-color: #a9c7b8;
 }
 
-.laporan-pembelian-modal .laporan-form-group input:focus,
 .laporan-pembelian-modal .laporan-form-group select:focus {
     border-color: #10b981;
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
 }
 
 /* ======================================
-   TANGGAL + TOMBOL RESET DALAM INPUT
+   TANGGAL + TOMBOL RESET
 ====================================== */
 
 .laporan-pembelian-modal .laporan-tanggal-wrapper {
@@ -324,6 +329,8 @@
     width: 100%;
     min-width: 0;
     height: 44px;
+    margin: 0;
+    padding: 0;
     border: 1px solid #d6e2dd;
     border-radius: 10px;
     background: #ffffff;
@@ -346,10 +353,12 @@
 /* INPUT TANGGAL */
 
 .laporan-pembelian-modal .laporan-tanggal-wrapper input[type="date"] {
-    flex: 1;
+    display: block;
+    flex: 1 1 auto;
     width: 100%;
     min-width: 0;
     height: 100%;
+    margin: 0;
     padding: 0 10px 0 13px;
     color: #17221e;
     background: transparent;
@@ -362,21 +371,22 @@
     font-size: 14px;
 }
 
-/* HILANGKAN EFEK BORDER INPUT SAAT FOKUS */
-
 .laporan-pembelian-modal .laporan-tanggal-wrapper input[type="date"]:focus {
     border: none;
     outline: none;
     box-shadow: none;
 }
 
-/* TOMBOL RESET DI DALAM KOTAK TANGGAL */
+/* TOMBOL RESET */
 
 .laporan-pembelian-modal .laporan-tanggal-wrapper .laporan-reset-button {
-    flex-shrink: 0;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
     height: 30px;
-    min-width: auto;
-    margin-right: 6px;
+    min-width: 0;
+    margin: 0 6px 0 0;
     padding: 0 10px;
     color: #bb1414;
     background: #ecfdf5;
@@ -385,7 +395,10 @@
     font-family: inherit;
     font-size: 12px;
     font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
     cursor: pointer;
+    box-sizing: border-box;
     transition:
         background-color 0.2s ease,
         border-color 0.2s ease,
@@ -400,6 +413,8 @@
 .laporan-pembelian-modal .laporan-tanggal-wrapper .laporan-reset-button:active {
     transform: scale(0.96);
 }
+
+
 
     /* ======================================
        SUMMARY GRID

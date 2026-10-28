@@ -5,6 +5,11 @@ APP
 
 const App = {
 
+    pembelianMassalMediaQuery: null,
+    pembelianMassalResizeHandler: null,
+    pembelianMassalResizeTimer: null,
+    pembelianMassalRenderMode: null,
+
     async init() {
 
         Loading.show(
@@ -181,12 +186,12 @@ const App = {
 
 
     /*======================================
-LOGOUT
-======================================*/
+    LOGOUT
+    ======================================*/
 
-async logout() {
+    async logout() {
 
-    const confirmed = await Dialog.confirm(
+        const confirmed = await Dialog.confirm(
             "Apakah Anda yakin ingin logout?",
             {
                 title: "Konfirmasi Logout",
@@ -200,51 +205,53 @@ async logout() {
             return;
         }
 
-    if (
-        typeof Auth !== "undefined" &&
-        typeof Auth.logout === "function"
-    ) {
+        if (
+            typeof Auth !== "undefined" &&
+            typeof Auth.logout === "function"
+        ) {
 
-        Auth.logout();
+            Auth.logout();
 
-    }
+        }
 
-    const app =
-        document.getElementById("app");
+        this.stopPembelianMassalRenderSwitch();
 
-    if (app) {
+        const app =
+            document.getElementById("app");
 
-        app.classList.add(
-            "login-mode"
-        );
+        if (app) {
 
-    }
+            app.classList.add(
+                "login-mode"
+            );
 
-    const loginPage =
-        document.getElementById("loginPage");
+        }
 
-    if (loginPage) {
+        const loginPage =
+            document.getElementById("loginPage");
 
-        loginPage.remove();
+        if (loginPage) {
 
-    }
+            loginPage.remove();
 
-    if (
-        typeof Login !== "undefined" &&
-        typeof Login.init === "function"
-    ) {
+        }
 
-        await Login.init();
+        if (
+            typeof Login !== "undefined" &&
+            typeof Login.init === "function"
+        ) {
 
-    } else {
+            await Login.init();
 
-        Dialog.error(
-            "Modul Login tidak tersedia."
-        );
+        } else {
 
-    }
+            Dialog.error(
+                "Modul Login tidak tersedia."
+            );
 
-},
+        }
+
+    },
 
 
     /*======================================
@@ -337,6 +344,320 @@ async logout() {
 
 
     /*======================================
+    PASANG PEMANTAU PERUBAHAN UKURAN LAYAR
+    ======================================*/
+
+    startPembelianMassalRenderSwitch() {
+
+        if (!this.pembelianMassalMediaQuery) {
+
+            this.pembelianMassalMediaQuery =
+                window.matchMedia(
+                    "(max-width: 768px)"
+                );
+
+        }
+
+        if (this.pembelianMassalResizeHandler) {
+            return;
+        }
+
+        this.pembelianMassalResizeHandler = () => {
+
+            if (
+                !this.pembelianMassalMediaQuery
+            ) {
+                return;
+            }
+
+            const nextMode =
+                this.pembelianMassalMediaQuery.matches
+                    ? "mobile"
+                    : "desktop";
+
+            if (
+                nextMode ===
+                this.pembelianMassalRenderMode
+            ) {
+                return;
+            }
+
+            if (this.pembelianMassalResizeTimer) {
+
+                clearTimeout(
+                    this.pembelianMassalResizeTimer
+                );
+
+            }
+
+            this.pembelianMassalResizeTimer =
+                setTimeout(() => {
+
+                    this.switchPembelianMassalRender();
+
+                }, 120);
+
+        };
+
+        if (
+            typeof this.pembelianMassalMediaQuery
+                .addEventListener === "function"
+        ) {
+
+            this.pembelianMassalMediaQuery.addEventListener(
+                "change",
+                this.pembelianMassalResizeHandler
+            );
+
+        } else {
+
+            this.pembelianMassalMediaQuery.addListener(
+                this.pembelianMassalResizeHandler
+            );
+
+        }
+
+    },
+
+
+    /*======================================
+    LEPAS PEMANTAU UKURAN LAYAR
+    ======================================*/
+
+    stopPembelianMassalRenderSwitch() {
+
+        if (
+            this.pembelianMassalResizeTimer
+        ) {
+
+            clearTimeout(
+                this.pembelianMassalResizeTimer
+            );
+
+            this.pembelianMassalResizeTimer = null;
+
+        }
+
+        if (
+            !this.pembelianMassalMediaQuery ||
+            !this.pembelianMassalResizeHandler
+        ) {
+            return;
+        }
+
+        if (
+            typeof this.pembelianMassalMediaQuery
+                .removeEventListener === "function"
+        ) {
+
+            this.pembelianMassalMediaQuery.removeEventListener(
+                "change",
+                this.pembelianMassalResizeHandler
+            );
+
+        } else {
+
+            this.pembelianMassalMediaQuery.removeListener(
+                this.pembelianMassalResizeHandler
+            );
+
+        }
+
+        this.pembelianMassalResizeHandler = null;
+
+    },
+
+
+    /*======================================
+    SIMPAN NILAI FORM PEMBELIAN
+    ======================================*/
+
+    capturePembelianMassalForm() {
+
+        const page = document.getElementById(
+            "pembelian-massal-modal"
+        );
+
+        if (!page) {
+            return null;
+        }
+
+        const fields = {};
+
+        page.querySelectorAll(
+            "input[id], select[id], textarea[id]"
+        ).forEach(element => {
+
+            fields[element.id] = {
+                value: element.value,
+                checked:
+                    element instanceof HTMLInputElement
+                        ? element.checked
+                        : undefined
+            };
+
+        });
+
+        return fields;
+
+    },
+
+
+    /*======================================
+    PULIHKAN NILAI FORM PEMBELIAN
+    ======================================*/
+
+    restorePembelianMassalForm(fields) {
+
+        if (!fields) {
+            return;
+        }
+
+        const page = document.getElementById(
+            "pembelian-massal-modal"
+        );
+
+        if (!page) {
+            return;
+        }
+
+        Object.entries(fields).forEach(
+            ([id, saved]) => {
+
+                const element =
+                    page.querySelector(
+                        "#" + CSS.escape(id)
+                    );
+
+                if (!element) {
+                    return;
+                }
+
+                element.value = saved.value;
+
+                if (
+                    element instanceof HTMLInputElement &&
+                    typeof saved.checked === "boolean"
+                ) {
+
+                    element.checked =
+                        saved.checked;
+
+                }
+
+            }
+        );
+
+    },
+
+
+    /*======================================
+    PINDAH RENDER PEMBELIAN
+    DESKTOP <-> MOBILE
+    ======================================*/
+
+    switchPembelianMassalRender() {
+
+        const pageElement =
+            document.getElementById("page");
+
+        const currentPage =
+            typeof Router !== "undefined"
+                ? Router.currentPage
+                : "";
+
+        if (
+            currentPage !== "pembelian" ||
+            !pageElement ||
+            !document.getElementById(
+                "pembelian-massal-modal"
+            )
+        ) {
+            return;
+        }
+
+        const nextMode =
+            window.matchMedia(
+                "(max-width: 768px)"
+            ).matches
+                ? "mobile"
+                : "desktop";
+
+        if (
+            nextMode ===
+            this.pembelianMassalRenderMode
+        ) {
+            return;
+        }
+
+        const formState =
+            this.capturePembelianMassalForm();
+
+        const renderedHTML =
+            this.renderPembelianMassal();
+
+        if (renderedHTML === null) {
+            return;
+        }
+
+        pageElement.innerHTML =
+            renderedHTML;
+
+        this.pembelianMassalRenderMode =
+            nextMode;
+
+        this.restorePembelianMassalForm(
+            formState
+        );
+
+        /*
+         * State item tetap berada pada
+         * PembelianMassal.items.
+         * Render ulang dari state tersebut.
+         */
+
+        if (
+            typeof PembelianMassalItem !== "undefined" &&
+            typeof PembelianMassalItem.renderItems === "function"
+        ) {
+
+            PembelianMassalItem.renderItems(
+                PembelianMassal
+            );
+
+        }
+
+        this.restorePembelianMassalForm(
+            formState
+        );
+
+        /*
+         * Bind ulang hanya pada elemen halaman
+         * yang baru dibuat.
+         */
+
+        if (
+            typeof PembelianMassal !== "undefined" &&
+            typeof PembelianMassal.bindEvents === "function"
+        ) {
+
+            PembelianMassal.bindEvents();
+
+        }
+
+        if (
+            typeof PembelianMassal !== "undefined" &&
+            typeof PembelianMassal.updateTotal === "function"
+        ) {
+
+            PembelianMassal.updateTotal();
+
+        }
+
+    },
+
+
+    /*======================================
     LOAD PAGE
     ======================================*/
 
@@ -350,6 +671,8 @@ async logout() {
             typeof Auth !== "undefined" &&
             !Auth.isLoggedIn()
         ) {
+
+            this.stopPembelianMassalRenderSwitch();
 
             if (
                 typeof Login !== "undefined"
@@ -435,12 +758,21 @@ async logout() {
             pageElement.innerHTML =
                 renderedHTML;
 
+            this.pembelianMassalRenderMode =
+                window.matchMedia(
+                    "(max-width: 768px)"
+                ).matches
+                    ? "mobile"
+                    : "desktop";
+
             const params =
                 typeof Router !== "undefined"
                     ? Router.params || {}
                     : {};
 
             PembelianMassal.init(params);
+
+            this.startPembelianMassalRenderSwitch();
 
 
             /*==================================

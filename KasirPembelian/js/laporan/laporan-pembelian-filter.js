@@ -483,7 +483,15 @@ Object.assign(LaporanPembelian, {
 
 
                     });
+console.log(
+    "DATA PEMBELIAN ASLI:",
+    pembelian[0]
+);
 
+console.log(
+    "DATA TRANSAKSI HASIL FILTER:",
+    transactions[0]
+);
             /*
             ==================================
             HITUNG SUMMARY

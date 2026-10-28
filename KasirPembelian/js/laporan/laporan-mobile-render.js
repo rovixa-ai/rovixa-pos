@@ -85,7 +85,7 @@ const LaporanPembelianMobileRender = {
 
                     <div class="laporan-pembelian-modal-body">
 
-                        <div class="laporan-card">
+                        
 
                             
 
@@ -97,10 +97,22 @@ const LaporanPembelianMobileRender = {
                                         Tanggal
                                     </label>
 
-                                    <input
-                                        type="date"
-                                        id="laporanPembelianTanggal"
-                                    >
+                                    <div class="laporan-tanggal-wrapper">
+
+                                        <input
+                                            type="date"
+                                            id="laporanPembelianTanggal"
+                                        >
+
+                                        <button
+                                            type="button"
+                                            id="laporanPembelianReset"
+                                            class="laporan-reset-button"
+                                        >
+                                            Reset
+                                        </button>
+
+                                    </div>
 
                                 </div>
 
@@ -122,19 +134,7 @@ const LaporanPembelianMobileRender = {
 
                             </div>
 
-                            <div class="laporan-filter-action">
-
-                                <button
-                                    type="button"
-                                    id="laporanPembelianReset"
-                                    class="laporan-reset-button"
-                                >
-                                    Reset
-                                </button>
-
-                            </div>
-
-                        </div>
+                       
 
                         <div class="laporan-card laporan-summary-card">
 
