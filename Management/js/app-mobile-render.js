@@ -70,17 +70,7 @@ const AppMobileRender = {
 
                 </div>
 
-                <div class="mobile-header-page">
-
-                    <h1 id="mobile-header-title">
-                        Dashboard
-                    </h1>
-
-                    <span id="mobile-header-subtitle">
-                        Ringkasan toko
-                    </span>
-
-                </div>
+                
 
                 <div class="mobile-header-user">
 
