@@ -129,17 +129,55 @@ const Receipt = {
                 data.id || "";
 
 
-            const tanggal = data.tanggal
-                ? new Date(data.tanggal).toLocaleString("id-ID", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                    hour12: false
-                })
-                : "";
+            const rawTanggal = data.tanggal;
+
+            let tanggal = "";
+
+            if (
+                rawTanggal !== null &&
+                rawTanggal !== undefined &&
+                String(rawTanggal).trim() !== ""
+            ) {
+                let parsedTanggal;
+
+                if (rawTanggal instanceof Date) {
+                    parsedTanggal = rawTanggal;
+                } else {
+                    const value = String(rawTanggal).trim();
+
+                    const match = value.match(
+                        /^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?$/
+                    );
+
+                    if (match) {
+                        parsedTanggal = new Date(
+                            Number(match[3]),
+                            Number(match[2]) - 1,
+                            Number(match[1]),
+                            Number(match[4] || 0),
+                            Number(match[5] || 0),
+                            Number(match[6] || 0)
+                        );
+                    } else {
+                        parsedTanggal = new Date(value);
+                    }
+                }
+
+                if (
+                    parsedTanggal &&
+                    !Number.isNaN(parsedTanggal.getTime())
+                ) {
+                    tanggal = parsedTanggal.toLocaleString("id-ID", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                        hour12: false
+                    });
+                }
+            }
 
 
             const kasir =
