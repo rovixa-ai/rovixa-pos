@@ -101,13 +101,31 @@ const PembelianMassalItemMobileRender = {
 
                             <label>Barcode</label>
 
-                            <input
-                                type="text"
-                                value="${escape(item.barcode)}"
-                                placeholder="Barcode"
-                                data-massal-field="barcode"
-                                data-massal-index="${index}"
-                            >
+                            <div class="pembelian-massal-mobile-barcode-wrapper">
+
+                                <input
+                                    type="text"
+                                    value="${escape(item.barcode)}"
+                                    placeholder="Barcode"
+                                    data-massal-field="barcode"
+                                    data-massal-index="${index}"
+                                >
+
+                                <button
+                                    type="button"
+                                    class="pembelian-massal-mobile-barcode-camera"
+                                    data-massal-action="scan-barcode"
+                                    data-massal-index="${index}"
+                                    title="Scan Barcode"
+                                    aria-label="Scan Barcode"
+                                >
+                                    <img
+                                        src="icons/camera.png"
+                                        alt=""
+                                    >
+                                </button>
+
+                            </div>
 
                         </div>
 

@@ -1,3 +1,4 @@
+
 /* ======================================
 TREEHOUSE POS
 PEMBELIAN MASSAL
@@ -53,6 +54,38 @@ Object.assign(PembelianMassal, {
                     this.close();
                     return;
                 }
+
+                if (action === "scan-barcode") {
+
+                    const index = Number(
+                        actionButton.dataset.massalIndex
+                    );
+
+                    if (
+                        !Number.isInteger(index) ||
+                        !this.items[index]
+                    ) {
+                        Dialog.error(
+                            "Baris item tidak ditemukan.",
+                            "Scanner Barcode"
+                        );
+                        return;
+                    }
+
+                    if (
+                        typeof PembelianBarcodeScanner === "undefined" ||
+                        typeof PembelianBarcodeScanner.openForMassal !== "function"
+                    ) {
+                        Dialog.error(
+                            "Scanner barcode belum tersedia.",
+                            "Scanner Barcode"
+                        );
+                        return;
+                    }
+
+                    PembelianBarcodeScanner.openForMassal(index);
+                    return;
+                }
             }
 
             const addButton = target.closest(
@@ -60,9 +93,7 @@ Object.assign(PembelianMassal, {
             );
 
             if (addButton) {
-
                 PembelianMassalItem.addItem(this);
-
                 return;
             }
 
@@ -290,120 +321,122 @@ Object.assign(PembelianMassal, {
 
     },
 
-
     /* ======================================
        CARI BARCODE SATUAN BARANG
     ====================================== */
 
-    
-cariBarcodeSatuan(index, barcode, page) {
+    cariBarcodeSatuan(index, barcode, page) {
 
-    const item = this.items[index];
+        const item = this.items[index];
 
-    if (!item) return;
+        if (!item) {
+            return;
+        }
 
-    const barcodeDicari =
-        PembelianMassalMaster.normalizeBarcode(barcode);
+        const barcodeDicari =
+            PembelianMassalMaster.normalizeBarcode(barcode);
 
-    item.barcode = barcodeDicari;
+        item.barcode = barcodeDicari;
 
-    if (!barcodeDicari) return;
+        if (!barcodeDicari) {
+            return;
+        }
 
-    const satuanDitemukan =
-        (this.satuanList || []).find(
-            satuan =>
-                PembelianMassalMaster.normalizeBarcode(
-                    satuan.barcodeSatuan
-                ) === barcodeDicari
-        );
+        const satuanDitemukan =
+            (this.satuanList || []).find(
+                satuan =>
+                    PembelianMassalMaster.normalizeBarcode(
+                        satuan.barcodeSatuan
+                    ) === barcodeDicari
+            );
 
-    if (!satuanDitemukan) return;
+        if (!satuanDitemukan) {
+            return;
+        }
 
-    const kodeBarang =
-        PembelianMassalMaster.normalizeKode(
-            satuanDitemukan.kode
-        );
+        const kodeBarang =
+            PembelianMassalMaster.normalizeKode(
+                satuanDitemukan.kode
+            );
 
-    const barangDitemukan =
-        (this.barangList || []).find(
-            barang =>
-                PembelianMassalMaster.normalizeKode(
-                    barang.kode
-                ) === kodeBarang
-        );
+        const barangDitemukan =
+            (this.barangList || []).find(
+                barang =>
+                    PembelianMassalMaster.normalizeKode(
+                        barang.kode
+                    ) === kodeBarang
+            );
 
-    if (!barangDitemukan) return;
+        if (!barangDitemukan) {
+            return;
+        }
 
-    // SAMA SEPERTI CHANGE NAMABARANG
-    item.barang = kodeBarang;
+        item.barang = kodeBarang;
+        item.namaBarang = barangDitemukan.nama || "";
 
-    item.namaBarang = barangDitemukan.nama || "";
+        item.satuanList =
+            (this.satuanList || []).filter(
+                satuan =>
+                    String(satuan.kode) ===
+                    String(barangDitemukan.kode)
+            );
 
-    item.satuanList =
-        (this.satuanList || []).filter(
-            satuan =>
-                String(satuan.kode) ===
-                String(barangDitemukan.kode)
-        );
+        const satuanTerpilih =
+            item.satuanList.find(
+                satuan =>
+                    PembelianMassalMaster.normalizeBarcode(
+                        satuan.barcodeSatuan
+                    ) === barcodeDicari
+            );
 
-    // Pilih satuan berdasarkan barcode yang ditemukan
-    const satuanTerpilih =
-        item.satuanList.find(
-            satuan =>
-                PembelianMassalMaster.normalizeBarcode(
-                    satuan.barcodeSatuan
-                ) === barcodeDicari
-        );
+        item.satuan = satuanTerpilih
+            ? satuanTerpilih.satuan || ""
+            : satuanDitemukan.satuan || "";
 
-    item.satuan = satuanTerpilih
-        ? satuanTerpilih.satuan || ""
-        : satuanDitemukan.satuan || "";
+        const satuanAktif =
+            satuanTerpilih || satuanDitemukan;
 
-    const satuanAktif =
-        satuanTerpilih || satuanDitemukan;
+        item.barcode =
+            satuanAktif.barcodeSatuan || "";
 
-    item.barcode =
-        satuanAktif.barcodeSatuan || "";
-
-    item.konversi =
-        PembelianMassalMaster.toNumber(
-            satuanAktif.isi,
+        item.konversi =
             PembelianMassalMaster.toNumber(
-                satuanAktif.konversi,
-                1
-            )
-        );
+                satuanAktif.isi,
+                PembelianMassalMaster.toNumber(
+                    satuanAktif.konversi,
+                    1
+                )
+            );
 
-    item.harga =
-        PembelianMassalMaster.toNumber(
-            satuanAktif.hargaBeli,
-            0
-        );
+        item.harga =
+            PembelianMassalMaster.toNumber(
+                satuanAktif.hargaBeli,
+                0
+            );
 
-    item.hargaJual =
-        PembelianMassalMaster.toNumber(
-            satuanAktif.hargaJual,
-            0
-        );
+        item.hargaJual =
+            PembelianMassalMaster.toNumber(
+                satuanAktif.hargaJual,
+                0
+            );
 
-    const satuanPCS =
-        item.satuanList.find(
-            satuan =>
-                PembelianMassalMaster.normalizeSatuan(
-                    satuan.satuan
-                ) === "PCS"
-        );
+        const satuanPCS =
+            item.satuanList.find(
+                satuan =>
+                    PembelianMassalMaster.normalizeSatuan(
+                        satuan.satuan
+                    ) === "PCS"
+            );
 
-    item.hargaJualPCS =
-        PembelianMassalMaster.toNumber(
-            satuanPCS?.hargaJual,
-            0
-        );
+        item.hargaJualPCS =
+            PembelianMassalMaster.toNumber(
+                satuanPCS?.hargaJual,
+                0
+            );
 
-    PembelianMassalItem.renderItems(this);
+        PembelianMassalItem.renderItems(this);
 
-    this.updateTotal();
-}
-
+        this.updateTotal();
+    }
 
 });

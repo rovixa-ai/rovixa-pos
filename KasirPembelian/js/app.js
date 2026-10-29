@@ -342,6 +342,41 @@ const App = {
 
     },
 
+    /*======================================
+        RENDER MODAL SCANNER BARCODE
+        ======================================*/
+
+        renderPembelianBarcodeScanner() {
+
+            if (
+                document.getElementById(
+                    "pembelian-barcode-scanner"
+                )
+            ) {
+                return;
+            }
+
+            if (
+                typeof PembelianScannerRender === "undefined"
+            ) {
+                console.error(
+                    "PembelianScannerRender tidak ditemukan."
+                );
+                return;
+            }
+
+            const container = document.createElement("div");
+
+            container.innerHTML =
+                PembelianScannerRender.render().trim();
+
+            const modal = container.firstElementChild;
+
+            if (modal) {
+                document.body.appendChild(modal);
+            }
+        },
+
 
     /*======================================
     PASANG PEMANTAU PERUBAHAN UKURAN LAYAR
@@ -706,6 +741,11 @@ const App = {
         if (!info) {
             return;
         }
+
+
+        this.renderPembelianBarcodeScanner();
+
+
 
 
         /*==================================
