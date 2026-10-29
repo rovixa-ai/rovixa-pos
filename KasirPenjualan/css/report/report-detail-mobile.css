@@ -938,11 +938,11 @@
 
         background: linear-gradient(
             145deg,
-            #df3636 0%,
-            #2cbd66 100%
+            #fffefe 0%,
+            #f1f7f3 100%
         );
 
-        border-color: #b7d9c5 !important;
+        border-color: #c70808 !important;
 
         box-shadow:
             0 3px 8px rgba(16, 60, 40, 0.04),
