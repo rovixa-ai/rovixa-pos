@@ -7,6 +7,7 @@ BARANG DETAIL MODAL
 const BarangDetail = {
 
     modal: null,
+    barangAktif: null,
 
     async open(barang) {
 
@@ -15,6 +16,7 @@ const BarangDetail = {
         }
 
         this.close();
+        this.barangAktif = barang;
 
         let statistik = {
             totalTerjual: 0,
@@ -204,8 +206,19 @@ const BarangDetail = {
                                                 </thead>
 
                                                 <tbody>
-                                                    ${satuan.map(item => `
-                                                        <tr>
+                                                    ${satuan.map((item, index) => `
+                                                        <tr
+                                                            class="barang-detail-unit-row"
+                                                            data-unit-index="${index}"
+                                                            tabindex="0"
+                                                            role="button"
+                                                            aria-label="Edit satuan ${this.escapeHTML(
+                                                                item.satuan ||
+                                                                item.nama ||
+                                                                ""
+                                                            )}"
+                                                            title="Klik untuk mengedit satuan"
+                                                        >
                                                             <td>
                                                                 ${this.escapeHTML(
                                                                     item.satuan ||
@@ -258,6 +271,10 @@ const BarangDetail = {
                                             </table>
 
                                         </div>
+
+                                        <p class="barang-detail-statistics-note">
+                                            Klik baris satuan untuk mengedit datanya.
+                                        </p>
                                     `
                                     : `
                                         <div class="barang-detail-empty">
@@ -296,6 +313,85 @@ const BarangDetail = {
     },
 
 
+    async editUnit(index) {
+
+        const modal = this.modal;
+
+        if (!modal || !this.barangAktif) {
+            return;
+        }
+
+        const rows = modal.querySelectorAll(
+            ".barang-detail-unit-row"
+        );
+
+        const row = rows[index];
+
+        if (!row) {
+            return;
+        }
+
+        const namaSatuan = row.cells[0]?.textContent
+            ?.trim()
+            .toLowerCase();
+
+        const kodeBarang = String(
+            this.barangAktif.kode ?? ""
+        ).trim();
+
+        /*
+         * Ambil kembali data satuan asli dari IndexedDB.
+         * Jangan gunakan objek hasil getUnitData untuk
+         * penyimpanan karena objek tersebut sudah diperkaya
+         * dengan harga beli hasil perhitungan.
+         */
+        const semuaSatuan = await DB.getAll("satuan");
+
+        const satuanAsli = (
+            Array.isArray(semuaSatuan)
+                ? semuaSatuan
+                : []
+        ).find(item => {
+
+            return (
+                String(item?.kode ?? "").trim() ===
+                    kodeBarang &&
+                String(
+                    item?.satuan ??
+                    item?.nama ??
+                    ""
+                ).trim().toLowerCase() === namaSatuan
+            );
+        });
+
+        if (!satuanAsli) {
+            Dialog.alert(
+                "Data satuan asli tidak ditemukan. " +
+                "Form edit tidak dapat dibuka."
+            );
+
+            return;
+        }
+
+        /*
+         * Tutup modal detail sebelum berpindah ke form.
+         */
+        this.close();
+
+        /*
+         * Kirim objek satuan asli yang memiliki ID,
+         * kode barang induk, dan data edit yang sebenarnya.
+         */
+        SatuanForm.form(
+            satuanAsli,
+            {
+                returnTo: "barang-detail",
+                barangInduk: this.barangAktif
+            }
+        );
+    },
+
+
     async getUnitData(barang) {
 
         const kodeBarang = String(
@@ -326,10 +422,6 @@ const BarangDetail = {
             String(item?.kode ?? "").trim() === kodeBarang
         );
 
-        /*
-         * Pertahankan data lama jika satuan belum tersedia
-         * pada penyimpanan terpisah.
-         */
         if (!satuanBarang.length) {
             return Array.isArray(barang.satuan)
                 ? barang.satuan
@@ -413,10 +505,6 @@ const BarangDetail = {
                     detail.satuan ?? ""
                 ).trim().toLowerCase();
 
-                /*
-                 * Cocokkan satuan agar harga pembelian
-                 * tidak diambil dari satuan lain.
-                 */
                 if (
                     !namaSatuan ||
                     satuanDetail !== namaSatuan
@@ -424,10 +512,6 @@ const BarangDetail = {
                     return;
                 }
 
-                /*
-                 * Detail pembelian menggunakan ID transaksi
-                 * pada field id untuk menghubungkan transaksi.
-                 */
                 if (detail.id == null) {
                     return;
                 }
@@ -471,11 +555,6 @@ const BarangDetail = {
                 0
             );
 
-            /*
-             * Harga pembelian dikonversi ke satuan yang
-             * sedang ditampilkan, mengikuti rumus:
-             * harga / isi pembelian * isi satuan.
-             */
             if (
                 pembelianTerbaru &&
                 Number.isFinite(isiSatuan) &&
@@ -577,9 +656,7 @@ const BarangDetail = {
 
             const status = String(
                 transaksi.status ?? ""
-            )
-                .trim()
-                .toUpperCase();
+            ).trim().toUpperCase();
 
             if (status === "RETUR") {
                 return;
@@ -597,7 +674,6 @@ const BarangDetail = {
                 String(transaksi.id),
                 tanggal
             );
-
         });
 
         let totalTerjual = 0;
@@ -677,7 +753,6 @@ const BarangDetail = {
             ) {
                 hasil.terjualBulanIni += jumlah;
             }
-
         });
 
         if (
@@ -704,7 +779,6 @@ const BarangDetail = {
             totalTerjual / jumlahBulan;
 
         return hasil;
-
     },
 
 
@@ -715,7 +789,6 @@ const BarangDetail = {
         }
 
         if (value instanceof Date) {
-
             return Number.isNaN(value.getTime())
                 ? null
                 : value;
@@ -818,6 +891,11 @@ const BarangDetail = {
                 ".barang-detail-overlay"
             );
 
+        const unitTable =
+            this.modal.querySelector(
+                ".barang-detail-table"
+            );
+
         if (closeButton) {
             closeButton.onclick = () => {
                 this.close();
@@ -837,6 +915,80 @@ const BarangDetail = {
                     this.close();
                 }
             };
+        }
+
+        if (unitTable) {
+
+            unitTable.addEventListener(
+                "click",
+                event => {
+
+                    const row = event.target.closest(
+                        ".barang-detail-unit-row"
+                    );
+
+                    if (!row || !unitTable.contains(row)) {
+                        return;
+                    }
+
+                    const index = Number(
+                        row.dataset.unitIndex
+                    );
+
+                    this.editUnit(index).catch(error => {
+
+                        console.error(
+                            "Gagal membuka form edit satuan:",
+                            error
+                        );
+
+                        Dialog.alert(
+                            error.message ||
+                            "Gagal membuka form edit satuan."
+                        );
+                    });
+                }
+            );
+
+            unitTable.addEventListener(
+                "keydown",
+                event => {
+
+                    if (
+                        event.key !== "Enter" &&
+                        event.key !== " "
+                    ) {
+                        return;
+                    }
+
+                    const row = event.target.closest(
+                        ".barang-detail-unit-row"
+                    );
+
+                    if (!row || !unitTable.contains(row)) {
+                        return;
+                    }
+
+                    event.preventDefault();
+
+                    const index = Number(
+                        row.dataset.unitIndex
+                    );
+
+                    this.editUnit(index).catch(error => {
+
+                        console.error(
+                            "Gagal membuka form edit satuan:",
+                            error
+                        );
+
+                        Dialog.alert(
+                            error.message ||
+                            "Gagal membuka form edit satuan."
+                        );
+                    });
+                }
+            );
         }
 
         this.handleEscape = event => {

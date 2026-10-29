@@ -247,21 +247,7 @@ const AppMobileRender = {
                     </button>
 
 
-                    <button
-                        type="button"
-                        class="mobile-menu-item"
-                        data-mobile-page="satuan"
-                        title="Satuan & Harga"
-                        aria-label="Satuan"
-                    >
-                        <span class="mobile-menu-icon">
-                            ⚖️
-                        </span>
-
-                        <span class="mobile-menu-text">
-                            Satuan
-                        </span>
-                    </button>
+                   
 
 
                     <button

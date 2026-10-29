@@ -83,15 +83,6 @@ const AppDesktopRender = {
                     </button>
 
 
-                    <button
-                        data-page="satuan"
-                        title="Satuan & Harga"
-                    >
-                        <span class="sidebar-menu-icon">⚖️</span>
-                        <span class="sidebar-menu-text">
-                            Satuan & Harga
-                        </span>
-                    </button>
 
 
                     <button

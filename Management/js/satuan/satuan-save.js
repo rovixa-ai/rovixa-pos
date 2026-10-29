@@ -1,73 +1,53 @@
 /*======================================
+TREEHOUSE POS
 SATUAN SAVE
 ======================================*/
 
 const SatuanSave = {
 
-
     /*======================================
     SAVE
     ======================================*/
 
-    async save(
-        existingData = null
-    ) {
+    async save(existingData = null) {
 
         const kode =
             document
-                .getElementById(
-                    "satuan-barang"
-                )
+                .getElementById("satuan-barang")
                 .value;
-
 
         const satuan =
             document
-                .getElementById(
-                    "satuan-nama"
-                )
+                .getElementById("satuan-nama")
                 .value
                 .trim();
-
 
         const barcodeSatuan =
             document
-                .getElementById(
-                    "satuan-barcode"
-                )
+                .getElementById("satuan-barcode")
                 .value
                 .trim();
-
 
         const isi =
             Number(
                 document
-                    .getElementById(
-                        "satuan-konversi"
-                    )
+                    .getElementById("satuan-konversi")
                     .value
             );
-
 
         const hargaJual =
             Number(
                 document
-                    .getElementById(
-                        "satuan-harga-jual"
-                    )
+                    .getElementById("satuan-harga-jual")
                     .value
             ) || 0;
-
 
         const discount =
             Number(
                 document
-                    .getElementById(
-                        "satuan-discount"
-                    )
+                    .getElementById("satuan-discount")
                     .value
             ) || 0;
-
 
         /*==================================
         VALIDASI BARANG
@@ -80,9 +60,7 @@ const SatuanSave = {
             );
 
             return;
-
         }
-
 
         /*==================================
         VALIDASI SATUAN
@@ -90,32 +68,25 @@ const SatuanSave = {
 
         if (!satuan) {
 
-           Dialog.alert(
+            Dialog.alert(
                 "Satuan wajib diisi."
             );
 
             return;
-
         }
-
 
         /*==================================
         VALIDASI KONVERSI
         ==================================*/
 
-        if (
-            !isi ||
-            isi < 1
-        ) {
+        if (!isi || isi < 1) {
 
-           Dialog.alert(
+            Dialog.alert(
                 "Konversi harus lebih dari 0."
             );
 
             return;
-
         }
-
 
         /*==================================
         DATA LAMA UNTUK EDIT
@@ -125,11 +96,9 @@ const SatuanSave = {
             existingData?.kode ||
             kode;
 
-
         const oldSatuan =
             existingData?.satuan ||
             satuan;
-
 
         /*==================================
         ID SATUAN
@@ -142,7 +111,6 @@ const SatuanSave = {
                 "|" +
                 satuan
             );
-
 
         /*==================================
         DATA SATUAN
@@ -173,16 +141,12 @@ const SatuanSave = {
 
             createdAt:
                 existingData?.createdAt ||
-                new Date()
-                    .toISOString(),
+                new Date().toISOString(),
 
             syncedAt:
                 null
 
         };
-
-
-       
 
         try {
 
@@ -197,7 +161,6 @@ const SatuanSave = {
                     data
                 );
 
-
                 const queue = {
 
                     id:
@@ -206,10 +169,7 @@ const SatuanSave = {
                         "-" +
                         Math.random()
                             .toString(36)
-                            .substring(
-                                2,
-                                8
-                            ),
+                            .substring(2, 8),
 
                     type:
                         "satuan",
@@ -233,23 +193,17 @@ const SatuanSave = {
                         0,
 
                     createdAt:
-                        new Date()
-                            .toISOString(),
+                        new Date().toISOString(),
 
                     lastError:
                         null
 
                 };
 
-
                 await DB.put(
                     "syncQueue",
                     queue
                 );
-
-
-                
-
 
                 /*==================================
                 KEMBALI KE PEMBELIAN
@@ -263,50 +217,102 @@ const SatuanSave = {
                     Pembelian.pendingBarcode =
                         data.barcodeSatuan;
 
-
                     Pembelian.preserveItems =
                         true;
 
+                    SatuanForm.close();
 
                     Router.go(
                         "pembelian"
                     );
 
-
                     setTimeout(
                         () => {
 
                             Sync.process()
-                                .catch(
-                                    error => {
+                                .catch(error => {
 
-                                        console.error(
-                                            "SYNC ERROR:",
-                                            error
-                                        );
+                                    console.error(
+                                        "SYNC ERROR:",
+                                        error
+                                    );
 
-                                    }
-                                );
+                                });
 
                         },
                         100
                     );
 
-
                     return;
-
                 }
 
+                /*==================================
+                KEMBALI KE MODAL DETAIL BARANG
+                KHUSUS EDIT SATUAN
+                ==================================*/
+
+                if (
+                    Satuan.formOptions.returnTo ===
+                    "barang-detail"
+                ) {
+
+                    const barangInduk =
+                        Satuan.formOptions.barangInduk;
+
+                    if (!barangInduk) {
+
+                        Dialog.alert(
+                            "Data barang tidak ditemukan."
+                        );
+
+                        return;
+                    }
+
+                    // Tutup modal edit satuan.
+                    SatuanForm.close();
+
+                    // Perbarui dan tampilkan kembali detail barang.
+                    await BarangDetail.open(
+                        barangInduk
+                    );
+
+                    Dialog.alert(
+                        "Satuan berhasil diperbarui."
+                    );
+
+                    setTimeout(
+                        () => {
+
+                            Sync.process()
+                                .catch(error => {
+
+                                    console.error(
+                                        "SYNC ERROR:",
+                                        error
+                                    );
+
+                                });
+
+                        },
+                        100
+                    );
+
+                    return;
+                }
+
+                /*==================================
+                ALUR EDIT NORMAL
+                ==================================*/
+
+                SatuanForm.close();
 
                 Dialog.alert(
                     "Satuan berhasil diperbarui."
                 );
 
-
                 Router.go(
                     "satuan"
                 );
-
 
                 setTimeout(
                     () => {
@@ -317,11 +323,8 @@ const SatuanSave = {
                     100
                 );
 
-
                 return;
-
             }
-
 
             /*==================================
             TAMBAH SATUAN BARU
@@ -331,10 +334,6 @@ const SatuanSave = {
                 await Sync.addSatuan(
                     data
                 );
-
-
-            
-
 
             /*==================================
             SATUAN SUDAH ADA
@@ -348,7 +347,6 @@ const SatuanSave = {
                 const existing =
                     result.data;
 
-
                 const edit =
                     confirm(
                         "Satuan untuk barang ini sudah ada.\n\n" +
@@ -356,24 +354,18 @@ const SatuanSave = {
                         "Klik Cancel untuk Batal."
                     );
 
-
                 if (!edit) {
 
                     return;
-
                 }
-
 
                 SatuanForm.form(
                     existing,
                     Satuan.formOptions
                 );
 
-
                 return;
-
             }
-
 
             /*==================================
             KEMBALI KE PEMBELIAN
@@ -387,54 +379,49 @@ const SatuanSave = {
                 Pembelian.pendingBarcode =
                     data.barcodeSatuan;
 
-
                 Pembelian.preserveItems =
                     true;
 
+                SatuanForm.close();
 
                 Router.go(
                     "pembelian"
                 );
 
-
                 setTimeout(
                     () => {
 
                         Sync.process()
-                            .catch(
-                                error => {
+                            .catch(error => {
 
-                                    console.error(
-                                        "SYNC ERROR:",
-                                        error
-                                    );
+                                console.error(
+                                    "SYNC ERROR:",
+                                    error
+                                );
 
-                                }
-                            );
+                            });
 
                     },
                     100
                 );
 
-
                 return;
-
             }
 
-
             /*==================================
-            ALUR NORMAL
+            ALUR NORMAL TAMBAH SATUAN
+            TETAP SEPERTI SEMULA
             ==================================*/
+
+            SatuanForm.close();
 
             Dialog.alert(
                 "Barang dan satuan berhasil disimpan."
             );
 
-
             Router.go(
                 "barang"
             );
-
 
             setTimeout(
                 () => {
@@ -445,15 +432,12 @@ const SatuanSave = {
                 100
             );
 
-        }
-
-        catch (error) {
+        } catch (error) {
 
             console.error(
                 "SAVE SATUAN ERROR:",
                 error
             );
-
 
             Dialog.alert(
                 error.message ||
