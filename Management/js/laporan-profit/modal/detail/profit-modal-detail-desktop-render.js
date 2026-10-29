@@ -69,6 +69,12 @@ const LaporanProfitDetailModalDesktopRender = {
             transaction.status || "-";
 
 
+        const isRetur =
+            String(status)
+                .trim()
+                .toUpperCase() === "RETUR";
+
+
         const rows =
             items.length
                 ? items.map(
@@ -211,8 +217,24 @@ const LaporanProfitDetailModalDesktopRender = {
             >
 
                 <div
-                    class="laporan-profit-detail-modal-content"
+                    class="
+                        laporan-profit-detail-modal-content
+                        ${isRetur ? "laporan-profit-detail-modal-retur" : ""}
+                    "
                 >
+
+                    ${
+                        isRetur
+                            ? `
+                                <div
+                                    class="laporan-profit-detail-watermark"
+                                    aria-hidden="true"
+                                >
+                                    RETUR
+                                </div>
+                            `
+                            : ""
+                    }
 
 
                     <div
@@ -250,7 +272,6 @@ const LaporanProfitDetailModalDesktopRender = {
                     <div
                         class="laporan-profit-detail-info"
                     >
-
 
                         <div
                             class="laporan-profit-detail-info-item"
@@ -332,14 +353,12 @@ const LaporanProfitDetailModalDesktopRender = {
 
                         </div>
 
-
                     </div>
 
 
                     <div
                         class="laporan-profit-detail-summary"
                     >
-
 
                         <div
                             class="laporan-profit-detail-summary-card"
@@ -423,7 +442,6 @@ const LaporanProfitDetailModalDesktopRender = {
 
                         </div>
 
-
                     </div>
 
 
@@ -439,53 +457,18 @@ const LaporanProfitDetailModalDesktopRender = {
 
                                 <tr>
 
-                                    <th>
-                                        No
-                                    </th>
-
-                                    <th>
-                                        Kode
-                                    </th>
-
-                                    <th>
-                                        Nama Barang
-                                    </th>
-
-                                    <th>
-                                        Satuan
-                                    </th>
-
-                                    <th>
-                                        Qty
-                                    </th>
-
-                                    <th>
-                                        Konversi
-                                    </th>
-
-                                    <th>
-                                        Harga Jual
-                                    </th>
-
-                                    <th>
-                                        Discount
-                                    </th>
-
-                                    <th>
-                                        Penjualan
-                                    </th>
-
-                                    <th>
-                                        Harga Beli Terakhir
-                                    </th>
-
-                                    <th>
-                                        HPP
-                                    </th>
-
-                                    <th>
-                                        Profit
-                                    </th>
+                                    <th>No</th>
+                                    <th>Kode</th>
+                                    <th>Nama Barang</th>
+                                    <th>Satuan</th>
+                                    <th>Qty</th>
+                                    <th>Konversi</th>
+                                    <th>Harga Jual</th>
+                                    <th>Discount</th>
+                                    <th>Penjualan</th>
+                                    <th>Harga Beli Terakhir</th>
+                                    <th>HPP</th>
+                                    <th>Profit</th>
 
                                 </tr>
 

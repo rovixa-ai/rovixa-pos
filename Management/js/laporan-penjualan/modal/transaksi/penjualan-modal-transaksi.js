@@ -5,24 +5,29 @@ const PenjualanTransaksiModal = {
 
 
     // ======================================
-    // OPEN MODAL
-    // ======================================
+// OPEN MODAL
+// ======================================
 
-    open(tanggal, transactions = []) {
+open(tanggal, transactions = []) {
 
-        this.close();
+    this.close();
 
-        this.tanggal =
-            tanggal || "";
+    this.tanggal =
+        tanggal || "";
 
-        this.data =
-            Array.isArray(transactions)
-                ? transactions
-                : [];
+    this.data =
+        Array.isArray(transactions)
+            ? [...transactions].sort(
+                (a, b) =>
+                    String(b.id || "").localeCompare(
+                        String(a.id || "")
+                    )
+            )
+            : [];
 
-        this.render();
+    this.render();
 
-    },
+},
 
 
     // ======================================

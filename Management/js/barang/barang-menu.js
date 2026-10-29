@@ -50,6 +50,31 @@ Object.assign(
 
                             <button
                                 class="barang-menu-item"
+                                id="menu-detail-barang"
+                            >
+
+                                <div>
+
+                                    <strong>
+                                        Detail Barang
+                                    </strong>
+
+                                    <span>
+                                        Lihat detail informasi barang
+                                    </span>
+
+                                </div>
+
+
+                                <div>
+                                    →
+                                </div>
+
+                            </button>
+
+
+                            <button
+                                class="barang-menu-item"
                                 id="menu-tambah-satuan"
                             >
 
@@ -186,6 +211,27 @@ Object.assign(
 
                     }
                 );
+
+
+            /*======================================
+                DETAIL BARANG
+                ======================================
+                */
+
+                document
+                    .getElementById(
+                        "menu-detail-barang"
+                    )
+                    .addEventListener(
+                        "click",
+                        () => {
+
+                            BarangDetail.open(
+                                barang
+                            );
+
+                        }
+                    );
 
 
             /*

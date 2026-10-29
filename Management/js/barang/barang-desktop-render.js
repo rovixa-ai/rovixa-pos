@@ -36,14 +36,7 @@ const BarangDesktopRender = {
                         placeholder="Cari kode, barcode, atau nama barang..."
                     >
 
-                    <button
-                        class="btn-primary"
-                        id="barang-tambah"
-                    >
-
-                        + Barang Baru
-
-                    </button>
+                    
 
                 </div>
 

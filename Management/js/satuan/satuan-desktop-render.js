@@ -43,14 +43,7 @@ const SatuanDesktopRender = {
                     >
 
 
-                    <button
-                        class="btn-primary"
-                        id="satuan-tambah"
-                    >
-
-                        + Satuan Baru
-
-                    </button>
+                   
 
                 </div>
 

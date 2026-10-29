@@ -74,7 +74,16 @@ const LaporanProfitModal = {
         }
 
         const transaksi =
-            this.transactions || [];
+    Array.isArray(this.transactions)
+        ? [...this.transactions].sort(
+            (a, b) =>
+                String(b.id || "").localeCompare(
+                    String(a.id || ""),
+                    undefined,
+                    { numeric: true }
+                )
+        )
+        : [];
 
         const totalPenjualan =
             transaksi.reduce(

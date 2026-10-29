@@ -20,9 +20,15 @@ const LaporanProfitTable = {
         tbody.innerHTML = ""; 
  
  
-        const data = 
-            LaporanProfit.filtered || 
-            []; 
+        const data =
+    Array.isArray(LaporanProfit.filtered)
+        ? [...LaporanProfit.filtered].sort(
+            (a, b) =>
+                String(b.tanggal || "").localeCompare(
+                    String(a.tanggal || "")
+                )
+        )
+        : [];
  
  
         /* 

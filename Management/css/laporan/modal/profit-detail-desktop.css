@@ -85,6 +85,28 @@
     border-radius: 10px;
 }
 
+.laporan-profit-detail-modal-content {
+    position: relative;
+}
+
+.laporan-profit-detail-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 3;
+
+    transform: translate(-50%, -50%) rotate(-25deg);
+
+    color: rgba(220, 38, 38, 0.14);
+    font-size: clamp(64px, 12vw, 150px);
+    font-weight: 900;
+    letter-spacing: 12px;
+
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+}
+
 
 /* ==========================================
    HEADER

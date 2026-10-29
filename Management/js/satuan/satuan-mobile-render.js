@@ -30,15 +30,7 @@ const SatuanMobileRender = {
 
                     </div>
 
-                   <button
-                        type="button"
-                        class="btn-primary"
-                        id="satuan-tambah"
-                        aria-label="Tambah Satuan Baru"
-                    >
-                        <span aria-hidden="true">＋</span>
-                        <span>Tambah Satuan</span>
-                    </button>
+                   
 
 
                 </div>

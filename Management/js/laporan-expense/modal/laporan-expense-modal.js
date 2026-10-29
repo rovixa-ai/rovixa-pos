@@ -684,27 +684,18 @@ const LaporanExpenseModal = {
 
 
         const transactions =
-            Array.isArray(data)
-                ? [...data].sort(
-                    (a, b) => {
-
-                        const dateA =
-                            new Date(
-                                a.tanggal
-                            );
-
-
-                        const dateB =
-                            new Date(
-                                b.tanggal
-                            );
-
-
-                        return dateB - dateA;
-
-                    }
+    Array.isArray(data)
+        ? [...data].sort(
+            (a, b) =>
+                String(
+                    b.spreadsheetId || ""
+                ).localeCompare(
+                    String(
+                        a.spreadsheetId || ""
+                    )
                 )
-                : [];
+        )
+        : [];
 
 
         if (!transactions.length) {

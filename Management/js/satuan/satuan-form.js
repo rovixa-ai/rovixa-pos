@@ -2,15 +2,17 @@ const SatuanForm = {
 
     form(barang = null, options = {}) {
 
-        Satuan.formOptions =
-            options || {};
+    Satuan.formOptions =
+        options || {};
 
-        const editMode =
-            !!(
-                barang &&
-                barang.id
-            );
+    this.barangAktif =
+        barang;
 
+    const editMode =
+        !!(
+            barang &&
+            barang.id
+        );
 
         document.getElementById(
             "page"
@@ -282,18 +284,27 @@ const SatuanForm = {
         }
 
 
-        document.getElementById(
-            "satuan-batal"
-        ).addEventListener(
-            "click",
-            () => {
+       
+document.getElementById(
+    "satuan-batal"
+).addEventListener(
+    "click",
+    () => {
 
-                Router.go(
-                    "satuan"
-                );
+        if (this.barangAktif) {
 
-            }
-        );
+            Barang.menu(
+                this.barangAktif
+            );
+
+        } else {
+
+            Router.go("barang");
+
+        }
+
+    }
+);
 
 
         document.getElementById(

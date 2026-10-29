@@ -15,12 +15,17 @@ Object.assign(LaporanPenjualan, {
         if (!tbody) return;
 
         const daily =
-            this.report &&
-            Array.isArray(
-                this.report.daily
-            )
-                ? this.report.daily
-                : [];
+    this.report &&
+    Array.isArray(
+        this.report.daily
+    )
+        ? [...this.report.daily].sort(
+            (a, b) =>
+                String(b.tanggal || "").localeCompare(
+                    String(a.tanggal || "")
+                )
+        )
+        : [];
 
         if (count) {
 

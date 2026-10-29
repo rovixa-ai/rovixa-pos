@@ -16,26 +16,19 @@ const LaporanExpenseTable = {
         } 
  
  
-        const data = 
-            Array.isArray(transactions) 
-                ? [...transactions].sort( 
-                    (a, b) => { 
- 
-                        const dateA = 
-                            new Date( 
-                                a.tanggal 
-                            ); 
- 
-                        const dateB = 
-                            new Date( 
-                                b.tanggal 
-                            ); 
- 
-                        return dateB - dateA; 
- 
-                    } 
-                ) 
-                : []; 
+        const data =
+    Array.isArray(transactions)
+        ? [...transactions].sort(
+            (a, b) =>
+                String(
+                    b.spreadsheetId || ""
+                ).localeCompare(
+                    String(
+                        a.spreadsheetId || ""
+                    )
+                )
+        )
+        : [];
  
  
         if (!data.length) { 
