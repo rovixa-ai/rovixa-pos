@@ -1,9 +1,9 @@
+/* ======================================
+   TREEHOUSE POS
+   BARANG DETAIL MODAL
+   PREMIUM EMERALD THEME
+====================================== */
 
-/*======================================
-TREEHOUSE POS
-BARANG DETAIL MODAL
-PREMIUM EMERALD THEME
-======================================*/
 
 /* ======================================
    MODAL OVERLAY
@@ -30,6 +30,7 @@ PREMIUM EMERALD THEME
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
 }
+
 
 /* ======================================
    DIALOG
@@ -60,6 +61,7 @@ PREMIUM EMERALD THEME
     box-shadow:
         0 24px 70px rgba(15, 23, 42, 0.20);
 }
+
 
 /* ======================================
    HEADER
@@ -140,6 +142,7 @@ PREMIUM EMERALD THEME
     outline-offset: 3px;
 }
 
+
 /* ======================================
    BODY
 ====================================== */
@@ -156,6 +159,7 @@ PREMIUM EMERALD THEME
     overflow-y: auto;
 
     overscroll-behavior: contain;
+
     scrollbar-width: thin;
     scrollbar-color: #a7c8ba transparent;
 }
@@ -190,6 +194,7 @@ PREMIUM EMERALD THEME
     font-weight: 500;
     line-height: 1.5;
 }
+
 
 /* ======================================
    INFORMASI UTAMA
@@ -242,6 +247,7 @@ PREMIUM EMERALD THEME
 
     overflow-wrap: anywhere;
 }
+
 
 /* ======================================
    TABEL SATUAN DAN HARGA
@@ -329,8 +335,10 @@ PREMIUM EMERALD THEME
 
 .barang-detail-table .text-right {
     text-align: right;
+
     font-variant-numeric: tabular-nums;
 }
+
 
 /* ======================================
    EMPTY STATE
@@ -352,9 +360,11 @@ PREMIUM EMERALD THEME
     color: #68766f;
 
     text-align: center;
+
     font-size: 13px;
     line-height: 1.6;
 }
+
 
 /* ======================================
    STATISTIK PENJUALAN
@@ -413,6 +423,7 @@ PREMIUM EMERALD THEME
     line-height: 1.3;
 
     overflow-wrap: anywhere;
+
     font-variant-numeric: tabular-nums;
 }
 
@@ -431,6 +442,7 @@ PREMIUM EMERALD THEME
     font-size: 12px;
     line-height: 1.6;
 }
+
 
 /* ======================================
    FOOTER
@@ -455,6 +467,62 @@ PREMIUM EMERALD THEME
     min-height: 40px;
 }
 
+
+/* ======================================
+   FOOTER BUTTON - SECONDARY
+====================================== */
+
+.barang-detail-footer .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    min-width: 110px;
+    min-height: 42px;
+    padding: 10px 20px;
+
+    border: 1px solid #d6e2dd;
+    border-radius: 10px;
+
+    background: #ffffff;
+    color: #b10505;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.barang-detail-footer .btn-secondary:hover {
+    border-color: #a7f3d0;
+
+    background: #b8141448;
+    color: #059669;
+
+    box-shadow:
+        0 3px 10px rgba(16, 185, 129, 0.08);
+}
+
+.barang-detail-footer .btn-secondary:active {
+    background: #d1fae5;
+    box-shadow: none;
+}
+
+.barang-detail-footer .btn-secondary:focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 3px;
+}
+
+
 /* ======================================
    RESPONSIVE TABLET
 ====================================== */
@@ -469,6 +537,7 @@ PREMIUM EMERALD THEME
     }
 }
 
+
 /* ======================================
    RESPONSIVE MOBILE
 ====================================== */
@@ -476,7 +545,6 @@ PREMIUM EMERALD THEME
 @media (max-width: 768px) {
     .barang-detail-overlay {
         align-items: flex-end;
-
         padding: 0;
     }
 
@@ -575,11 +643,13 @@ PREMIUM EMERALD THEME
         );
     }
 
-    .barang-detail-footer button {
+    .barang-detail-footer button,
+    .barang-detail-footer .btn-secondary {
         width: 100%;
         min-height: 44px;
     }
 }
+
 
 /* ======================================
    SMALL MOBILE
@@ -608,6 +678,7 @@ PREMIUM EMERALD THEME
     }
 }
 
+
 /* ======================================
    REDUCED MOTION
 ====================================== */
@@ -616,75 +687,12 @@ PREMIUM EMERALD THEME
     .barang-detail-close,
     .barang-detail-field,
     .barang-detail-table tbody tr,
-    .barang-detail-stat-card {
+    .barang-detail-stat-card,
+    .barang-detail-footer .btn-secondary {
         transition: none;
     }
 
     .barang-detail-stat-card:hover {
         transform: none;
-    }
-}
-
-
-
-/* ======================================
-   BARANG DETAIL
-   FOOTER BUTTON
-====================================== */
-
-.barang-detail-footer .btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-
-    min-width: 110px;
-    min-height: 42px;
-    padding: 10px 20px;
-
-    border: 1px solid #d6e2dd;
-    border-radius: 10px;
-
-    background: #ffffff;
-    color: #0a4e35;
-
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 1.4;
-
-    cursor: pointer;
-
-    transition:
-        background 0.2s ease,
-        color 0.2s ease,
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.barang-detail-footer .btn-secondary:hover {
-    border-color: #a7f3d0;
-
-    background: #ecfdf5;
-    color: #047857;
-
-    box-shadow:
-        0 3px 10px rgba(16, 185, 129, 0.08);
-}
-
-.barang-detail-footer .btn-secondary:active {
-    background: #d1fae5;
-    box-shadow: none;
-}
-
-.barang-detail-footer .btn-secondary:focus-visible {
-    outline: 2px solid #10b981;
-    outline-offset: 3px;
-}
-
-@media (max-width: 768px) {
-    .barang-detail-footer .btn-secondary {
-        width: 100%;
-        min-height: 44px;
     }
 }
