@@ -142,10 +142,11 @@ const SatuanForm = {
                                 <input
                                     id="satuan-konversi"
                                     type="number"
-                                    min="1"
+                                    min="0"
+                                    step="any"
                                     value="${
                                         editMode
-                                            ? Number(barang?.isi || 1)
+                                            ? Number(barang?.isi ?? 1)
                                             : 1
                                     }"
                                 >

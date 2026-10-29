@@ -75,19 +75,7 @@ const SatuanSave = {
             return;
         }
 
-        /*==================================
-        VALIDASI KONVERSI
-        ==================================*/
-
-        if (!isi || isi < 1) {
-
-            Dialog.alert(
-                "Konversi harus lebih dari 0."
-            );
-
-            return;
-        }
-
+       
         /*==================================
         DATA LAMA UNTUK EDIT
         ==================================*/
