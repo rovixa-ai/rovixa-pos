@@ -1,11 +1,14 @@
-// ======================================
-// SALES
-// EVENTS
-// ======================================
+
+ // ======================================
+ // SALES
+ // EVENTS
+ // ======================================
 
 Object.assign(
     Sales,
     {
+        eventsBoundElement: null,
+
         /* ==================================
            EVENT
         ================================== */
@@ -20,6 +23,12 @@ Object.assign(
                 return;
             }
 
+            // Hindari pemasangan event berulang
+            // pada elemen render yang sama.
+            if (this.eventsBoundElement === search) {
+                return;
+            }
+
             /* ==================================
                SEARCH
             ================================== */
@@ -27,9 +36,7 @@ Object.assign(
             search.addEventListener(
                 "input",
                 e => {
-                    this.search(
-                        e.target.value
-                    );
+                    this.search(e.target.value);
                 }
             );
 
@@ -41,10 +48,7 @@ Object.assign(
                     }
 
                     e.preventDefault();
-
-                    this.handleBarcode(
-                        search.value
-                    );
+                    this.handleBarcode(search.value);
                 }
             );
 
@@ -53,26 +57,20 @@ Object.assign(
             ================================== */
 
             const discount =
-                document.getElementById(
-                    "discount"
-                );
+                document.getElementById("discount");
 
             if (discount) {
                 discount.addEventListener(
                     "input",
                     e => {
                         this.discount =
-                            Number(
-                                e.target.value
-                            ) || 0;
+                            Number(e.target.value) || 0;
 
                         Cart.render();
 
                         if (
-                            typeof CustScreen !==
-                                "undefined" &&
-                            typeof CustScreen.send ===
-                                "function"
+                            typeof CustScreen !== "undefined" &&
+                            typeof CustScreen.send === "function"
                         ) {
                             CustScreen.send();
                         }
@@ -85,9 +83,7 @@ Object.assign(
             ================================== */
 
             const barcodeButton =
-                document.getElementById(
-                    "barcodeButton"
-                );
+                document.getElementById("barcodeButton");
 
             if (barcodeButton) {
                 barcodeButton.addEventListener(
@@ -104,9 +100,7 @@ Object.assign(
             ================================== */
 
             const cameraButton =
-                document.getElementById(
-                    "cameraButton"
-                );
+                document.getElementById("cameraButton");
 
             if (cameraButton) {
                 cameraButton.addEventListener(
@@ -114,7 +108,7 @@ Object.assign(
                     () => {
                         if (
                             typeof SalesBarcodeScanner ===
-                                "undefined"
+                            "undefined"
                         ) {
                             console.error(
                                 "SalesBarcodeScanner tidak tersedia."
@@ -132,9 +126,7 @@ Object.assign(
             ================================== */
 
             const paymentButton =
-                document.getElementById(
-                    "paymentButton"
-                );
+                document.getElementById("paymentButton");
 
             if (paymentButton) {
                 paymentButton.addEventListener(
@@ -147,7 +139,6 @@ Object.assign(
 
             /* ==================================
                RELOAD STOK BARANG
-               SERVER → INDEXEDDB → DAFTAR BARANG
             ================================== */
 
             const reloadStockButton =
@@ -165,8 +156,7 @@ Object.assign(
 
                         if (
                             typeof LocalSync === "undefined" ||
-                            typeof LocalSync.syncProducts !==
-                                "function"
+                            typeof LocalSync.syncProducts !== "function"
                         ) {
                             Dialog.error(
                                 "Fungsi sinkronisasi barang tidak tersedia."
@@ -175,8 +165,7 @@ Object.assign(
                         }
 
                         if (
-                            typeof this.loadProducts !==
-                                "function"
+                            typeof this.loadProducts !== "function"
                         ) {
                             Dialog.error(
                                 "Fungsi pemuatan daftar barang tidak tersedia."
@@ -221,8 +210,7 @@ Object.assign(
                                 );
 
                             if (
-                                typeof this.search ===
-                                    "function"
+                                typeof this.search === "function"
                             ) {
                                 this.search(
                                     searchInput?.value || ""
@@ -272,18 +260,14 @@ Object.assign(
             ================================== */
 
             const productList =
-                document.getElementById(
-                    "productList"
-                );
+                document.getElementById("productList");
 
             if (productList) {
                 productList.addEventListener(
                     "click",
                     e => {
                         const card =
-                            e.target.closest(
-                                ".product-card"
-                            );
+                            e.target.closest(".product-card");
 
                         if (!card) {
                             return;
@@ -297,9 +281,7 @@ Object.assign(
                             return;
                         }
 
-                        const kode =
-                            card.dataset.kode;
-
+                        const kode = card.dataset.kode;
                         UnitModal.open(kode);
                     }
                 );
@@ -330,18 +312,13 @@ Object.assign(
                 );
 
             const cartPanel =
-                document.getElementById(
-                    "cartPanel"
-                );
+                document.getElementById("cartPanel");
 
             const pos =
-                document.querySelector(
-                    ".pos"
-                );
+                document.querySelector(".pos");
 
             /* ==================================
                MOBILE CART BUTTON STATE
-               KELOLA OBSERVER SEBELUM MEMBUAT BARU
             ================================== */
 
             if (this.renderObserver) {
@@ -475,6 +452,9 @@ Object.assign(
                     }
                 );
             }
+
+            // Simpan elemen render yang sudah dipasangi event.
+            this.eventsBoundElement = search;
         }
     }
 );
