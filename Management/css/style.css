@@ -245,29 +245,7 @@ button {
         z-index: 10000;
     }
 
-    /* ==================================
-       BOTTOM NAVIGATION
-       NO LONGER FIXED TO VIEWPORT
-    ================================== */
-
-    #mobile-menu {
-        position: relative;
-        flex: 0 0 76px;
-        left: auto;
-        right: auto;
-        bottom: auto;
-        width: 100%;
-        height: 76px;
-        z-index: 9999;
-    }
-
-    .mobile-menu-scroll {
-        height: 100%;
-    }
-
-    .mobile-menu-list {
-        height: 100%;
-    }
+   
 }
 
 
@@ -281,8 +259,5 @@ button {
         padding: 68px 12px 14px;
     }
 
-    #mobile-menu {
-        flex-basis: 70px;
-        height: 70px;
-    }
+ 
 }

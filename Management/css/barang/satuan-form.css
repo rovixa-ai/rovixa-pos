@@ -141,12 +141,13 @@
 ====================================== */
 
 .satuan-form-modal .satuan-form-close {
+
     flex: 0 0 36px;
 
     width: 36px;
     height: 36px;
 
-    display: inline-flex;
+    display: none;
     align-items: center;
     justify-content: center;
 

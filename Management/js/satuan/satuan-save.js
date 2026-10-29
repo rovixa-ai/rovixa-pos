@@ -1,3 +1,4 @@
+
 /*======================================
 TREEHOUSE POS
 SATUAN SAVE
@@ -28,11 +29,14 @@ const SatuanSave = {
                 .value
                 .trim();
 
+        const konversiInput =
+            document.getElementById(
+                "satuan-konversi"
+            ).value;
+
         const isi =
-            Number(
-                document
-                    .getElementById("satuan-konversi")
-                    .value
+            SatuanForm.parseKonversi(
+                konversiInput
             );
 
         const hargaJual =
@@ -75,7 +79,19 @@ const SatuanSave = {
             return;
         }
 
-       
+        /*==================================
+        VALIDASI FORMAT KONVERSI
+        ==================================*/
+
+        if (!Number.isFinite(isi)) {
+
+            Dialog.alert(
+                "Format konversi tidak valid. Gunakan contoh 0,5, 1/2, atau 2 1/2."
+            );
+
+            return;
+        }
+
         /*==================================
         DATA LAMA UNTUK EDIT
         ==================================*/
@@ -256,10 +272,8 @@ const SatuanSave = {
                         return;
                     }
 
-                    // Tutup modal edit satuan.
                     SatuanForm.close();
 
-                    // Perbarui dan tampilkan kembali detail barang.
                     await BarangDetail.open(
                         barangInduk
                     );

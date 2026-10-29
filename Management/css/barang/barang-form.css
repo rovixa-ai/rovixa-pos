@@ -12,6 +12,7 @@
 ====================================== */
 
 .barang-tambah-page {
+    margin-bottom: 100px;
     --barang-tambah-emerald: #10b981;
     --barang-tambah-emerald-dark: #059669;
     --barang-tambah-text: #17221e;
@@ -353,6 +354,7 @@
 
 @media (max-width: 600px) {
     .barang-tambah-page {
+         padding-bottom: 100px;
         gap: 16px;
         padding: 2px 0 20px;
     }

@@ -85,22 +85,7 @@ Object.assign(LaporanPenjualan, {
                     "detailPenjualan"
                 );
 
-            console.table(
-                detailPenjualan.map(
-                    item => ({
-                        id: item.id,
-                        kode: item.kode,
-                        nama: item.nama,
-                        satuan: item.satuan,
-                        qty: item.qty,
-                        konversi: item.konversi,
-                        harga: item.harga,
-                        disc: item.disc,
-                        discount: item.discount,
-                        subtotal: item.subtotal
-                    })
-                )
-            );
+            
 
             const pembayaranPenjualan =
                 await DB.getAll(

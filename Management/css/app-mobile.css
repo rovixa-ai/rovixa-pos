@@ -481,7 +481,7 @@
         );
 
         border-top: 1px solid rgba(16, 24, 40, 0.08);
-
+        border-radius: 20px;
         box-shadow:
             0 -2px 5px rgba(16, 24, 40, 0.03),
             0 -8px 22px rgba(16, 24, 40, 0.07);
@@ -557,29 +557,28 @@
     ================================== */
 
     .mobile-menu-list {
-        display: grid;
-        align-items: center;
-        justify-items: stretch;
+    display: grid;
+    align-items: center;
+    justify-items: stretch;
 
-        width: 100%;
-        min-width: 0;
-        height: 100%;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
 
-        grid-template-columns:
-            minmax(0, 1fr)
-            minmax(0, 1fr)
-            minmax(0, 1fr)
-            82px
-            minmax(0, 1fr)
-            minmax(0, 1fr)
-            minmax(0, 1fr);
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr)
+        minmax(0, 1fr)
+        minmax(0, 1fr)
+        minmax(0, 1fr)
+        minmax(0, 1fr);
 
-        padding: 4px 6px;
-        gap: 2px;
-        box-sizing: border-box;
+    padding: 4px 6px;
+    gap: 2px;
+    box-sizing: border-box;
 
-        overflow: visible;
-    }
+    overflow: visible;
+}
 
     /* ==================================
        STANDARD MENU ITEM
@@ -603,14 +602,14 @@
         margin: 0;
         padding: 4px 1px;
 
-        border: 0;
+        border: 1px solid rgba(16, 185, 129, 0.20);
         border-radius: 11px;
 
         background: transparent;
         color: #7c8782;
 
         font-family: inherit;
-        font-size: 9px;
+        font-size: 12px;
         font-weight: 500;
         line-height: 1;
 
@@ -679,10 +678,10 @@
 
         flex: 0 0 auto;
 
-        width: 22px;
-        height: 22px;
+        width: 24px;
+        height: 24px;
 
-        font-size: 18px;
+        font-size: 20px;
         line-height: 1;
 
         transition:
@@ -712,158 +711,7 @@
         line-height: 1.1;
     }
 
-    /* ==================================
-       HOME BUTTON
-       LARGE CENTER FRAME
-    ================================== */
-
-    .mobile-menu-item.mobile-menu-home {
-        grid-column: 4;
-
-        justify-self: center;
-        align-self: center;
-
-        width: 76px;
-        min-width: 76px;
-        height: 72px;
-
-        margin: -23px 0 0;
-        padding: 0;
-        gap: 5px;
-
-        overflow: visible;
-
-        border: 1px solid rgba(255, 255, 255, 0.95);
-        border-radius: 22px;
-
-        color: #ffffff;
-
-        background: linear-gradient(
-            145deg,
-            #10b981 0%,
-            #059669 55%,
-            #047857 100%
-        );
-
-        box-shadow:
-            0 9px 20px rgba(5, 150, 105, 0.30),
-            0 3px 8px rgba(4, 120, 87, 0.18),
-            inset 0 1px 0 rgba(255, 255, 255, 0.38),
-            inset 0 -2px 4px rgba(0, 70, 45, 0.10);
-
-        transform: translateY(-2px);
-
-        z-index: 5;
-    }
-
-    .mobile-menu-item.mobile-menu-home::before {
-        content: "";
-        position: absolute;
-
-        inset: -7px;
-
-        border: 1px solid rgba(16, 185, 129, 0.22);
-        border-radius: 28px;
-
-        background: linear-gradient(
-            145deg,
-            rgba(236, 253, 245, 0.70),
-            rgba(209, 250, 229, 0.22)
-        );
-
-        box-shadow:
-            0 0 0 3px rgba(16, 185, 129, 0.035);
-
-        pointer-events: none;
-        z-index: -1;
-    }
-
-    .mobile-menu-item.mobile-menu-home .mobile-menu-icon {
-        width: 36px;
-        height: 36px;
-
-        font-size: 31px;
-
-        filter: drop-shadow(
-            0 2px 3px rgba(0, 60, 35, 0.20)
-        );
-    }
-
-    .mobile-menu-item.mobile-menu-home .mobile-menu-text {
-        color: #ffffff;
-
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.4px;
-
-        text-shadow:
-            0 1px 2px rgba(0, 60, 35, 0.15);
-    }
-
-    .mobile-menu-item.mobile-menu-home:hover,
-    .mobile-menu-item.mobile-menu-home.active {
-        color: #ffffff;
-
-        background: linear-gradient(
-            145deg,
-            #10b981 0%,
-            #059669 55%,
-            #047857 100%
-        );
-
-        box-shadow:
-            0 9px 20px rgba(5, 150, 105, 0.30),
-            0 3px 8px rgba(4, 120, 87, 0.18),
-            inset 0 1px 0 rgba(255, 255, 255, 0.38),
-            inset 0 -2px 4px rgba(0, 70, 45, 0.10);
-    }
-
-    .mobile-menu-item.mobile-menu-home:hover {
-        background: linear-gradient(
-            145deg,
-            #34d399 0%,
-            #10b981 55%,
-            #059669 100%
-        );
-
-        box-shadow:
-            0 11px 24px rgba(5, 150, 105, 0.34),
-            0 4px 9px rgba(4, 120, 87, 0.20),
-            inset 0 1px 0 rgba(255, 255, 255, 0.42);
-    }
-
-    .mobile-menu-item.mobile-menu-home.active::before {
-        inset: -7px;
-
-        width: auto;
-        height: auto;
-
-        top: auto;
-        left: auto;
-
-        transform: none;
-
-        border: 1px solid rgba(16, 185, 129, 0.22);
-        border-radius: 28px;
-
-        background: linear-gradient(
-            145deg,
-            rgba(236, 253, 245, 0.70),
-            rgba(209, 250, 229, 0.22)
-        );
-
-        box-shadow:
-            0 0 0 3px rgba(16, 185, 129, 0.035);
-    }
-
-    .mobile-menu-item.mobile-menu-home .mobile-menu-icon,
-    .mobile-menu-item.mobile-menu-home.active .mobile-menu-icon {
-        transform: none;
-
-        filter: drop-shadow(
-            0 2px 3px rgba(0, 60, 35, 0.20)
-        );
-    }
+    
 
     /* ==================================
        CLICK EFFECTS
@@ -953,9 +801,9 @@
 
     .mobile-header-logout {
         flex: 0 0 26px;
-        width: 40px;
-        min-width: 40px;
-        height: 40px;
+        width: 32px;
+        min-width: 32px;
+        height: 35px;
 
         padding: 4px;
     }
@@ -967,18 +815,21 @@
     }
 
     .mobile-menu-list {
-        grid-template-columns:
-            minmax(0, 1fr)
-            minmax(0, 1fr)
-            minmax(0, 1fr)
-            72px
-            minmax(0, 1fr)
-            minmax(0, 1fr)
-            minmax(0, 1fr);
+    display: grid;
+    align-items: center;
+    justify-items: stretch;
 
-        padding: 4px;
-        gap: 1px;
-    }
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+
+  
+    padding: 4px 6px;
+    gap: 2px;
+    box-sizing: border-box;
+
+    overflow: visible;
+}
 
     .mobile-menu-item {
         height: 52px;
@@ -987,45 +838,17 @@
     }
 
     .mobile-menu-icon {
-        width: 20px;
-        height: 20px;
-        font-size: 16px;
+        width: 24px;
+        height: 24px;
+        font-size: 20px;
     }
 
     .mobile-menu-text {
-        font-size: 8px;
-    }
-
-    /* HOME BUTTON */
-
-    .mobile-menu-item.mobile-menu-home {
-        grid-column: 4;
-
-        width: 66px;
-        min-width: 66px;
-        height: 66px;
-
-        margin-top: -20px;
-        gap: 4px;
-
-        border-radius: 20px;
-    }
-
-    .mobile-menu-item.mobile-menu-home::before,
-    .mobile-menu-item.mobile-menu-home.active::before {
-        inset: -5px;
-        border-radius: 25px;
-    }
-
-    .mobile-menu-item.mobile-menu-home .mobile-menu-icon {
-        width: 32px;
-        height: 32px;
-        font-size: 27px;
-    }
-
-    .mobile-menu-item.mobile-menu-home .mobile-menu-text {
         font-size: 9px;
     }
+
+ 
+
 
     /* PAGE SPACE */
 

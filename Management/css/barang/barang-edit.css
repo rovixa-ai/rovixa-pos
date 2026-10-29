@@ -12,6 +12,7 @@
 ====================================== */
 
 .barang-edit-page {
+   
     --barang-emerald: #10b981;
     --barang-emerald-dark: #059669;
     --barang-emerald-light: #34d399;
@@ -97,6 +98,7 @@
 ====================================== */
 
 .barang-edit-page .barang-edit-card {
+    margin-bottom: 60px;
     position: relative;
     isolation: isolate;
     width: 100%;
@@ -455,9 +457,7 @@
         gap: 15px;
     }
 
-    .barang-edit-page .barang-edit-actions {
-        grid-template-columns: minmax(0, 1fr);
-    }
+   
 
     .barang-edit-page .barang-edit-actions button {
         min-height: 43px;

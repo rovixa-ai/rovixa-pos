@@ -230,6 +230,23 @@ const AppMobileRender = {
 
                 <div class="mobile-menu-list">
 
+                     <button
+                        type="button"
+                        class="mobile-menu-item mobile-menu-home"
+                        data-mobile-page="dashboard"
+                        title="Home"
+                        aria-label="Home"
+                        aria-current="page"
+                    >
+                        <span class="mobile-menu-icon">
+                            🏠
+                        </span>
+
+                        <span class="mobile-menu-text">
+                            Home
+                        </span>
+                    </button>
+
                     <button
                         type="button"
                         class="mobile-menu-item"
@@ -245,9 +262,6 @@ const AppMobileRender = {
                             Barang
                         </span>
                     </button>
-
-
-                   
 
 
                     <button
@@ -267,22 +281,7 @@ const AppMobileRender = {
                     </button>
 
 
-                    <button
-                        type="button"
-                        class="mobile-menu-item mobile-menu-home"
-                        data-mobile-page="dashboard"
-                        title="Home"
-                        aria-label="Home"
-                        aria-current="page"
-                    >
-                        <span class="mobile-menu-icon">
-                            🏠
-                        </span>
-
-                        <span class="mobile-menu-text">
-                            Home
-                        </span>
-                    </button>
+                   
 
 
                     <button

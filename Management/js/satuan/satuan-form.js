@@ -1,3 +1,4 @@
+
 /*======================================
 TREEHOUSE POS
 SATUAN FORM MODAL
@@ -24,7 +25,6 @@ const SatuanForm = {
             barang.id
         );
 
-        // Hapus modal form sebelumnya jika ada.
         this.close();
 
         const modal = document.createElement("div");
@@ -141,15 +141,22 @@ const SatuanForm = {
 
                                 <input
                                     id="satuan-konversi"
-                                    type="number"
-                                    min="0"
-                                    step="any"
+                                    type="text"
+                                    inputmode="text"
+                                    autocomplete="off"
+                                    placeholder="Contoh: 0,5 atau 1/2"
                                     value="${
-                                        editMode
-                                            ? Number(barang?.isi ?? 1)
-                                            : 1
+                                        this.escapeAttribute(
+                                            editMode
+                                                ? String(barang?.isi ?? 1)
+                                                : "1"
+                                        )
                                     }"
                                 >
+
+                                <small>
+                                    Contoh: 0,5 · 1/2 · 1/4 · 2 1/2
+                                </small>
 
                             </div>
 
@@ -259,6 +266,77 @@ const SatuanForm = {
         if (firstInput) {
             firstInput.focus();
         }
+    },
+
+    /*======================================
+    PARSE NILAI KONVERSI
+    Mendukung desimal dan pecahan.
+    Contoh: 0,5 | 1/2 | 2 1/2
+    ======================================*/
+
+    parseKonversi(value) {
+
+        const text = String(
+            value ?? ""
+        ).trim();
+
+        if (!text) {
+            return NaN;
+        }
+
+        const normalized = text
+            .replace(/\s+/g, " ")
+            .replace(/,/g, ".");
+
+        const mixedFraction = normalized.match(
+            /^([+-]?\d+)\s+(\d+)\s*\/\s*(\d+)$/
+        );
+
+        if (mixedFraction) {
+
+            const whole = Number(mixedFraction[1]);
+            const numerator = Number(mixedFraction[2]);
+            const denominator = Number(mixedFraction[3]);
+
+            if (
+                denominator === 0 ||
+                !Number.isFinite(whole) ||
+                !Number.isFinite(numerator)
+            ) {
+                return NaN;
+            }
+
+            const fraction =
+                numerator / denominator;
+
+            return whole < 0
+                ? whole - fraction
+                : whole + fraction;
+        }
+
+        const fraction = normalized.match(
+            /^([+-]?\d+)\s*\/\s*(\d+)$/
+        );
+
+        if (fraction) {
+
+            const numerator = Number(fraction[1]);
+            const denominator = Number(fraction[2]);
+
+            if (denominator === 0) {
+                return NaN;
+            }
+
+            return numerator / denominator;
+        }
+
+        if (
+            !/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(normalized)
+        ) {
+            return NaN;
+        }
+
+        return Number(normalized);
     },
 
     /*======================================
@@ -397,11 +475,8 @@ const SatuanForm = {
 
         const barangInduk = options.barangInduk;
 
-        // Tutup modal edit terlebih dahulu.
         this.close();
 
-        // Jika dibuka dari BarangDetail,
-        // tampilkan kembali modal detail.
         if (returnTo === "barang-detail") {
 
             if (barangInduk) {
@@ -419,7 +494,6 @@ const SatuanForm = {
             return;
         }
 
-        // Perilaku sebelumnya dipertahankan.
         if (this.barangAktif) {
 
             Barang.menu(
@@ -569,13 +643,14 @@ const SatuanForm = {
             satuanInput.value || ""
         ).trim();
 
-        const isiTujuan = Number(
-            konversiInput.value || 0
+        const isiTujuan = this.parseKonversi(
+            konversiInput.value
         );
 
         if (
             !kode ||
             !namaSatuan ||
+            !Number.isFinite(isiTujuan) ||
             isiTujuan <= 0
         ) {
 
@@ -609,12 +684,6 @@ const SatuanForm = {
 
         }
 
-        /*
-         * DETAIL PEMBELIAN TERAKHIR
-         * Harga dan isi berasal dari
-         * snapshot transaksi pembelian.
-         */
-
         const last = filtered[
             filtered.length - 1
         ];
@@ -638,11 +707,9 @@ const SatuanForm = {
 
         }
 
-        // Harga dasar.
         const hargaDasar =
             hargaPembelian / isiPembelian;
 
-        // Harga sesuai satuan form.
         const hargaSatuan =
             hargaDasar * isiTujuan;
 
