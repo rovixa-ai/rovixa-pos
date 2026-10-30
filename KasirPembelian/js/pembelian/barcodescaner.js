@@ -71,6 +71,40 @@ const PembelianBarcodeScanner = {
 
 audioContext: null,
 
+async unlockAudio() {
+
+    try {
+
+        const AudioContextClass =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+        if (!AudioContextClass) {
+            return false;
+        }
+
+        if (!this.audioContext) {
+            this.audioContext = new AudioContextClass();
+        }
+
+        if (this.audioContext.state === "suspended") {
+            await this.audioContext.resume();
+        }
+
+        return this.audioContext.state === "running";
+
+    } catch (error) {
+
+        console.warn(
+            "PEMBELIAN BARCODE AUDIO ERROR:",
+            error
+        );
+
+        return false;
+    }
+
+},
+
 playBeep(type = "success") {
 
     try {
