@@ -64,6 +64,118 @@ const PembelianBarcodeScanner = {
         await this.startScanner();
     },
 
+
+       /* ======================================
+   AUDIO BEEP
+====================================== */
+
+audioContext: null,
+
+playBeep(type = "success") {
+
+    try {
+
+        const AudioContextClass =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+        if (!AudioContextClass) {
+            return;
+        }
+
+        if (!this.audioContext) {
+
+            this.audioContext =
+                new AudioContextClass();
+
+        }
+
+        const context =
+            this.audioContext;
+
+        const playSound = () => {
+
+            const oscillator =
+                context.createOscillator();
+
+            const gain =
+                context.createGain();
+
+            const isError =
+                type === "error";
+
+            oscillator.type = "square";
+
+            oscillator.frequency.value =
+                isError ? 350 : 2200;
+
+            const now =
+                context.currentTime;
+
+            const duration =
+                isError ? 0.35 : 0.20;
+
+            gain.gain.setValueAtTime(
+                0.0001,
+                now
+            );
+
+            gain.gain.exponentialRampToValueAtTime(
+                0.8,
+                now + 0.01
+            );
+
+            gain.gain.setValueAtTime(
+                0.8,
+                now + duration * 0.7
+            );
+
+            gain.gain.exponentialRampToValueAtTime(
+                0.0001,
+                now + duration
+            );
+
+            oscillator.connect(gain);
+            gain.connect(context.destination);
+
+            oscillator.start(now);
+
+            oscillator.stop(
+                now + duration + 0.01
+            );
+
+        };
+
+        if (context.state === "suspended") {
+
+            context.resume()
+                .then(playSound)
+                .catch(error => {
+
+                    console.warn(
+                        "SALES BARCODE AUDIO ERROR:",
+                        error
+                    );
+
+                });
+
+        } else {
+
+            playSound();
+
+        }
+
+    } catch (error) {
+
+        console.warn(
+            "SALES BARCODE AUDIO ERROR:",
+            error
+        );
+
+    }
+
+},
+
     /* ======================================
        START SCANNER
     ====================================== */
