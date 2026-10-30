@@ -321,7 +321,7 @@ Object.assign(PembelianMassal, {
 
     },
 
-    /* ======================================
+/* ======================================
    CARI BARCODE SATUAN BARANG
 ====================================== */
 
@@ -336,9 +336,11 @@ cariBarcodeSatuan(index, barcode, page) {
     const barcodeDicari =
         PembelianMassalMaster.normalizeBarcode(barcode);
 
+    // Tetap simpan barcode hasil scan.
     item.barcode = barcodeDicari;
 
     if (!barcodeDicari) {
+        PembelianMassalItem.renderItems(this);
         return;
     }
 
@@ -351,7 +353,14 @@ cariBarcodeSatuan(index, barcode, page) {
                 ) === barcodeDicari
         );
 
+    // Jika barcode tidak ditemukan,
+    // tetap tampilkan barcode pada form.
     if (!satuanDitemukan.length) {
+
+        PembelianMassalItem.renderItems(this);
+
+        this.updateTotal();
+
         return;
     }
 
@@ -394,7 +403,14 @@ cariBarcodeSatuan(index, barcode, page) {
                 ) === kodeBarang
         );
 
+    // Jika data barang tidak ditemukan,
+    // barcode tetap dipertahankan.
     if (!barangDitemukan) {
+
+        PembelianMassalItem.renderItems(this);
+
+        this.updateTotal();
+
         return;
     }
 
@@ -415,7 +431,7 @@ cariBarcodeSatuan(index, barcode, page) {
     item.satuan = satuanAktif.satuan || "";
 
     item.barcode =
-        satuanAktif.barcodeSatuan || "";
+        satuanAktif.barcodeSatuan || barcodeDicari;
 
     item.konversi =
         PembelianMassalMaster.toNumber(
