@@ -108,8 +108,23 @@ const LaporanPembelianMobileRender = {
                                             type="button"
                                             id="laporanPembelianReset"
                                             class="laporan-reset-button"
+                                            aria-label="Reset"
+                                            title="Reset"
                                         >
-                                            Reset
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="18"
+                                                height="18"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="2"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                            >
+                                                <path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/>
+                                                <path d="M3 3v5h5"/>
+                                            </svg>
                                         </button>
 
                                     </div>

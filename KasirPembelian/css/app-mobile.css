@@ -779,7 +779,7 @@ body {
    SMALL PHONES
 ====================================== */
 
-@media (max-width: 380px) {
+@media (max-width: 480px) {
 
     #header-content {
         gap: 5px;
@@ -831,16 +831,10 @@ body {
     }
 
     .header-logout-button {
-        flex-basis: 30px;
-
-        width: 30px;
-        height: 30px;
-        min-width: 30px;
+        min-width: 32px;
         min-height: 30px;
-
-        padding: 6px;
-
-        border-radius: 9px;
+        padding: 3px 5px;
+        font-size: 9px;
     }
 
     .header-logout-icon {

@@ -12,7 +12,7 @@
 .penjualan-transaksi-overlay {
     position: fixed;
     inset: 0;
-    z-index: 2147483000;
+    z-index: 40000;
 
     display: flex;
     align-items: center;
@@ -53,7 +53,7 @@
 
     min-height: 0;
 
-    overflow: hidden;
+    overflow: auto;
 
     background:
         linear-gradient(
@@ -934,5 +934,217 @@
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
+    }
+}
+
+/* ==========================================
+   TREEHOUSE POS
+   PENJUALAN TRANSAKSI MODAL
+   DESKTOP — LIMITED SCREEN HEIGHT
+========================================== */
+
+@media (min-width: 769px) and (max-height: 767px) {
+
+    /* OVERLAY */
+
+    .penjualan-transaksi-overlay {
+        align-items: center;
+        padding: 10px 20px;
+        overflow: hidden;
+    }
+
+    /* DIALOG */
+
+    .penjualan-transaksi-dialog {
+        width: 100%;
+        max-height: calc(100dvh - 20px);
+        height: auto;
+        min-height: 0;
+
+        overflow: hidden;
+    }
+
+    /* HEADER */
+
+    .penjualan-transaksi-header {
+        flex: 0 0 auto;
+        padding: 12px 24px;
+        gap: 12px;
+    }
+
+    .penjualan-transaksi-header h3 {
+        font-size: 19px;
+    }
+
+    .penjualan-transaksi-header p {
+        margin-top: 4px;
+        font-size: 11px;
+    }
+
+    .penjualan-transaksi-close {
+        width: 34px;
+        height: 34px;
+        font-size: 23px;
+    }
+
+    /* SUMMARY */
+
+    .penjualan-transaksi-summary {
+        flex: 0 0 auto;
+        gap: 8px;
+        padding: 10px 24px 12px;
+    }
+
+    .penjualan-transaksi-summary-card {
+        min-height: 54px;
+        gap: 4px;
+        padding: 7px 10px 7px 13px;
+    }
+
+    .penjualan-transaksi-summary-card span {
+        font-size: 9px;
+    }
+
+    .penjualan-transaksi-summary-card strong {
+        font-size: 14px;
+    }
+
+    /* TRANSACTION SECTION */
+
+    .penjualan-transaksi-section {
+        flex: 1 1 auto;
+        min-height: 0;
+        margin: 0 24px 10px;
+        overflow: hidden;
+    }
+
+    .penjualan-transaksi-section-title {
+        flex: 0 0 auto;
+        min-height: 36px;
+        padding: 8px 15px;
+        font-size: 12px;
+    }
+
+    /* TABLE */
+
+    .penjualan-transaksi-table-wrapper {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+    }
+
+    .penjualan-transaksi-table-wrapper thead th {
+        height: 32px;
+        padding: 0 10px;
+    }
+
+    .penjualan-transaksi-table-wrapper tbody td {
+        height: 34px;
+        padding: 6px 10px;
+    }
+
+    .penjualan-transaksi-table-wrapper .penjualan-transaksi-empty {
+        height: 90px;
+        padding: 15px;
+    }
+
+    /* FOOTER */
+
+    .penjualan-transaksi-footer {
+        flex: 0 0 auto;
+        gap: 10px;
+        padding: 8px 24px;
+    }
+
+    .penjualan-transaksi-footer-button {
+        min-width: 95px;
+        height: 34px;
+        padding: 0 16px;
+        font-size: 11px;
+    }
+}
+
+
+/* ==========================================
+   VERY SHORT SCREEN
+   MAX HEIGHT 600PX
+========================================== */
+
+@media (min-width: 769px) and (max-height: 600px) {
+
+    .penjualan-transaksi-overlay {
+        padding: 6px 16px;
+    }
+
+    .penjualan-transaksi-dialog {
+        max-height: calc(100dvh - 12px);
+    }
+
+    .penjualan-transaksi-header {
+        padding: 9px 20px;
+    }
+
+    .penjualan-transaksi-header h3 {
+        font-size: 17px;
+    }
+
+    .penjualan-transaksi-header p {
+        font-size: 10px;
+    }
+
+    .penjualan-transaksi-close {
+        width: 30px;
+        height: 30px;
+        font-size: 21px;
+    }
+
+    .penjualan-transaksi-summary {
+        gap: 6px;
+        padding: 7px 20px 8px;
+    }
+
+    .penjualan-transaksi-summary-card {
+        min-height: 44px;
+        gap: 3px;
+        padding: 5px 8px 5px 11px;
+    }
+
+    .penjualan-transaksi-summary-card span {
+        font-size: 8px;
+    }
+
+    .penjualan-transaksi-summary-card strong {
+        font-size: 12px;
+    }
+
+    .penjualan-transaksi-section {
+        margin: 0 20px 7px;
+    }
+
+    .penjualan-transaksi-section-title {
+        min-height: 30px;
+        padding: 6px 12px;
+        font-size: 11px;
+    }
+
+    .penjualan-transaksi-table-wrapper thead th {
+        height: 28px;
+        font-size: 9px;
+    }
+
+    .penjualan-transaksi-table-wrapper tbody td {
+        height: 29px;
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+
+    .penjualan-transaksi-footer {
+        padding: 6px 20px;
+    }
+
+    .penjualan-transaksi-footer-button {
+        height: 30px;
+        min-width: 85px;
+        font-size: 10px;
     }
 }

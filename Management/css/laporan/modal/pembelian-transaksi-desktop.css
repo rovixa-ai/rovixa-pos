@@ -762,72 +762,183 @@
 }
 
 
-/* ==========================================
-   DESKTOP HEIGHT ADJUSTMENT
-========================================== */
+/* ======================================
+   PEMBELIAN TRANSAKSI
+   DESKTOP - MAX HEIGHT 768PX
+   FULL MODAL SCROLL
+====================================== */
 
-@media (max-height: 700px) {
+@media (min-width: 769px) and (max-height: 768px) {
+
+    /* OVERLAY */
     .pembelian-transaksi-modal-overlay {
-        padding-top: 16px;
-        padding-bottom: 16px;
+        align-items: flex-start;
+        justify-content: center;
+
+        padding: 20px;
+        overflow-x: hidden;
+        overflow-y: auto;
+
+        box-sizing: border-box;
+        -webkit-overflow-scrolling: touch;
     }
 
+    /* CONTAINER */
     .pembelian-transaksi-modal-container {
-        max-height: calc(100vh - 32px);
+        width: 100%;
+        max-width: 1180px;
+
+        height: auto;
+        max-height: none;
+        min-height: 0;
+
+        flex: 0 0 auto;
+
+        overflow: visible;
     }
 
+    /* HEADER */
     .pembelian-transaksi-modal-header {
-        padding-top: 18px;
-        padding-bottom: 16px;
+        flex-shrink: 0;
+        padding: 17px 24px;
     }
 
+    .pembelian-transaksi-modal-header h3 {
+        font-size: 20px;
+    }
+
+    .pembelian-transaksi-modal-close {
+        width: 36px;
+        height: 36px;
+    }
+
+    /* INFORMASI TRANSAKSI */
     .pembelian-transaksi-modal-info {
-        padding-top: 14px;
-        padding-bottom: 16px;
+        flex: 0 0 auto;
+        gap: 10px;
+        padding: 14px 24px 16px;
     }
 
     .pembelian-transaksi-modal-info > div {
-        min-height: 76px;
-        padding-top: 12px;
-        padding-bottom: 12px;
+        min-height: 68px;
+        padding: 12px 16px;
     }
 
+    .pembelian-transaksi-modal-info strong {
+        font-size: 19px;
+    }
+
+    /* BAGIAN TABEL */
     .pembelian-transaksi-modal-section {
-        margin-bottom: 16px;
+        flex: 0 0 auto;
+
+        min-height: auto;
+        margin: 0 24px 16px;
+
+        overflow: visible;
     }
 
     .pembelian-transaksi-modal-section-header {
-        padding-top: 13px;
-        padding-bottom: 13px;
+        padding: 12px 16px;
+    }
+
+    /* PEMBUNGKUS TABEL */
+    .pembelian-transaksi-modal-table-wrapper {
+        flex: 0 0 auto;
+
+        min-height: auto;
+        max-height: none;
+
+        overflow-x: auto;
+        overflow-y: visible;
+    }
+
+    .pembelian-transaksi-modal-table th {
+        height: 38px;
+        padding: 0 12px;
     }
 
     .pembelian-transaksi-modal-table td {
-        height: 42px;
-        padding-top: 8px;
-        padding-bottom: 8px;
+        height: 40px;
+        padding: 8px 12px;
     }
 
+    /* FOOTER */
     .pembelian-transaksi-modal-footer {
-        padding-top: 13px;
-        padding-bottom: 13px;
+        flex-shrink: 0;
+        gap: 15px;
+        padding: 12px 24px;
+    }
+
+    .pembelian-transaksi-modal-footer-total strong {
+        font-size: 20px;
+    }
+
+    .pembelian-transaksi-modal-footer-button {
+        min-width: 100px;
+        height: 38px;
     }
 }
 
 
-/* ==========================================
-   REDUCED MOTION
-========================================== */
+/* ======================================
+   DESKTOP - TINGGI MAKSIMAL 600PX
+====================================== */
 
-@media (prefers-reduced-motion: reduce) {
-    .pembelian-transaksi-modal-overlay,
-    .pembelian-transaksi-modal-container {
-        animation: none;
+@media (min-width: 769px) and (max-height: 600px) {
+
+    .pembelian-transaksi-modal-overlay {
+        padding: 14px;
     }
 
-    .pembelian-transaksi-modal-close,
-    .pembelian-transaksi-modal-info > div,
-    .pembelian-transaksi-modal-table td,
+    .pembelian-transaksi-modal-header {
+        padding: 12px 20px;
+    }
+
+    .pembelian-transaksi-modal-header h3 {
+        font-size: 18px;
+    }
+
+    .pembelian-transaksi-modal-info {
+        gap: 8px;
+        padding: 10px 20px 12px;
+    }
+
+    .pembelian-transaksi-modal-info > div {
+        min-height: 58px;
+        padding: 9px 13px;
+    }
+
+    .pembelian-transaksi-modal-info strong {
+        font-size: 16px;
+    }
+
+    .pembelian-transaksi-modal-section {
+        margin: 0 20px 12px;
+    }
+
+    .pembelian-transaksi-modal-section-header {
+        padding: 9px 13px;
+    }
+
+    .pembelian-transaksi-modal-table th {
+        height: 34px;
+    }
+
+    .pembelian-transaksi-modal-table td {
+        height: 35px;
+        padding: 6px 10px;
+    }
+
+    .pembelian-transaksi-modal-footer {
+        padding: 9px 20px;
+    }
+
+    .pembelian-transaksi-modal-footer-total strong {
+        font-size: 18px;
+    }
+
     .pembelian-transaksi-modal-footer-button {
-        transition: none;
+        height: 35px;
     }
 }

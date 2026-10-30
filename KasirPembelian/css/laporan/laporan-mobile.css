@@ -347,7 +347,7 @@
     min-width: 0;
     height: 100%;
     margin: 0;
-    padding: 0 10px 0 13px;
+    padding: 0 5px 0 5px;
     color: #17221e;
     background: transparent;
     border: none;
@@ -372,13 +372,14 @@
     flex: 0 0 auto;
     align-items: center;
     justify-content: center;
-    height: 30px;
+    height: 20px;
     min-width: 0;
-    margin: 0 6px 0 0;
-    padding: 0 10px;
+    padding: 0 3px;
+
+    
     color: #bb1414;
-    background: #ecfdf5;
-    border: 1px solid #a7f3d0;
+    background: transparent;
+    border: 0px solid #a7f3d0;
     border-radius: 7px;
     font-family: inherit;
     font-size: 12px;

@@ -9,29 +9,28 @@ const Dashboard = {
 
     init() {
 
-        this.event();
+    DashboardRender.initResponsive();
 
-        this.loadTotalBarang();
+    this.event();
 
-        this.loadStokMenipis();
+    this.loadTotalBarang();
 
-        this.loadStokLama();
+    this.loadStokMenipis();
 
-        this.loadExpense();
+    this.loadStokLama();
 
-        this.loadPenjualanBulan();
+    this.loadExpense();
 
-        this.loadPembelianBulan();
+    this.loadPenjualanBulan();
 
-        this.loadTransaksiHari();
+    this.loadPembelianBulan();
 
-        this.loadNilaiStok();
+    this.loadTransaksiHari();
 
+    this.loadNilaiStok();
 
-        /*
-         * Load hanya chart yang sedang dirender.
-         * Desktop dan Mobile tidak dijalankan bersamaan.
-         */
+  
+         
 
         if (
             document.getElementById(

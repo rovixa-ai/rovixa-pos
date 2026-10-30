@@ -1103,3 +1103,274 @@
         font-size: 19px;
     }
 }
+
+/* ======================================
+   TREEHOUSE POS
+   PEMBELIAN LAPORAN MODAL
+   DESKTOP - LIMITED HEIGHT
+====================================== */
+
+@media (min-width: 769px) and (max-height: 800px) {
+
+    /* ==================================
+       OVERLAY
+    ================================== */
+
+    .pembelian-laporan-modal-overlay {
+        align-items: flex-start;
+        justify-content: center;
+
+        padding: 24px;
+
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+
+    /* ==================================
+       MODAL CONTAINER
+    ================================== */
+
+    .pembelian-laporan-modal-container {
+        position: relative;
+
+        width: 100%;
+        max-width: 1180px;
+
+        height: auto;
+        max-height: calc(100dvh - 48px);
+
+        min-height: 0;
+
+        display: flex;
+        flex-direction: column;
+
+        overflow: hidden;
+
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+
+    /* ==================================
+       HEADER
+    ================================== */
+
+    .pembelian-laporan-modal-header {
+        flex: 0 0 60px;
+
+        min-height: 60px;
+
+        padding: 0 18px;
+    }
+
+
+    /* ==================================
+       BODY
+    ================================== */
+
+    .pembelian-laporan-modal-body {
+        flex: 1 1 auto;
+
+        min-height: 0;
+        width: 100%;
+
+        gap: 12px;
+
+        padding: 14px 18px 18px;
+
+        overflow-x: hidden;
+        overflow-y: auto;
+
+        overscroll-behavior: contain;
+
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5d1 transparent;
+    }
+
+    .pembelian-laporan-modal-body::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .pembelian-laporan-modal-body::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .pembelian-laporan-modal-body::-webkit-scrollbar-thumb {
+        background: #cbd5d1;
+        border-radius: 10px;
+    }
+
+
+    /* ==================================
+       FILTER CARD
+    ================================== */
+
+    .pembelian-laporan-modal-filter-card {
+        flex: 0 0 auto;
+
+        gap: 12px;
+        padding: 13px;
+    }
+
+    .pembelian-laporan-modal-filter-grid {
+        gap: 12px;
+
+        grid-template-columns:
+            minmax(170px, 0.65fr)
+            minmax(220px, 1fr);
+    }
+
+    .pembelian-laporan-modal-filter-group {
+        gap: 5px;
+    }
+
+    .pembelian-laporan-modal-filter-group input,
+    .pembelian-laporan-modal-filter-group select {
+        height: 36px;
+    }
+
+    .pembelian-laporan-modal-filter-actions button {
+        height: 36px;
+    }
+
+
+    /* ==================================
+       SUMMARY
+    ================================== */
+
+    .pembelian-laporan-modal-summary {
+        flex: 0 0 auto;
+
+        gap: 9px;
+    }
+
+    .pembelian-laporan-modal-summary-card {
+        min-height: 68px;
+
+        gap: 5px;
+
+        padding: 10px 12px;
+    }
+
+    .pembelian-laporan-modal-summary-card span {
+        font-size: 9px;
+    }
+
+    .pembelian-laporan-modal-summary-card strong {
+        font-size: 16px;
+    }
+
+
+    /* ==================================
+       RESULT CARD
+    ================================== */
+
+    .pembelian-laporan-modal-result-card {
+        flex: 0 0 auto;
+
+        min-height: 0;
+    }
+
+    .pembelian-laporan-modal-result-header {
+        flex: 0 0 46px;
+
+        min-height: 46px;
+
+        padding: 0 13px;
+    }
+
+
+    /* ==================================
+       TABLE WRAPPER
+    ================================== */
+
+    .pembelian-laporan-modal-table-wrapper {
+        width: 100%;
+
+        max-height: 300px;
+
+        overflow-x: auto;
+        overflow-y: auto;
+
+        overscroll-behavior: contain;
+    }
+
+    .pembelian-laporan-modal-table th {
+        height: 36px;
+    }
+
+    .pembelian-laporan-modal-table td {
+        height: 38px;
+
+        padding: 6px 10px;
+    }
+
+
+    /* ==================================
+       LARGE DESKTOP - LIMITED HEIGHT
+    ================================== */
+
+    @media (min-width: 1400px) {
+
+        .pembelian-laporan-modal-container {
+            max-width: 1260px;
+        }
+
+        .pembelian-laporan-modal-body {
+            gap: 13px;
+            padding: 15px 20px 18px;
+        }
+
+    }
+
+}
+
+
+/* ======================================
+   EXTRA SHORT DESKTOP
+====================================== */
+
+@media (min-width: 769px) and (max-height: 600px) {
+
+    .pembelian-laporan-modal-overlay {
+        padding: 16px;
+    }
+
+    .pembelian-laporan-modal-container {
+        max-height: calc(100dvh - 32px);
+    }
+
+    .pembelian-laporan-modal-header {
+        flex-basis: 52px;
+        min-height: 52px;
+    }
+
+    .pembelian-laporan-modal-body {
+        gap: 10px;
+        padding: 10px 16px 14px;
+    }
+
+    .pembelian-laporan-modal-filter-card {
+        padding: 10px;
+    }
+
+    .pembelian-laporan-modal-summary-card {
+        min-height: 60px;
+        padding: 8px 10px;
+    }
+
+    .pembelian-laporan-modal-summary-card strong {
+        font-size: 14px;
+    }
+
+    .pembelian-laporan-modal-table-wrapper {
+        max-height: 240px;
+    }
+
+    .pembelian-laporan-modal-result-header {
+        flex-basis: 42px;
+        min-height: 42px;
+    }
+
+}

@@ -78,7 +78,7 @@ const AppMobileRender = {
                         alt=""
                         class="header-logout-icon"
                     >
-                    <p>Logout</p>
+                    
                     
                 </button>
 

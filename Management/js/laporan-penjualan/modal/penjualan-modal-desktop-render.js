@@ -55,15 +55,7 @@ const PenjualanLaporanModalDesktopRender = {
                             class="penjualan-laporan-modal-card"
                         >
 
-                            <div
-                                class="penjualan-laporan-modal-card-header"
-                            >
-
-                                <h3>
-                                    Filter Laporan
-                                </h3>
-
-                            </div>
+                            
 
 
                             <div
@@ -110,10 +102,7 @@ const PenjualanLaporanModalDesktopRender = {
 
                                 </div>
 
-                            </div>
-
-
-                            <div
+                                 <div
                                 class="penjualan-laporan-modal-filter-action"
                             >
 
@@ -126,6 +115,11 @@ const PenjualanLaporanModalDesktopRender = {
                                 </button>
 
                             </div>
+
+                            </div>
+
+
+                           
 
                         </div>
 

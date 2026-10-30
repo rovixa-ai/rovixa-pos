@@ -322,121 +322,140 @@ Object.assign(PembelianMassal, {
     },
 
     /* ======================================
-       CARI BARCODE SATUAN BARANG
-    ====================================== */
+   CARI BARCODE SATUAN BARANG
+====================================== */
 
-    cariBarcodeSatuan(index, barcode, page) {
+cariBarcodeSatuan(index, barcode, page) {
 
-        const item = this.items[index];
+    const item = this.items[index];
 
-        if (!item) {
-            return;
-        }
-
-        const barcodeDicari =
-            PembelianMassalMaster.normalizeBarcode(barcode);
-
-        item.barcode = barcodeDicari;
-
-        if (!barcodeDicari) {
-            return;
-        }
-
-        const satuanDitemukan =
-            (this.satuanList || []).find(
-                satuan =>
-                    PembelianMassalMaster.normalizeBarcode(
-                        satuan.barcodeSatuan
-                    ) === barcodeDicari
-            );
-
-        if (!satuanDitemukan) {
-            return;
-        }
-
-        const kodeBarang =
-            PembelianMassalMaster.normalizeKode(
-                satuanDitemukan.kode
-            );
-
-        const barangDitemukan =
-            (this.barangList || []).find(
-                barang =>
-                    PembelianMassalMaster.normalizeKode(
-                        barang.kode
-                    ) === kodeBarang
-            );
-
-        if (!barangDitemukan) {
-            return;
-        }
-
-        item.barang = kodeBarang;
-        item.namaBarang = barangDitemukan.nama || "";
-
-        item.satuanList =
-            (this.satuanList || []).filter(
-                satuan =>
-                    String(satuan.kode) ===
-                    String(barangDitemukan.kode)
-            );
-
-        const satuanTerpilih =
-            item.satuanList.find(
-                satuan =>
-                    PembelianMassalMaster.normalizeBarcode(
-                        satuan.barcodeSatuan
-                    ) === barcodeDicari
-            );
-
-        item.satuan = satuanTerpilih
-            ? satuanTerpilih.satuan || ""
-            : satuanDitemukan.satuan || "";
-
-        const satuanAktif =
-            satuanTerpilih || satuanDitemukan;
-
-        item.barcode =
-            satuanAktif.barcodeSatuan || "";
-
-        item.konversi =
-            PembelianMassalMaster.toNumber(
-                satuanAktif.isi,
-                PembelianMassalMaster.toNumber(
-                    satuanAktif.konversi,
-                    1
-                )
-            );
-
-        item.harga =
-            PembelianMassalMaster.toNumber(
-                satuanAktif.hargaBeli,
-                0
-            );
-
-        item.hargaJual =
-            PembelianMassalMaster.toNumber(
-                satuanAktif.hargaJual,
-                0
-            );
-
-        const satuanPCS =
-            item.satuanList.find(
-                satuan =>
-                    PembelianMassalMaster.normalizeSatuan(
-                        satuan.satuan
-                    ) === "PCS"
-            );
-
-        item.hargaJualPCS =
-            PembelianMassalMaster.toNumber(
-                satuanPCS?.hargaJual,
-                0
-            );
-
-        PembelianMassalItem.renderItems(this);
-
-        this.updateTotal();
+    if (!item) {
+        return;
     }
+
+    const barcodeDicari =
+        PembelianMassalMaster.normalizeBarcode(barcode);
+
+    item.barcode = barcodeDicari;
+
+    if (!barcodeDicari) {
+        return;
+    }
+
+    // Cari semua satuan dengan barcode yang sama.
+    const satuanDitemukan =
+        (this.satuanList || []).filter(
+            satuan =>
+                PembelianMassalMaster.normalizeBarcode(
+                    satuan.barcodeSatuan
+                ) === barcodeDicari
+        );
+
+    if (!satuanDitemukan.length) {
+        return;
+    }
+
+    // Pilih satuan dengan nilai isi/konversi tertinggi.
+    const satuanAktif = [...satuanDitemukan].sort(
+        (a, b) => {
+
+            const isiA =
+                PembelianMassalMaster.toNumber(
+                    a.isi,
+                    PembelianMassalMaster.toNumber(
+                        a.konversi,
+                        1
+                    )
+                );
+
+            const isiB =
+                PembelianMassalMaster.toNumber(
+                    b.isi,
+                    PembelianMassalMaster.toNumber(
+                        b.konversi,
+                        1
+                    )
+                );
+
+            return isiB - isiA;
+        }
+    )[0];
+
+    const kodeBarang =
+        PembelianMassalMaster.normalizeKode(
+            satuanAktif.kode
+        );
+
+    const barangDitemukan =
+        (this.barangList || []).find(
+            barang =>
+                PembelianMassalMaster.normalizeKode(
+                    barang.kode
+                ) === kodeBarang
+        );
+
+    if (!barangDitemukan) {
+        return;
+    }
+
+    item.barang = kodeBarang;
+
+    item.namaBarang = barangDitemukan.nama || "";
+
+    // Ambil seluruh satuan milik barang.
+    item.satuanList =
+        (this.satuanList || []).filter(
+            satuan =>
+                PembelianMassalMaster.normalizeKode(
+                    satuan.kode
+                ) === kodeBarang
+        );
+
+    // Isi satuan dengan konversi tertinggi.
+    item.satuan = satuanAktif.satuan || "";
+
+    item.barcode =
+        satuanAktif.barcodeSatuan || "";
+
+    item.konversi =
+        PembelianMassalMaster.toNumber(
+            satuanAktif.isi,
+            PembelianMassalMaster.toNumber(
+                satuanAktif.konversi,
+                1
+            )
+        );
+
+    item.harga =
+        PembelianMassalMaster.toNumber(
+            satuanAktif.hargaBeli,
+            0
+        );
+
+    item.hargaJual =
+        PembelianMassalMaster.toNumber(
+            satuanAktif.hargaJual,
+            0
+        );
+
+    // Ambil harga jual satuan PCS.
+    const satuanPCS =
+        item.satuanList.find(
+            satuan =>
+                PembelianMassalMaster.normalizeSatuan(
+                    satuan.satuan
+                ) === "PCS"
+        );
+
+    item.hargaJualPCS =
+        PembelianMassalMaster.toNumber(
+            satuanPCS?.hargaJual,
+            0
+        );
+
+    PembelianMassalItem.renderItems(this);
+
+    this.updateTotal();
+}
 
 });
