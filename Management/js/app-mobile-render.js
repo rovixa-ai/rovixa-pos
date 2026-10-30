@@ -230,22 +230,7 @@ const AppMobileRender = {
 
                 <div class="mobile-menu-list">
 
-                     <button
-                        type="button"
-                        class="mobile-menu-item mobile-menu-home"
-                        data-mobile-page="dashboard"
-                        title="Home"
-                        aria-label="Home"
-                        aria-current="page"
-                    >
-                        <span class="mobile-menu-icon">
-                            🏠
-                        </span>
-
-                        <span class="mobile-menu-text">
-                            Home
-                        </span>
-                    </button>
+                     
 
                     <button
                         type="button"
@@ -264,25 +249,7 @@ const AppMobileRender = {
                     </button>
 
 
-                    <button
-                        type="button"
-                        class="mobile-menu-item"
-                        data-mobile-page="harga-pembelian"
-                        title="Harga Pembelian"
-                        aria-label="Pembelian"
-                    >
-                        <span class="mobile-menu-icon">
-                            🛒
-                        </span>
-
-                        <span class="mobile-menu-text">
-                            Pembelian
-                        </span>
-                    </button>
-
-
-                   
-
+                    
 
                     <button
                         type="button"
@@ -297,6 +264,23 @@ const AppMobileRender = {
 
                         <span class="mobile-menu-text">
                             Laporan
+                        </span>
+                    </button>
+
+                    <button
+                        type="button"
+                        class="mobile-menu-item mobile-menu-home"
+                        data-mobile-page="dashboard"
+                        title="Home"
+                        aria-label="Home"
+                        aria-current="page"
+                    >
+                        <span class="mobile-menu-icon">
+                            🏠
+                        </span>
+
+                        <span class="mobile-menu-text">
+                            Home
                         </span>
                     </button>
 

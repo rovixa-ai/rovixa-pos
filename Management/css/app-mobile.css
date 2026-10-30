@@ -566,10 +566,10 @@
     height: 100%;
 
     grid-template-columns:
+        
         minmax(0, 1fr)
         minmax(0, 1fr)
-        minmax(0, 1fr)
-        minmax(0, 1fr)
+        72px
         minmax(0, 1fr)
         minmax(0, 1fr);
 
@@ -631,8 +631,8 @@
     .mobile-menu-item.active {
         background: linear-gradient(
             145deg,
-            #f0fdf8,
-            #e7f8ef
+            #a7f3d0,
+            #7dd8b7
         );
 
         color: #047857;
@@ -720,7 +720,11 @@
     .mobile-menu-item:active {
         transform: scale(0.92);
 
-        background: rgba(16, 185, 129, 0.12);
+        background: linear-gradient(
+            145deg,
+            #a7f3d0,
+            #34d399
+        );
 
         box-shadow:
             inset 0 2px 5px rgba(5, 150, 105, 0.10);
@@ -731,18 +735,244 @@
             box-shadow 0.08s ease;
     }
 
-    .mobile-menu-item.mobile-menu-home:active {
-        transform: translateY(1px) scale(0.94);
+    
+
+
+    
+   
+    /* ==================================
+       HOME MENU - PREMIUM FLOATING
+    ================================== */
+
+    .mobile-menu-item.mobile-menu-home {
+        position: relative;
+        z-index: 5;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+
+        justify-self: center;
+
+        width: 68px;
+        height: 68px;
+        min-width: 68px;
+
+        margin-top: -18px;
+        padding: 5px;
+
+        box-sizing: border-box;
+        overflow: visible;
+
+        background: linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #d1fae5 48%,
+            #d7f7ea 100%
+        );
+
+        color: #065f46;
+
+        border: 2px solid rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
 
         box-shadow:
-            0 3px 8px rgba(5, 150, 105, 0.24),
-            0 1px 3px rgba(4, 120, 87, 0.16),
-            inset 0 2px 5px rgba(0, 70, 45, 0.16);
+            0 0 0 1px rgba(16, 185, 129, 0.30),
+            0 5px 10px rgba(5, 150, 105, 0.18),
+            0 10px 22px rgba(5, 150, 105, 0.22),
+            inset 0 1px 2px rgba(255, 255, 255, 0.95);
+
+        transition:
+            background 0.22s ease,
+            box-shadow 0.22s ease,
+            transform 0.22s ease;
+    }
+
+    /* HOME - OUTER GLOW */
+
+    .mobile-menu-item.mobile-menu-home::after {
+        content: "";
+
+        position: absolute;
+        z-index: -1;
+
+        inset: 4px;
+        border-radius: 16px;
+
+        background: rgba(16, 185, 129, 0.28);
+
+        filter: blur(12px);
+
+        opacity: 0.65;
+
+        pointer-events: none;
+
+        transition: opacity 0.22s ease;
+    }
+
+    /* HOME - ICON */
+
+    .mobile-menu-item.mobile-menu-home .mobile-menu-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 36px;
+        height: 36px;
+
+        font-size: 26px;
+        line-height: 1;
+
+        color: #047857;
+
+        filter: drop-shadow(
+            0 2px 2px rgba(4, 120, 87, 0.16)
+        );
+
+        transition:
+            transform 0.22s ease,
+            filter 0.22s ease;
+    }
+
+    /* HOME - LABEL */
+
+    .mobile-menu-item.mobile-menu-home .mobile-menu-text {
+        display: block;
+
+        width: 100%;
+
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        text-align: center;
+
+        color: #065f46;
+
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 1.1;
+
+        letter-spacing: 0.2px;
+    }
+
+    /* HOME - HOVER */
+
+    .mobile-menu-item.mobile-menu-home:hover {
+        background: linear-gradient(
+            145deg,
+            #ecfdf5 0%,
+            #a7f3d0 48%,
+            #34d399 100%
+        );
+
+        font-weight: 800;
+
+        box-shadow:
+            0 0 0 1px rgba(16, 185, 129, 0.42),
+            0 6px 12px rgba(5, 150, 105, 0.20),
+            0 12px 25px rgba(5, 150, 105, 0.26),
+            inset 0 1px 2px rgba(255, 255, 255, 0.95);
+    }
+
+    .mobile-menu-item.mobile-menu-home:hover::after {
+        opacity: 1;
+    }
+
+    .mobile-menu-item.mobile-menu-home:hover .mobile-menu-icon {
+        transform: translateY(-2px) scale(1.06);
+
+        filter: drop-shadow(
+            0 3px 4px rgba(4, 120, 87, 0.22)
+        );
+    }
+
+    /* HOME - ACTIVE */
+
+    .mobile-menu-item.mobile-menu-home.active {
+        background: linear-gradient(
+            145deg,
+            #d1fae5 0%,
+            #6ee7b7 50%,
+            #10b981 100%
+        );
+
+        color: #064e3b;
+
+        border-color: rgba(255, 255, 255, 0.95);
+
+        box-shadow:
+            0 0 0 1px rgba(5, 150, 105, 0.38),
+            0 5px 12px rgba(5, 150, 105, 0.22),
+            0 10px 22px rgba(5, 150, 105, 0.24),
+            inset 0 1px 2px rgba(255, 255, 255, 0.80);
+    }
+
+    .mobile-menu-item.mobile-menu-home.active::before {
+        content: "";
+        position: absolute;
+
+        top: 4px;
+        left: 50%;
+
+        width: 20px;
+        height: 2px;
+
+        transform: translateX(-50%);
+
+        border-radius: 999px;
+
+        background: linear-gradient(
+            90deg,
+            #059669,
+            #34d399
+        );
+
+        box-shadow:
+            0 0 8px rgba(16, 185, 129, 0.25);
+    }
+
+    .mobile-menu-item.mobile-menu-home.active::after {
+        opacity: 0.9;
+    }
+
+    .mobile-menu-item.mobile-menu-home.active .mobile-menu-icon {
+        transform: translateY(-1px);
+
+        filter: drop-shadow(
+            0 2px 3px rgba(4, 120, 87, 0.25)
+        );
+    }
+
+    .mobile-menu-item.mobile-menu-home.active .mobile-menu-text {
+        color: #064e3b;
+    }
+
+    /* HOME - CLICK */
+
+    .mobile-menu-item.mobile-menu-home:active {
+        transform: translateY(1px) scale(0.93);
+
+        background: linear-gradient(
+            145deg,
+            #a7f3d0,
+            #34d399
+        );
+
+        box-shadow:
+            0 2px 5px rgba(5, 150, 105, 0.18),
+            inset 0 2px 5px rgba(4, 120, 87, 0.14);
 
         transition:
             transform 0.08s ease,
+            background 0.08s ease,
             box-shadow 0.08s ease;
     }
+
+   
+
+    
 }
 
 /* ======================================
