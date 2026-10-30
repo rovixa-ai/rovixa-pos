@@ -17,19 +17,56 @@
         "https://script.google.com/macros/s/AKfycbyEGC57wQqgx5LNw_TgfnbFIXPxjrN0H4I_17nT1cI5KOT5UotyBBViOyNTbkAQ8HFD/exec";
 
 
-    /* ======================================
-       CLIENT IDENTIFICATION
-    ====================================== */
+  /* ======================================
+   CLIENT IDENTIFICATION
+====================================== */
 
-    const params =
-        new URLSearchParams(
-            window.location.search
+const CLIENT_STORAGE_KEY =
+    "ROVIXA_CLIENT_ID";
+
+const params =
+    new URLSearchParams(
+        window.location.search
+    );
+
+const urlClientId =
+    String(
+        params.get("client") || ""
+    ).trim();
+
+let clientId = "";
+
+try {
+
+    if (urlClientId) {
+
+        // Simpan Client ID dari URL.
+        localStorage.setItem(
+            CLIENT_STORAGE_KEY,
+            urlClientId
         );
 
-    const clientId =
-        (
-            params.get("client") || ""
+        clientId = urlClientId;
+
+    } else {
+
+        // Gunakan Client ID yang tersimpan.
+        clientId = String(
+            localStorage.getItem(
+                CLIENT_STORAGE_KEY
+            ) || ""
         ).trim();
+
+    }
+
+} catch (error) {
+
+    console.error(
+        "Gagal membaca Client ID:",
+        error
+    );
+
+}
 
 
     /* ======================================
