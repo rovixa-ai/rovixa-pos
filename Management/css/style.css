@@ -227,6 +227,7 @@ button {
         height: auto;
         min-height: 0;
         padding: 70px 16px 16px;
+        margin-bottom: 70px;
         overflow-x: hidden;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;

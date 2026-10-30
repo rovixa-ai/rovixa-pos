@@ -235,6 +235,14 @@
         word-break: break-word;
     }
 
+    .laporan-penjualan-detail-info .status-normal {
+        color: #059669;
+    }
+
+    .laporan-penjualan-detail-info .status-retur {
+        color: #dc2626;
+    }
+
 
     /* ======================================
        SECTION
@@ -528,6 +536,36 @@
         cursor: pointer;
 
         -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ==================================
+       RETUR WATERMARK
+    ================================== */
+
+    .laporan-penjualan-detail-dialog.modal-retur {
+        isolation: isolate;
+    }
+
+    .laporan-penjualan-detail-dialog.modal-retur::after {
+        content: "RETUR";
+
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        z-index: +1;
+
+        transform: translate(-50%, -50%) rotate(-28deg);
+
+        color: rgba(220, 38, 38, 0.055);
+
+        font-size: 110px;
+        font-weight: 900;
+        letter-spacing: 12px;
+
+        white-space: nowrap;
+
+        pointer-events: none;
+        user-select: none;
     }
 }
 
