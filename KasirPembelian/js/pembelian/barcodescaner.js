@@ -470,6 +470,7 @@ playBeep(type = "success") {
                         this.lastBarcode = barcode;
                         this.lastDetectedTime = now;
                         this.scanning = false;
+                        this.playBeep("success");
 
                         if (message) {
                             message.textContent =
