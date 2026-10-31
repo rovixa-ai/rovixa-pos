@@ -116,7 +116,7 @@ input:focus-visible {
 }
 
 .brand-name {
-    color: var(--text);
+    color: rgb(14, 59, 43);
     font-size: 14px;
     font-weight: 700;
     letter-spacing: 1.4px;
@@ -192,6 +192,7 @@ input:focus-visible {
 h1 {
     margin: 0 0 12px;
     font-size: clamp(25px, 5vw, 31px);
+    color: rgb(14, 59, 43);
     line-height: 1.25;
     letter-spacing: -0.8px;
 }
@@ -335,7 +336,7 @@ h1 {
 label {
     display: block;
     margin: 0;
-    color: var(--text);
+    color: rgb(14, 59, 43);
     font-size: 13px;
     font-weight: 700;
 }

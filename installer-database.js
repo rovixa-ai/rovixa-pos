@@ -669,7 +669,7 @@ Object.assign(Installer, {
 
             this.showActionPanel(
                 "Persiapan Google Apps Script API",
-                "Buka halaman pengaturan di tab baru. Aktifkan API jika diperlukan, lalu kembali ke installer dan tekan Lanjutkan Instalasi."
+                "Buka pengaturan di tab baru. Aktifkan Google Apps Script API, lalu kembali ke installer dan tekan Lanjutkan Instalasi."
             );
 
             const content =
