@@ -3,8 +3,6 @@
 const App = {
 
     currentPage: null,
-    backHandlerInitialized: false,
-    handlingBack: false,
 
 
     async init() {
@@ -78,8 +76,6 @@ const App = {
             ) {
 
                 this.renderAppShell();
-
-                this.initBackHandler();
 
                 Loading.update(
                     "Membuka dashboard...",
@@ -157,151 +153,6 @@ const App = {
         AppMobileRender.renderHeader();
 
         AppMobileRender.renderMobileMenu();
-
-    },
-
-
-    /* ==================================
-       ANDROID / DEVICE BACK BUTTON
-    ================================== */
-
-    initBackHandler() {
-
-        if (this.backHandlerInitialized) {
-            return;
-        }
-
-        this.backHandlerInitialized = true;
-
-        history.replaceState(
-            {
-                treehousePOS: true,
-                page: "dashboard"
-            },
-            "",
-            location.href
-        );
-
-        history.pushState(
-            {
-                treehousePOS: true,
-                page: "dashboard"
-            },
-            "",
-            location.href
-        );
-
-        window.addEventListener(
-            "popstate",
-            async () => {
-
-                if (this.handlingBack) {
-                    return;
-                }
-
-                this.handlingBack = true;
-
-                try {
-
-                    // Pasang kembali history guard.
-                    // Jika pengguna memilih Batal,
-                    // aplikasi tetap berada di halaman aktif.
-
-                    history.pushState(
-                        {
-                            treehousePOS: true,
-                            page: this.currentPage || "dashboard"
-                        },
-                        "",
-                        location.href
-                    );
-
-                    await this.handleBackButton();
-
-                }
-                finally {
-
-                    this.handlingBack = false;
-
-                }
-
-            }
-        );
-
-    },
-
-
-    async handleBackButton() {
-
-        /* ==============================
-           CLOSE MOBILE MENU FIRST
-        ============================== */
-
-        const mobileMenu =
-            document.getElementById("mobile-menu");
-
-        if (
-            mobileMenu &&
-            mobileMenu.classList.contains("open")
-        ) {
-
-            this.closeMobileMenu();
-
-            return;
-
-        }
-
-
-        /* ==============================
-           IF NOT DASHBOARD, GO DASHBOARD
-        ============================== */
-
-        if (
-            this.currentPage &&
-            this.currentPage !== "dashboard"
-        ) {
-
-            Router.go("dashboard");
-
-            return;
-
-        }
-
-
-        /* ==============================
-           DASHBOARD: CONFIRM EXIT
-        ============================== */
-
-        if (typeof Dialog !== "undefined") {
-
-            const confirmed = await Dialog.confirm(
-                "Apakah Anda yakin ingin keluar dari aplikasi?",
-                {
-                    title: "Keluar Aplikasi",
-                    confirmText: "Ya, Keluar",
-                    cancelText: "Batal",
-                    variant: "danger"
-                }
-            );
-
-            if (confirmed) {
-
-                /*
-                 * Keluar dari aplikasi dengan kembali
-                 * melewati history guard dan halaman
-                 * aplikasi sebelumnya.
-                 */
-
-                history.go(-2);
-
-                return;
-
-            }
-
-            // Jika Batal, history guard tetap aktif.
-            return;
-
-        }
 
     },
 

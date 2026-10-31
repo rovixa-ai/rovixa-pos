@@ -15,12 +15,6 @@ const App = {
 
     eventsBound: false,
 
-    backButtonBound: false,
-
-    backButtonActive: false,
-
-    backButtonHandling: false,
-
     /* ==================================
        INITIALIZE APPLICATION
     ================================== */
@@ -630,8 +624,6 @@ const App = {
 
             await Auth.logout();
 
-            this.disableBackButton();
-
             document.documentElement.classList.add(
                 "app-auth-checking"
             );
@@ -699,116 +691,6 @@ const App = {
             }
 
         }
-
-    },
-
-
-    /* ==================================
-       ANDROID / HP BACK BUTTON
-    ================================== */
-
-    enableBackButton() {
-
-        if (!this.backButtonBound) {
-
-            window.addEventListener(
-                "popstate",
-                () => {
-
-                    this.handleBackButton();
-
-                }
-            );
-
-            this.backButtonBound = true;
-
-        }
-
-        if (this.backButtonActive) {
-            return;
-        }
-
-        this.backButtonActive = true;
-
-        history.pushState(
-            {
-                ...(history.state || {}),
-                treehousePosBackGuard: true
-            },
-            "",
-            location.href
-        );
-
-    },
-
-
-    async handleBackButton() {
-
-        if (
-            !this.backButtonActive ||
-            this.backButtonHandling
-        ) {
-            return;
-        }
-
-        this.backButtonHandling = true;
-
-        try {
-
-            const confirmed =
-                await Dialog.confirm(
-                    "Apakah Anda yakin ingin keluar dari aplikasi?",
-                    {
-                        title: "Konfirmasi Keluar",
-                        confirmText: "Ya, Keluar",
-                        cancelText: "Batal",
-                        variant: "danger"
-                    }
-                );
-
-            if (confirmed) {
-
-                this.backButtonActive = false;
-
-                history.back();
-
-                return;
-
-            }
-
-        } catch (error) {
-
-            console.error(
-                "APP BACK BUTTON ERROR:",
-                error
-            );
-
-        } finally {
-
-            this.backButtonHandling = false;
-
-        }
-
-        if (this.backButtonActive) {
-
-            history.pushState(
-                {
-                    ...(history.state || {}),
-                    treehousePosBackGuard: true
-                },
-                "",
-                location.href
-            );
-
-        }
-
-    },
-
-
-    disableBackButton() {
-
-        this.backButtonActive = false;
-        this.backButtonHandling = false;
 
     },
 
@@ -1147,8 +1029,6 @@ const App = {
             );
 
             await this.open("sales");
-
-            this.enableBackButton();
 
             document.documentElement.classList.remove(
                 "app-auth-checking"
