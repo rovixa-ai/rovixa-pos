@@ -1,224 +1,244 @@
 
-// app.js
+/* ======================================
+   TREEHOUSE POS
+   GLOBAL DIALOG & NOTIFICATION
+====================================== */
 
-const App = {
+const Dialog = {
 
-    currentPage: null,
-    backHandlerInitialized: false,
-    handlingBack: false,
+    root: null,
+    overlay: null,
+    titleElement: null,
+    messageElement: null,
+    cancelButton: null,
+    confirmButton: null,
+    iconElement: null,
+    toastContainer: null,
 
+    initialized: false,
+    activeDialog: null,
+    queue: [],
+    toastCounter: 0,
 
-    async init() {
+    // ==================================
+    // INIT
+    // ==================================
 
-        Loading.show(
-            "Menyiapkan database dan memuat data toko...",
-            "Memuat Aplikasi"
-        );
+    init() {
 
-        try {
-
-            await DB.init();
-
-            try {
-
-                Loading.update(
-                    "Mengunduh data pengguna...",
-                    "Memuat Aplikasi"
-                );
-
-                await DownloadUsers.download();
-
-            }
-            catch (error) {
-
-                console.warn(
-                    "Download User gagal:",
-                    error.message ||
-                    error
-                );
-
-            }
-
-            Loading.update(
-                "Memuat konfigurasi toko...",
-                "Memuat Aplikasi"
-            );
-
-            await StoreConfig.load();
-
-            Sync.init();
-
-            Loading.update(
-                "Mengunduh dan menyiapkan data aplikasi...",
-                "Memuat Aplikasi"
-            );
-
-            const result =
-                await Download.bootstrap();
-
-            if (!result.success) {
-
-                console.warn(
-                    "Download gagal:",
-                    result.message
-                );
-
-            }
-
-            Loading.update(
-                "Memeriksa sesi pengguna...",
-                "Memuat Aplikasi"
-            );
-
-            const session =
-                await Auth.validateSession();
-
-            if (
-                session.success &&
-                session.loggedIn
-            ) {
-
-                this.renderAppShell();
-
-                this.initBackHandler();
-
-                Loading.update(
-                    "Membuka dashboard...",
-                    "Memuat Aplikasi"
-                );
-
-                Router.go("dashboard");
-
-            } else {
-
-                await Login.init();
-
-            }
-
-        }
-        catch (error) {
-
-            console.error(
-                "APP INIT ERROR:",
-                error
-            );
-
-            if (typeof Dialog !== "undefined") {
-
-                Dialog.error(
-                    error.message ||
-                    "Gagal memuat aplikasi."
-                );
-
-            }
-
-        }
-        finally {
-
-            Loading.hide();
-
-        }
-
-    },
-
-
-    renderAppShell() {
-
-        const app =
-            document.getElementById("app");
-
-        if (app) {
-
-            app.classList.remove("login-mode");
-
-            app.innerHTML = `
-
-                <aside id="sidebar">
-                    <div id="sidebar-content"></div>
-                </aside>
-
-                <main id="main">
-
-                    <header id="desktop-header"></header>
-
-                    <header id="mobile-header"></header>
-
-                    <section id="page"></section>
-
-                </main>
-
-            `;
-
-        }
-
-        AppDesktopRender.renderSidebar();
-
-        AppDesktopRender.renderHeader();
-
-        AppMobileRender.renderHeader();
-
-        AppMobileRender.renderMobileMenu();
-
-    },
-
-
-    /* ==================================
-       ANDROID / DEVICE BACK BUTTON
-    ================================== */
-
-    initBackHandler() {
-
-        if (this.backHandlerInitialized) {
+        if (this.initialized) {
             return;
         }
 
-        this.backHandlerInitialized = true;
+        this.createElement();
+        this.bindEvents();
 
-        history.replaceState(
-            {
-                treehousePOS: true,
-                page: "dashboard"
-            },
-            "",
-            location.href
+        this.initialized = true;
+
+        this.processQueue();
+
+    },
+
+    // ==================================
+    // CREATE ELEMENT
+    // ==================================
+
+    createElement() {
+
+        if (document.getElementById("treehouseDialogRoot")) {
+
+            this.root =
+                document.getElementById("treehouseDialogRoot");
+
+            return;
+
+        }
+
+        this.root = document.createElement("div");
+
+        this.root.id = "treehouseDialogRoot";
+
+        this.root.innerHTML = `
+            <div
+                class="th-dialog-overlay"
+                id="thDialogOverlay"
+                hidden
+            >
+                <section
+                    class="th-dialog"
+                    id="thDialog"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="thDialogTitle"
+                    aria-describedby="thDialogMessage"
+                    tabindex="-1"
+                >
+                    <div
+                        class="th-dialog-icon"
+                        id="thDialogIcon"
+                        aria-hidden="true"
+                    ></div>
+
+                    <div class="th-dialog-content">
+
+                        <h2
+                            class="th-dialog-title"
+                            id="thDialogTitle"
+                        ></h2>
+
+                        <p
+                            class="th-dialog-message"
+                            id="thDialogMessage"
+                        ></p>
+
+                    </div>
+
+                    <div class="th-dialog-actions">
+
+                        <button
+                            type="button"
+                            class="th-dialog-button th-dialog-cancel"
+                            id="thDialogCancel"
+                        >
+                            Batal
+                        </button>
+
+                        <button
+                            type="button"
+                            class="th-dialog-button th-dialog-confirm"
+                            id="thDialogConfirm"
+                        >
+                            OK
+                        </button>
+
+                    </div>
+
+                </section>
+            </div>
+
+            <div
+                class="th-toast-container"
+                id="thToastContainer"
+                aria-live="polite"
+                aria-atomic="false"
+            ></div>
+        `;
+
+        document.body.appendChild(this.root);
+
+        this.overlay =
+            this.root.querySelector("#thDialogOverlay");
+
+        this.titleElement =
+            this.root.querySelector("#thDialogTitle");
+
+        this.messageElement =
+            this.root.querySelector("#thDialogMessage");
+
+        this.cancelButton =
+            this.root.querySelector("#thDialogCancel");
+
+        this.confirmButton =
+            this.root.querySelector("#thDialogConfirm");
+
+        this.iconElement =
+            this.root.querySelector("#thDialogIcon");
+
+        this.toastContainer =
+            this.root.querySelector("#thToastContainer");
+
+    },
+
+    // ==================================
+    // EVENTS
+    // ==================================
+
+    bindEvents() {
+
+        this.cancelButton.onclick = () => {
+            this.finishDialog(false);
+        };
+
+        this.confirmButton.onclick = () => {
+            this.finishDialog(true);
+        };
+
+        this.overlay.addEventListener(
+            "click",
+            event => {
+
+                if (event.target === this.overlay) {
+
+                    if (this.activeDialog?.type === "confirm") {
+                        this.finishDialog(false);
+                    }
+
+                }
+
+            }
         );
 
-        history.pushState(
-            {
-                treehousePOS: true,
-                page: "dashboard"
-            },
-            "",
-            location.href
-        );
+        this.overlay.addEventListener(
+            "keydown",
+            event => {
 
-        window.addEventListener(
-            "popstate",
-            async () => {
-
-                if (this.handlingBack) {
+                if (!this.activeDialog) {
                     return;
                 }
 
-                this.handlingBack = true;
+                if (event.key === "Escape") {
 
-                try {
+                    event.preventDefault();
 
-                    history.pushState(
-                        {
-                            treehousePOS: true,
-                            page: this.currentPage || "dashboard"
-                        },
-                        "",
-                        location.href
-                    );
+                    if (this.activeDialog.type === "confirm") {
+                        this.finishDialog(false);
+                    }
 
-                    await this.handleBackButton();
+                    return;
 
                 }
-                finally {
 
-                    this.handlingBack = false;
+                if (event.key === "Enter") {
+
+                    if (
+                        event.target === this.cancelButton
+                    ) {
+                        return;
+                    }
+
+                    event.preventDefault();
+
+                    this.finishDialog(true);
+
+                }
+
+                if (event.key === "Tab") {
+
+                    const focusable = [
+                        this.cancelButton,
+                        this.confirmButton
+                    ];
+
+                    const first = focusable[0];
+                    const last = focusable[1];
+
+                    if (
+                        event.shiftKey &&
+                        document.activeElement === first
+                    ) {
+
+                        event.preventDefault();
+                        last.focus();
+
+                    } else if (
+                        !event.shiftKey &&
+                        document.activeElement === last
+                    ) {
+
+                        event.preventDefault();
+                        first.focus();
+
+                    }
 
                 }
 
@@ -227,411 +247,375 @@ const App = {
 
     },
 
+    // ==================================
+    // ENSURE INITIALIZED
+    // ==================================
 
-    async handleBackButton() {
+    ensureInit() {
 
-        /* ==============================
-           CLOSE MOBILE MENU FIRST
-        ============================== */
-
-        const mobileMenu =
-            document.getElementById("mobile-menu");
-
-        if (
-            mobileMenu &&
-            mobileMenu.classList.contains("open")
-        ) {
-
-            this.closeMobileMenu();
-
+        if (this.initialized) {
             return;
-
         }
 
+        if (document.body) {
 
-        /* ==============================
-           IF NOT DASHBOARD, GO DASHBOARD
-        ============================== */
+            this.init();
 
-        if (
-            this.currentPage &&
-            this.currentPage !== "dashboard"
-        ) {
+        } else {
 
-            Router.go("dashboard");
-
-            return;
-
-        }
-
-
-        /* ==============================
-           DASHBOARD: CONFIRM EXIT
-        ============================== */
-
-        if (typeof Dialog !== "undefined") {
-
-            const confirmed = await Dialog.confirm(
-                "Apakah Anda yakin ingin keluar dari aplikasi?",
-                {
-                    title: "Keluar Aplikasi",
-                    confirmText: "Ya, Keluar",
-                    cancelText: "Batal",
-                    variant: "danger"
-                }
+            throw new Error(
+                "Dialog harus dipanggil setelah document.body tersedia."
             );
 
-            if (!confirmed) {
+        }
+
+    },
+
+    // ==================================
+    // CONFIRM
+    // ==================================
+
+    confirm(message, options = {}) {
+
+        return this.show({
+
+            type: "confirm",
+
+            title:
+                options.title ||
+                "Konfirmasi",
+
+            message:
+                message ?? "",
+
+            confirmText:
+                options.confirmText ||
+                "Ya, Lanjutkan",
+
+            cancelText:
+                options.cancelText ||
+                "Batal",
+
+            variant:
+                options.variant ||
+                "default"
+
+        });
+
+    },
+
+    // ==================================
+    // ALERT
+    // ==================================
+
+    alert(message, options = {}) {
+
+        return this.show({
+
+            type: "alert",
+
+            title:
+                options.title ||
+                "Informasi",
+
+            message:
+                message ?? "",
+
+            confirmText:
+                options.confirmText ||
+                "Mengerti",
+
+            cancelText: "",
+
+            variant:
+                options.variant ||
+                "info"
+
+        });
+
+    },
+
+    // ==================================
+    // SHOW DIALOG
+    // ==================================
+
+    show(config) {
+
+        this.ensureInit();
+
+        return new Promise(resolve => {
+
+            this.queue.push({
+                ...config,
+                resolve
+            });
+
+            this.processQueue();
+
+        });
+
+    },
+
+    // ==================================
+    // PROCESS QUEUE
+    // ==================================
+
+    processQueue() {
+
+        if (
+            this.activeDialog ||
+            !this.queue.length
+        ) {
+            return;
+        }
+
+        const config = this.queue.shift();
+
+        this.activeDialog = config;
+
+        this.titleElement.textContent =
+            String(config.title);
+
+        this.messageElement.textContent =
+            String(config.message);
+
+        this.confirmButton.textContent =
+            config.confirmText;
+
+        this.cancelButton.textContent =
+            config.cancelText || "Batal";
+
+        this.cancelButton.hidden =
+            config.type !== "confirm";
+
+        this.confirmButton.classList.toggle(
+            "is-danger",
+            config.variant === "danger"
+        );
+
+        this.confirmButton.classList.toggle(
+            "is-success",
+            config.variant === "success"
+        );
+
+        this.iconElement.className =
+            "th-dialog-icon";
+
+        const icons = {
+            confirm: "?",
+            alert: "i",
+            info: "i",
+            success: "✓",
+            warning: "!",
+            danger: "!"
+        };
+
+        const iconType =
+            config.variant === "default"
+                ? config.type
+                : config.variant;
+
+        this.iconElement.textContent =
+            icons[iconType] || "i";
+
+        this.iconElement.classList.add(
+            `is-${iconType}`
+        );
+
+        this.overlay.hidden = false;
+
+        document.body.classList.add(
+            "th-dialog-open"
+        );
+
+        requestAnimationFrame(() => {
+
+            if (this.activeDialog) {
+
+                this.confirmButton.focus();
+
+            }
+
+        });
+
+    },
+
+    // ==================================
+    // FINISH DIALOG
+    // ==================================
+
+    finishDialog(result) {
+
+        if (!this.activeDialog) {
+            return;
+        }
+
+        const dialog = this.activeDialog;
+
+        this.activeDialog = null;
+
+        this.overlay.hidden = true;
+
+        document.body.classList.remove(
+            "th-dialog-open"
+        );
+
+        dialog.resolve(
+            Boolean(result)
+        );
+
+        this.processQueue();
+
+    },
+
+    // ==================================
+    // NOTIFICATION / TOAST
+    // ==================================
+
+    notify(message, type = "success", duration = 3000) {
+
+        this.ensureInit();
+
+        const allowedTypes = [
+            "success",
+            "error",
+            "warning",
+            "info"
+        ];
+
+        if (!allowedTypes.includes(type)) {
+            type = "info";
+        }
+
+        const toast = document.createElement("div");
+
+        toast.className =
+            `th-toast is-${type}`;
+
+        toast.setAttribute("role", "status");
+
+        const icon = document.createElement("span");
+
+        icon.className = "th-toast-icon";
+
+        icon.textContent = {
+            success: "✓",
+            error: "!",
+            warning: "!",
+            info: "i"
+        }[type];
+
+        const text = document.createElement("span");
+
+        text.className = "th-toast-message";
+        text.textContent = String(message ?? "");
+
+        const close = document.createElement("button");
+
+        close.type = "button";
+        close.className = "th-toast-close";
+        close.textContent = "×";
+        close.setAttribute("aria-label", "Tutup notifikasi");
+
+        toast.append(icon, text, close);
+
+        this.toastContainer.appendChild(toast);
+
+        this.toastCounter++;
+
+        const removeToast = () => {
+
+            if (!toast.isConnected) {
                 return;
             }
 
-            /*
-             * Pada aplikasi web biasa, JavaScript tidak
-             * dapat menutup tab yang dibuka langsung oleh
-             * pengguna. Pada PWA, perilaku keluar mengikuti
-             * browser atau sistem operasi.
-             */
-            return;
+            toast.classList.add("is-hiding");
 
-        }
-
-    },
-
-
-    async logout() {
-
-        const confirmed = await Dialog.confirm(
-            "Apakah Anda yakin ingin keluar dari aplikasi?",
-            {
-                title: "Konfirmasi Logout",
-                confirmText: "Ya, Logout",
-                cancelText: "Batal",
-                variant: "danger"
-            }
-        );
-
-        if (!confirmed) {
-            return;
-        }
-
-        Auth.logout();
-
-        const app =
-            document.getElementById("app");
-
-        if (app) {
-            app.classList.add("login-mode");
-        }
-
-        await Login.init();
-
-    },
-
-
-    toggleMobileMenu() {
-
-        const menu =
-            document.getElementById(
-                "mobile-menu"
+            toast.addEventListener(
+                "transitionend",
+                () => toast.remove(),
+                { once: true }
             );
 
-        if (!menu) return;
-
-        menu.classList.toggle("open");
-
-    },
-
-
-    closeMobileMenu() {
-
-        const menu =
-            document.getElementById(
-                "mobile-menu"
-            );
-
-        if (!menu) return;
-
-        menu.classList.remove("open");
-
-    },
-
-
-    loadPage(page) {
-
-        if (
-            typeof Auth !== "undefined" &&
-            !Auth.isLoggedIn()
-        ) {
-
-            Login.init();
-
-            return;
-
-        }
-
-        const pages = {
-
-            dashboard: {
-                title: "Dashboard",
-                subtitle: "Ringkasan toko"
-            },
-
-            barang: {
-                title: "Barang",
-                subtitle: "Management data barang"
-            },
-
-            satuan: {
-                title: "Satuan & Harga",
-                subtitle: "Management satuan dan harga"
-            },
-
-            "harga-pembelian": {
-                title: "Harga Pembelian Barang",
-                subtitle: "Management harga pembelian barang"
-            },
-
-            stok: {
-                title: "Stok",
-                subtitle: "Management stok"
-            },
-
-            penjualan: {
-                title: "Penjualan",
-                subtitle: "Riwayat penjualan"
-            },
-
-            penyesuaian: {
-                title: "Penyesuaian Stok",
-                subtitle: "Koreksi stok"
-            },
-
-            laporan: {
-                title: "Laporan",
-                subtitle: "Laporan toko"
-            },
-
-            expense: {
-                title: "Expense",
-                subtitle: "Catat pengeluaran"
-            },
-
-            config: {
-                title: "Config Toko",
-                subtitle: "Pengaturan informasi toko"
-            }
+            setTimeout(() => toast.remove(), 300);
 
         };
 
+        close.onclick = removeToast;
 
-        const info =
-            pages[page];
+        if (Number(duration) > 0) {
 
-        if (!info) return;
-
-        this.currentPage = page;
-
-
-        /* ==================================
-           UPDATE DESKTOP HEADER
-        ================================== */
-
-        const desktopTitle =
-            document.getElementById(
-                "desktop-header-title"
+            setTimeout(
+                removeToast,
+                Number(duration)
             );
 
-        const desktopSubtitle =
-            document.getElementById(
-                "desktop-header-subtitle"
-            );
-
-        if (desktopTitle) {
-
-            desktopTitle.textContent =
-                info.title;
-
         }
 
-        if (desktopSubtitle) {
+        return toast;
 
-            desktopSubtitle.textContent =
-                info.subtitle;
+    },
 
-        }
+    // ==================================
+    // SHORTCUTS
+    // ==================================
 
+    success(message, duration = 3000) {
 
-        /* ==================================
-           UPDATE MOBILE HEADER
-        ================================== */
+        return this.notify(
+            message,
+            "success",
+            duration
+        );
 
-        const mobileTitle =
-            document.getElementById(
-                "mobile-header-title"
-            );
+    },
 
-        const mobileSubtitle =
-            document.getElementById(
-                "mobile-header-subtitle"
-            );
+    error(message, duration = 4000) {
 
-        if (mobileTitle) {
+        return this.notify(
+            message,
+            "error",
+            duration
+        );
 
-            mobileTitle.textContent =
-                info.title;
+    },
 
-        }
+    warning(message, duration = 4000) {
 
-        if (mobileSubtitle) {
+        return this.notify(
+            message,
+            "warning",
+            duration
+        );
 
-            mobileSubtitle.textContent =
-                info.subtitle;
+    },
 
-        }
+    info(message, duration = 3000) {
 
-
-        /* ==================================
-           PAGE
-        ================================== */
-
-        if (page === "dashboard") {
-
-            document.getElementById(
-                "page"
-            ).innerHTML =
-                Dashboard.render();
-
-            Dashboard.init();
-
-        }
-
-        else if (page === "barang") {
-
-            document.getElementById(
-                "page"
-            ).innerHTML =
-                Barang.render();
-
-            Barang.init();
-
-        }
-
-        else if (page === "satuan") {
-
-            document.getElementById(
-                "page"
-            ).innerHTML =
-                Satuan.render();
-
-            Satuan.init();
-
-        }
-
-        else if (page === "harga-pembelian") {
-
-            document.getElementById(
-                "page"
-            ).innerHTML =
-                HargaPembelian.render();
-
-            HargaPembelian.init();
-
-        }
-
-        else if (page === "laporan") {
-
-            document.getElementById(
-                "page"
-            ).innerHTML =
-                Laporan.render();
-
-            Laporan.init();
-
-        }
-
-        else if (page === "expense") {
-
-            document.getElementById(
-                "page"
-            ).innerHTML =
-                Expense.render();
-
-            Expense.init();
-
-        }
-
-        else if (page === "config") {
-
-            document.getElementById(
-                "page"
-            ).innerHTML =
-                StoreConfig.page();
-
-            StoreConfig.init();
-
-        }
-
-        else {
-
-            document.getElementById(
-                "page"
-            ).innerHTML = `
-
-                <h2>
-                    ${info.title}
-                </h2>
-
-                <p>
-                    Halaman ${info.title}
-                    sedang dibuat.
-                </p>
-
-            `;
-
-        }
-
-
-        /* ==================================
-           DESKTOP MENU ACTIVE
-        ================================== */
-
-        document
-            .querySelectorAll(
-                "[data-page]"
-            )
-            .forEach(button => {
-
-                button.classList.toggle(
-                    "active",
-                    button.dataset.page === page
-                );
-
-            });
-
-
-        /* ==================================
-           MOBILE MENU ACTIVE
-        ================================== */
-
-        document
-            .querySelectorAll(
-                "[data-mobile-page]"
-            )
-            .forEach(button => {
-
-                button.classList.toggle(
-                    "active",
-                    button.dataset.mobilePage === page
-                );
-
-            });
+        return this.notify(
+            message,
+            "info",
+            duration
+        );
 
     }
 
 };
 
+// ======================================
+// AUTO INIT
+// ======================================
 
-document.addEventListener(
-    "DOMContentLoaded",
-    () => App.init()
-);
+if (document.readyState === "loading") {
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        () => Dialog.init(),
+        { once: true }
+    );
+
+} else {
+
+    Dialog.init();
+
+}
