@@ -102,6 +102,13 @@ input:focus-visible {
     font-weight: 700;
 }
 
+.brand .logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
 .brand-info {
     display: flex;
     flex-direction: column;
