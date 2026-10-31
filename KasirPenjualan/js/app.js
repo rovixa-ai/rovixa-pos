@@ -15,13 +15,17 @@ const App = {
 
     eventsBound: false,
 
+    backButtonBound: false,
+
+    backButtonActive: false,
+
+    backButtonHandling: false,
+
     /* ==================================
        INITIALIZE APPLICATION
     ================================== */
 
     async init() {
-
-       
 
         const loadingAvailable =
             typeof Loading !== "undefined" &&
@@ -59,8 +63,6 @@ const App = {
 
             await LocalDB.init();
 
-          
-
             /* ==================================
                LOAD STORE CONFIG
             ================================== */
@@ -81,8 +83,6 @@ const App = {
             );
 
             await StoreConfig.load();
-
-           
 
             /* ==================================
                RENDER APPLICATION SHELL
@@ -116,7 +116,9 @@ const App = {
             let userDownloadError = null;
 
             if (navigator.onLine) {
+
                 try {
+
                     const userResult =
                         await DownloadUsers.download();
 
@@ -124,23 +126,32 @@ const App = {
                         !userResult ||
                         userResult.success !== true
                     ) {
+
                         userDownloadError =
                             new Error(
                                 userResult?.message ||
                                 "Download data pengguna gagal."
                             );
+
                     }
+
                 } catch (err) {
+
                     userDownloadError = err;
+
                 }
+
             } else {
+
                 userDownloadError =
                     new Error(
                         "Perangkat dalam kondisi offline."
                     );
+
             }
 
             if (userDownloadError) {
+
                 console.warn(
                     "Download data pengguna dilewati / offline:",
                     userDownloadError.message || userDownloadError
@@ -153,10 +164,13 @@ const App = {
                     !Array.isArray(localUsers) ||
                     !localUsers.length
                 ) {
+
                     throw new Error(
                         "Koneksi internet diperlukan untuk mengunduh akun pengguna pada penggunaan pertama kali."
                     );
+
                 }
+
             }
 
             /* ==================================
@@ -188,8 +202,6 @@ const App = {
             const authResult =
                 await Auth.validateSession();
 
-            
-
             /* ==================================
                BELUM LOGIN
             ================================== */
@@ -199,8 +211,6 @@ const App = {
                 authResult.success !== true ||
                 authResult.loggedIn !== true
             ) {
-
-                
 
                 if (
                     typeof Login === "undefined" ||
@@ -223,8 +233,6 @@ const App = {
                     "app-auth-checking"
                 );
 
-               
-
                 return;
 
             }
@@ -232,8 +240,6 @@ const App = {
             /* ==================================
                USER SUDAH LOGIN
             ================================== */
-
-            
 
             document.documentElement.classList.remove(
                 "app-auth-checking"
@@ -624,6 +630,8 @@ const App = {
 
             await Auth.logout();
 
+            this.disableBackButton();
+
             document.documentElement.classList.add(
                 "app-auth-checking"
             );
@@ -655,8 +663,6 @@ const App = {
             document.documentElement.classList.remove(
                 "app-auth-checking"
             );
-
-            
 
         } catch (error) {
 
@@ -698,6 +704,116 @@ const App = {
 
 
     /* ==================================
+       ANDROID / HP BACK BUTTON
+    ================================== */
+
+    enableBackButton() {
+
+        if (!this.backButtonBound) {
+
+            window.addEventListener(
+                "popstate",
+                () => {
+
+                    this.handleBackButton();
+
+                }
+            );
+
+            this.backButtonBound = true;
+
+        }
+
+        if (this.backButtonActive) {
+            return;
+        }
+
+        this.backButtonActive = true;
+
+        history.pushState(
+            {
+                ...(history.state || {}),
+                treehousePosBackGuard: true
+            },
+            "",
+            location.href
+        );
+
+    },
+
+
+    async handleBackButton() {
+
+        if (
+            !this.backButtonActive ||
+            this.backButtonHandling
+        ) {
+            return;
+        }
+
+        this.backButtonHandling = true;
+
+        try {
+
+            const confirmed =
+                await Dialog.confirm(
+                    "Apakah Anda yakin ingin keluar dari aplikasi?",
+                    {
+                        title: "Konfirmasi Keluar",
+                        confirmText: "Ya, Keluar",
+                        cancelText: "Batal",
+                        variant: "danger"
+                    }
+                );
+
+            if (confirmed) {
+
+                this.backButtonActive = false;
+
+                history.back();
+
+                return;
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "APP BACK BUTTON ERROR:",
+                error
+            );
+
+        } finally {
+
+            this.backButtonHandling = false;
+
+        }
+
+        if (this.backButtonActive) {
+
+            history.pushState(
+                {
+                    ...(history.state || {}),
+                    treehousePosBackGuard: true
+                },
+                "",
+                location.href
+            );
+
+        }
+
+    },
+
+
+    disableBackButton() {
+
+        this.backButtonActive = false;
+        this.backButtonHandling = false;
+
+    },
+
+
+    /* ==================================
        ACTIVE MENU
     ================================== */
 
@@ -729,8 +845,6 @@ const App = {
     async prepareApplication() {
 
         if (this.applicationPrepared) {
-
-          
 
             return true;
 
@@ -771,7 +885,6 @@ const App = {
                 currentYear
             );
 
-
         }
 
         /* ==================================
@@ -798,7 +911,9 @@ const App = {
         let downloadError = null;
 
         if (navigator.onLine) {
+
             try {
+
                 this.updateLoading(
                     "Mengunduh database penjualan..."
                 );
@@ -812,39 +927,51 @@ const App = {
                     !downloadResult ||
                     downloadResult.success !== true
                 ) {
+
                     downloadError =
                         new Error(
                             downloadResult?.message ||
                             "Download database penjualan gagal."
                         );
+
                 }
+
             } catch (err) {
+
                 downloadError = err;
+
             }
+
         } else {
+
             downloadError =
                 new Error(
                     "Perangkat dalam kondisi offline."
                 );
+
         }
 
         if (downloadError) {
+
             if (isYearReady) {
+
                 console.warn(
                     "Download database penjualan dilewati / offline, menggunakan database lokal tahun " +
                     currentYear + ":",
                     downloadError.message || downloadError
                 );
+
             } else {
+
                 throw new Error(
                     "Database penjualan tahun " +
                     currentYear +
                     " belum tersedia di perangkat. Diperlukan koneksi internet untuk mengunduh data awal tahun ini."
                 );
-            }
-        }
 
-        
+            }
+
+        }
 
         /* ==================================
            INITIALIZE MODALS
@@ -908,8 +1035,6 @@ const App = {
                     syncResult.success
                 ) {
 
-                   
-
                 } else {
 
                     console.warn(
@@ -937,8 +1062,6 @@ const App = {
         }
 
         this.applicationPrepared = true;
-
-      
 
         return true;
 
@@ -1025,11 +1148,11 @@ const App = {
 
             await this.open("sales");
 
+            this.enableBackButton();
+
             document.documentElement.classList.remove(
                 "app-auth-checking"
             );
-
-          
 
         } catch (error) {
 

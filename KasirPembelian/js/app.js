@@ -10,6 +10,14 @@ const App = {
     pembelianMassalResizeTimer: null,
     pembelianMassalRenderMode: null,
 
+    backButtonBound: false,
+    backButtonActive: false,
+    backButtonHandling: false,
+
+    /*======================================
+    INITIALIZE APPLICATION
+    ======================================*/
+
     async init() {
 
         Loading.show(
@@ -148,6 +156,8 @@ const App = {
 
             else {
 
+                this.disableBackButton();
+
                 if (
                     typeof Login === "undefined" ||
                     typeof Login.init !== "function"
@@ -205,6 +215,8 @@ const App = {
             return;
         }
 
+        this.disableBackButton();
+
         if (
             typeof Auth !== "undefined" &&
             typeof Auth.logout === "function"
@@ -250,6 +262,95 @@ const App = {
             );
 
         }
+
+    },
+
+
+    /*======================================
+    ANDROID / HP BACK BUTTON
+    ======================================*/
+
+    enableBackButton() {
+
+        if (!this.backButtonBound) {
+
+            window.addEventListener(
+                "popstate",
+                () => {
+
+                    this.handleBackButton();
+
+                }
+            );
+
+            this.backButtonBound = true;
+
+        }
+
+        if (this.backButtonActive) {
+            return;
+        }
+
+        this.backButtonActive = true;
+
+        history.pushState(
+            {
+                ...(history.state || {}),
+                treehousePosBackGuard: true
+            },
+            "",
+            location.href
+        );
+
+    },
+
+
+    async handleBackButton() {
+    if (!this.backButtonActive || this.backButtonHandling) return;
+
+    this.backButtonHandling = true;
+
+    try {
+        const confirmed = await Dialog.confirm(
+            "Apakah Anda yakin ingin keluar dari aplikasi?",
+            {
+                title: "Konfirmasi Keluar",
+                confirmText: "Ya, Keluar",
+                cancelText: "Batal",
+                variant: "danger"
+            }
+        );
+
+        if (confirmed) {
+            this.backButtonActive = false;
+            this.backButtonHandling = false;
+
+            history.go(-2);
+            return;
+        }
+
+        // Batal: tetap berada di aplikasi
+        history.pushState(
+            {
+                ...(history.state || {}),
+                treehousePosBackGuard: true
+            },
+            "",
+            location.href
+        );
+
+    } catch (error) {
+        console.error("APP BACK BUTTON ERROR:", error);
+    } finally {
+        this.backButtonHandling = false;
+    }
+},
+
+
+    disableBackButton() {
+
+        this.backButtonActive = false;
+        this.backButtonHandling = false;
 
     },
 
@@ -342,40 +443,45 @@ const App = {
 
     },
 
+
     /*======================================
-        RENDER MODAL SCANNER BARCODE
-        ======================================*/
+    RENDER MODAL SCANNER BARCODE
+    ======================================*/
 
-        renderPembelianBarcodeScanner() {
+    renderPembelianBarcodeScanner() {
 
-            if (
-                document.getElementById(
-                    "pembelian-barcode-scanner"
-                )
-            ) {
-                return;
-            }
+        if (
+            document.getElementById(
+                "pembelian-barcode-scanner"
+            )
+        ) {
+            return;
+        }
 
-            if (
-                typeof PembelianScannerRender === "undefined"
-            ) {
-                console.error(
-                    "PembelianScannerRender tidak ditemukan."
-                );
-                return;
-            }
+        if (
+            typeof PembelianScannerRender === "undefined"
+        ) {
 
-            const container = document.createElement("div");
+            console.error(
+                "PembelianScannerRender tidak ditemukan."
+            );
 
-            container.innerHTML =
-                PembelianScannerRender.render().trim();
+            return;
 
-            const modal = container.firstElementChild;
+        }
 
-            if (modal) {
-                document.body.appendChild(modal);
-            }
-        },
+        const container = document.createElement("div");
+
+        container.innerHTML =
+            PembelianScannerRender.render().trim();
+
+        const modal = container.firstElementChild;
+
+        if (modal) {
+            document.body.appendChild(modal);
+        }
+
+    },
 
 
     /*======================================
@@ -707,6 +813,8 @@ const App = {
             !Auth.isLoggedIn()
         ) {
 
+            this.disableBackButton();
+
             this.stopPembelianMassalRenderSwitch();
 
             if (
@@ -720,6 +828,12 @@ const App = {
             return;
 
         }
+
+        /*==================================
+        AKTIFKAN TOMBOL BACK HP
+        ==================================*/
+
+        this.enableBackButton();
 
         const pages = {
 
@@ -742,11 +856,7 @@ const App = {
             return;
         }
 
-
         this.renderPembelianBarcodeScanner();
-
-
-
 
         /*==================================
         PEMBELIAN MASSAL
@@ -813,7 +923,6 @@ const App = {
             PembelianMassal.init(params);
 
             this.startPembelianMassalRenderSwitch();
-
 
             /*==================================
             LAPORAN PEMBELIAN MODAL

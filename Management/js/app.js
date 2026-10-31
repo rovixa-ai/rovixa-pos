@@ -1,4 +1,3 @@
-
 // app.js
 
 const App = {
@@ -204,6 +203,10 @@ const App = {
 
                 try {
 
+                    // Pasang kembali history guard.
+                    // Jika pengguna memilih Batal,
+                    // aplikasi tetap berada di halaman aktif.
+
                     history.pushState(
                         {
                             treehousePOS: true,
@@ -281,16 +284,21 @@ const App = {
                 }
             );
 
-            if (!confirmed) {
+            if (confirmed) {
+
+                /*
+                 * Keluar dari aplikasi dengan kembali
+                 * melewati history guard dan halaman
+                 * aplikasi sebelumnya.
+                 */
+
+                history.go(-2);
+
                 return;
+
             }
 
-            /*
-             * Pada aplikasi web biasa, JavaScript tidak
-             * dapat menutup tab yang dibuka langsung oleh
-             * pengguna. Pada PWA, perilaku keluar mengikuti
-             * browser atau sistem operasi.
-             */
+            // Jika Batal, history guard tetap aktif.
             return;
 
         }
