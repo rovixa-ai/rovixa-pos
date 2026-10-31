@@ -217,74 +217,81 @@ Object.assign(Installer, {
                     ? result.values
                     : [];
 
+            /* ======================================
+               CARI SPREADSHEET ID YANG SUDAH ADA
+            ====================================== */
+
             const existingIndex =
                 rows.findIndex((row, index) =>
                     index > 0 &&
                     String(row?.[2] || "").trim() ===
-                        this.spreadsheetId
+                        String(this.spreadsheetId).trim()
                 );
+
+            let sheetRow;
 
             if (existingIndex >= 0) {
 
-                const sheetRow =
+                /* ======================================
+                   UPDATE DATA YANG SUDAH ADA
+                ====================================== */
+
+                sheetRow =
                     existingIndex + 1;
-
-                const updateRange =
-                    encodeURIComponent(
-                        escapedSheetName +
-                        "!A" + sheetRow +
-                        ":F" + sheetRow
-                    );
-
-                const updateUrl =
-                    INSTALLER_CONFIG.SHEETS_API +
-                    "/spreadsheets/" +
-                    encodeURIComponent(masterSpreadsheetId) +
-                    "/values/" +
-                    updateRange +
-                    "?valueInputOption=USER_ENTERED";
-
-                await this.apiRequest(
-                    updateUrl,
-                    {
-                        method: "PUT",
-                        body: JSON.stringify({
-                            range:
-                                escapedSheetName +
-                                "!A" + sheetRow +
-                                ":F" + sheetRow,
-                            majorDimension: "ROWS",
-                            values: [rowValues]
-                        })
-                    }
-                );
 
             } else {
 
-                const appendRange =
-                    encodeURIComponent(
-                        escapedSheetName + "!A:F"
-                    );
+                /* ======================================
+                   TENTUKAN BARIS TERAKHIR KOLOM C
+                ====================================== */
 
-                const appendUrl =
-                    INSTALLER_CONFIG.SHEETS_API +
-                    "/spreadsheets/" +
-                    encodeURIComponent(masterSpreadsheetId) +
-                    "/values/" +
-                    appendRange +
-                    ":append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS";
+                let lastDataRow = 1;
 
-                await this.apiRequest(
-                    appendUrl,
-                    {
-                        method: "POST",
-                        body: JSON.stringify({
-                            majorDimension: "ROWS",
-                            values: [rowValues]
-                        })
+                for (let index = rows.length - 1; index >= 1; index--) {
+
+                    const spreadsheetId =
+                        String(rows[index]?.[2] || "").trim();
+
+                    if (spreadsheetId) {
+
+                        lastDataRow = index + 1;
+
+                        break;
                     }
-                );
+                }
+
+                sheetRow =
+                    lastDataRow + 1;
             }
+
+            /* ======================================
+               TULIS DATA KE BARIS YANG DITENTUKAN
+            ====================================== */
+
+            const updateRange =
+                escapedSheetName +
+                "!A" + sheetRow +
+                ":F" + sheetRow;
+
+            const updateUrl =
+                INSTALLER_CONFIG.SHEETS_API +
+                "/spreadsheets/" +
+                encodeURIComponent(masterSpreadsheetId) +
+                "/values/" +
+                encodeURIComponent(updateRange) +
+                "?valueInputOption=USER_ENTERED";
+
+            await this.apiRequest(
+                updateUrl,
+                {
+                    method: "PUT",
+                    body: JSON.stringify({
+                        range: updateRange,
+                        majorDimension: "ROWS",
+                        values: [rowValues]
+                    })
+                }
+            );
 
             this.clientConfigurationSaved = true;
             this.clientConfigurationEmail = email;
@@ -304,63 +311,63 @@ Object.assign(Installer, {
 
     async getInstallerGoogleEmail() {
 
-    if (this.clientConfigurationEmail) {
-        return this.clientConfigurationEmail;
-    }
-
-    const existingEmail =
-        this.googleEmail ||
-        this.userEmail ||
-        this.accountEmail ||
-        this.email;
-
-    if (existingEmail) {
-        this.clientConfigurationEmail =
-            String(existingEmail).trim();
-
-        return this.clientConfigurationEmail;
-    }
-
-    if (!this.accessToken) {
-        throw new Error(
-            "Token akses Google tidak tersedia. Silakan autentikasi kembali."
-        );
-    }
-
-    const response = await fetch(
-        "https://openidconnect.googleapis.com/v1/userinfo",
-        {
-            method: "GET",
-            headers: {
-                Authorization: "Bearer " + this.accessToken
-            }
+        if (this.clientConfigurationEmail) {
+            return this.clientConfigurationEmail;
         }
-    );
 
-    let profile = {};
+        const existingEmail =
+            this.googleEmail ||
+            this.userEmail ||
+            this.accountEmail ||
+            this.email;
 
-    try {
-        profile = await response.json();
-    } catch (error) {
-        profile = {};
-    }
+        if (existingEmail) {
+            this.clientConfigurationEmail =
+                String(existingEmail).trim();
 
-    if (!response.ok || !profile.email) {
-        throw new Error(
-            profile.error_description ||
-            profile.error?.message ||
-            "Email akun Google tidak dapat dibaca. " +
-            "Pastikan OAuth memiliki scope openid, email, " +
-            "dan https://www.googleapis.com/auth/userinfo.email. " +
-            "Autentikasi ulang Google, lalu coba simpan kembali."
+            return this.clientConfigurationEmail;
+        }
+
+        if (!this.accessToken) {
+            throw new Error(
+                "Token akses Google tidak tersedia. Silakan autentikasi kembali."
+            );
+        }
+
+        const response = await fetch(
+            "https://openidconnect.googleapis.com/v1/userinfo",
+            {
+                method: "GET",
+                headers: {
+                    Authorization: "Bearer " + this.accessToken
+                }
+            }
         );
-    }
 
-    this.clientConfigurationEmail =
-        String(profile.email).trim();
+        let profile = {};
 
-    return this.clientConfigurationEmail;
-},
+        try {
+            profile = await response.json();
+        } catch (error) {
+            profile = {};
+        }
+
+        if (!response.ok || !profile.email) {
+            throw new Error(
+                profile.error_description ||
+                profile.error?.message ||
+                "Email akun Google tidak dapat dibaca. " +
+                "Pastikan OAuth memiliki scope openid, email, " +
+                "dan https://www.googleapis.com/auth/userinfo.email. " +
+                "Autentikasi ulang Google, lalu coba simpan kembali."
+            );
+        }
+
+        this.clientConfigurationEmail =
+            String(profile.email).trim();
+
+        return this.clientConfigurationEmail;
+    },
 
 
     /* ======================================
