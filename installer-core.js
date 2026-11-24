@@ -50,7 +50,7 @@ const Installer = {
 
             event.preventDefault();
 
-            if (this.busy) {
+            if (this.busy || this.actionInProgress) {
                 return;
             }
 
@@ -270,6 +270,47 @@ setBusy(busy) {
 
         this.busy = busy;
 
+        const allButtons =
+            document.querySelectorAll("button");
+
+        if (busy) {
+
+            allButtons.forEach(item => {
+
+                if (!Object.prototype.hasOwnProperty.call(
+                    item.dataset,
+                    "busyDisabled"
+                )) {
+                    item.dataset.busyDisabled =
+                        String(item.disabled);
+                }
+
+                item.disabled = true;
+
+            });
+
+        } else if (!this.actionInProgress) {
+
+            allButtons.forEach(item => {
+
+                if (
+                    !Object.prototype.hasOwnProperty.call(
+                        item.dataset,
+                        "busyDisabled"
+                    )
+                ) {
+                    return;
+                }
+
+                item.disabled =
+                    item.dataset.busyDisabled === "true";
+
+                delete item.dataset.busyDisabled;
+
+            });
+
+        }
+
         const button =
             document.getElementById(
                 "install-button"
@@ -286,14 +327,37 @@ setBusy(busy) {
                         button.textContent.trim();
                 }
 
-                button.textContent =
-                    "Memproses...";
+                const label =
+                    button.querySelector(".button-label");
+
+                if (label) {
+                    if (!button.dataset.previousText) {
+                        button.dataset.previousText =
+                            label.textContent;
+                    }
+                    label.textContent = "Memproses...";
+                } else {
+                    if (!button.dataset.previousText) {
+                        button.dataset.previousText =
+                            button.textContent.trim();
+                    }
+                    button.textContent = "Memproses...";
+                }
 
             } else {
 
-                button.textContent =
+                const label =
+                    button.querySelector(".button-label");
+
+                const previousText =
                     button.dataset.previousText ||
                     "Hubungkan Google & Mulai Instalasi";
+
+                if (label) {
+                    label.textContent = previousText;
+                } else {
+                    button.textContent = previousText;
+                }
 
             }
         }
