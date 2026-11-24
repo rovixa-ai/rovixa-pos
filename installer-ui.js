@@ -317,12 +317,30 @@ Object.assign(Installer, {
 
                 if (
                     button.disabled ||
-                    button.dataset.loading === "true"
+                    button.dataset.loading === "true" ||
+                    this.actionInProgress ||
+                    this.busy
                 ) {
                     return;
                 }
 
-                button.disabled = true;
+                this.actionInProgress = true;
+
+                const buttons =
+                    Array.from(
+                        document.querySelectorAll("button")
+                    );
+
+                const previousStates =
+                    buttons.map(item => ({
+                        button: item,
+                        disabled: item.disabled
+                    }));
+
+                buttons.forEach(item => {
+                    item.disabled = true;
+                });
+
                 button.dataset.loading = "true";
                 button.setAttribute("aria-busy", "true");
 
@@ -334,7 +352,19 @@ Object.assign(Installer, {
 
                 } finally {
 
-                    button.disabled = false;
+                    this.actionInProgress = false;
+
+                    previousStates.forEach(state => {
+
+                        if (!state.button.isConnected) {
+                            return;
+                        }
+
+                        state.button.disabled =
+                            state.disabled || Boolean(this.busy);
+
+                    });
+
                     delete button.dataset.loading;
                     button.removeAttribute("aria-busy");
 
