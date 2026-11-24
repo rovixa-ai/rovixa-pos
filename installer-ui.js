@@ -313,7 +313,34 @@ Object.assign(Installer, {
 
         button.addEventListener(
             "click",
-            callback
+            async (event) => {
+
+                if (
+                    button.disabled ||
+                    button.dataset.loading === "true"
+                ) {
+                    return;
+                }
+
+                button.disabled = true;
+                button.dataset.loading = "true";
+                button.setAttribute("aria-busy", "true");
+
+                try {
+
+                    if (typeof callback === "function") {
+                        await callback(event);
+                    }
+
+                } finally {
+
+                    button.disabled = false;
+                    delete button.dataset.loading;
+                    button.removeAttribute("aria-busy");
+
+                }
+
+            }
         );
 
         return button;
