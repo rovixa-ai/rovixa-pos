@@ -360,6 +360,8 @@ Object.assign(Installer, {
                             return;
                         }
 
+                        delete state.button.dataset.busyDisabled;
+
                         state.button.disabled =
                             state.disabled || Boolean(this.busy);
 
