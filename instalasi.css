@@ -450,8 +450,8 @@ button[aria-disabled="true"] {
 
 button:disabled:hover,
 button[aria-disabled="true"]:hover {
-    background: inherit;
     box-shadow: none;
+    transform: none;
 }
 
 button[aria-busy="true"] {
