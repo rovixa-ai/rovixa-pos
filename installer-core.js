@@ -509,23 +509,34 @@ setBusy(busy) {
 
         if (button) {
 
-            button.disabled = busy;
+            const label =
+                button.querySelector(
+                    "span:not(.button-arrow)"
+                ) || button;
 
             if (busy) {
 
                 if (!button.dataset.previousText) {
                     button.dataset.previousText =
-                        button.textContent.trim();
+                        label.textContent.trim();
                 }
 
-                button.textContent =
+                label.textContent =
                     "Memproses...";
+
+                button.disabled = true;
+                button.dataset.loading = "true";
+                button.setAttribute("aria-busy", "true");
 
             } else {
 
-                button.textContent =
+                label.textContent =
                     button.dataset.previousText ||
                     "Hubungkan Google & Mulai Instalasi";
+
+                button.disabled = false;
+                delete button.dataset.loading;
+                button.removeAttribute("aria-busy");
 
             }
         }
