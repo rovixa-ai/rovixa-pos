@@ -274,7 +274,7 @@ const Installer = {
 
             event.preventDefault();
 
-            if (this.busy) {
+            if (this.busy || this.actionInProgress) {
                 return;
             }
 
