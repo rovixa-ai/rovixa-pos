@@ -502,6 +502,47 @@ setBusy(busy) {
 
         this.busy = busy;
 
+        const allButtons =
+            document.querySelectorAll("button");
+
+        if (busy) {
+
+            allButtons.forEach(item => {
+
+                if (!Object.prototype.hasOwnProperty.call(
+                    item.dataset,
+                    "busyDisabled"
+                )) {
+                    item.dataset.busyDisabled =
+                        String(item.disabled);
+                }
+
+                item.disabled = true;
+
+            });
+
+        } else if (!this.actionInProgress) {
+
+            allButtons.forEach(item => {
+
+                if (
+                    !Object.prototype.hasOwnProperty.call(
+                        item.dataset,
+                        "busyDisabled"
+                    )
+                ) {
+                    return;
+                }
+
+                item.disabled =
+                    item.dataset.busyDisabled === "true";
+
+                delete item.dataset.busyDisabled;
+
+            });
+
+        }
+
         const button =
             document.getElementById(
                 "install-button"
@@ -534,7 +575,9 @@ setBusy(busy) {
                     button.dataset.previousText ||
                     "Hubungkan Google & Mulai Instalasi";
 
-                button.disabled = false;
+                button.disabled =
+                    Boolean(this.actionInProgress);
+
                 delete button.dataset.loading;
                 button.removeAttribute("aria-busy");
 
