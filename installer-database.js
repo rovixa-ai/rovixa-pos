@@ -659,6 +659,11 @@ Object.assign(Installer, {
 
         this.waitingForAppsScriptSettings = true;
 
+        // Lock the initial form once the installer has advanced to this step.
+        if (typeof this.setBusy === "function") {
+            this.setBusy(false);
+        }
+
         if (typeof this.showActionPanel === "function") {
 
             this.setStatus(
