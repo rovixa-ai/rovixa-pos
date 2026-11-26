@@ -168,21 +168,79 @@ Object.assign(Installer, {
                                     "Akses instalasi yang sudah ada. Tidak ada database atau deployment baru yang dibuat." 
                                 ); 
  
-                            if (content) { 
- 
-                                const openButton = 
-                                    this.createActionButton( 
-                                        "Buka Web App", 
-                                        () => { 
- 
-                                            if (!this.webAppUrl) { 
- 
-                                                this.setStatus( 
-                                                    "URL Web App tidak tersedia.", 
-                                                    "error" 
-                                                ); 
- 
-                                                return; 
+                            if (content) {
+
+                                let webAppOpened = false;
+
+                                const confirmButton =
+                                    this.createActionButton(
+                                        "Saya Sudah Menyelesaikan Otorisasi",
+                                        () => this.completeInstallation()
+                                    );
+
+                                const openButton =
+                                    this.createActionButton(
+                                        "Buka Web App untuk Otorisasi",
+                                        () => {
+
+                                            if (webAppOpened) {
+                                                return;
+                                            }
+
+                                            if (!this.webAppUrl) {
+
+                                                this.setStatus(
+                                                    "URL Web App tidak tersedia.",
+                                                    "error"
+                                                );
+
+                                                return;
+                                            }
+
+                                            const webAppWindow =
+                                                window.open(
+                                                    this.webAppUrl,
+                                                    "_blank"
+                                                );
+
+                                            if (!webAppWindow) {
+
+                                                this.setStatus(
+                                                    "Tab Web App tidak dapat dibuka. Izinkan popup untuk halaman Installer, kemudian coba kembali.",
+                                                    "error"
+                                                );
+
+                                                return;
+                                            }
+
+                                            try {
+                                                webAppWindow.opener = null;
+                                            } catch (error) {
+                                                // Web App remains open if opener cannot be reset.
+                                            }
+
+                                            webAppOpened = true;
+                                            openButton.textContent =
+                                                "Web App Sudah Dibuka";
+
+                                            content.appendChild(
+                                                confirmButton
+                                            );
+
+                                            this.setStatus(
+                                                "Web App telah dibuka pada tab baru. Selesaikan otorisasi Google di tab tersebut, lalu kembali ke Installer dan tekan Saya Sudah Menyelesaikan Otorisasi.",
+                                                "info"
+                                            );
+
+                                        }
+                                    );
+
+                                content.appendChild(
+                                    openButton
+                                );
+                            }
+
+                            return; 
                                             } 
  
                                             window.open( 
