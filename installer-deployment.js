@@ -38,29 +38,42 @@ Object.assign(Installer, {
 
             await this.verifyCopiedScript();
 
-            this.setStatus(
-                "Membuat versi Apps Script...",
-                "loading"
-            );
+            let deployment =
+                await this.findExistingWebAppDeployment();
 
-            const version =
-                await this.createScriptVersion();
+            if (deployment) {
 
-            if (!version.versionNumber) {
-                throw new Error(
-                    "Nomor versi Apps Script tidak ditemukan."
+                this.setStatus(
+                    "Deployment Web App yang sudah ada ditemukan. Menggunakan deployment tersebut...",
+                    "loading"
                 );
+
+            } else {
+
+                this.setStatus(
+                    "Membuat versi Apps Script...",
+                    "loading"
+                );
+
+                const version =
+                    await this.createScriptVersion();
+
+                if (!version.versionNumber) {
+                    throw new Error(
+                        "Nomor versi Apps Script tidak ditemukan."
+                    );
+                }
+
+                this.setStatus(
+                    "Melakukan deployment Web App...",
+                    "loading"
+                );
+
+                deployment =
+                    await this.createWebAppDeployment(
+                        version.versionNumber
+                    );
             }
-
-            this.setStatus(
-                "Melakukan deployment Web App...",
-                "loading"
-            );
-
-            const deployment =
-                await this.createWebAppDeployment(
-                    version.versionNumber
-                );
 
             const webApp =
                 (deployment.entryPoints || []).find(
@@ -516,6 +529,67 @@ Object.assign(Installer, {
         }
 
         return project;
+    },
+
+
+    /* ======================================
+       FIND EXISTING WEB APP DEPLOYMENT
+       PREVENT DUPLICATE DEPLOYMENT ON RETRY
+    ====================================== */
+
+    async findExistingWebAppDeployment() {
+
+        const url =
+            INSTALLER_CONFIG.SCRIPT_API +
+            "/projects/" +
+            encodeURIComponent(this.scriptId) +
+            "/deployments";
+
+        const result =
+            await this.apiRequest(
+                url,
+                {
+                    method: "GET"
+                }
+            );
+
+        const deployments =
+            Array.isArray(result.deployments)
+                ? result.deployments
+                : [];
+
+        const expectedDescription =
+            "Rovixa POS Web App - " +
+            String(this.storeName || "").trim();
+
+        const matchingDeployments =
+            deployments.filter(deployment =>
+                String(
+                    deployment?.deploymentConfig?.description || ""
+                ).trim() === expectedDescription
+            );
+
+        if (matchingDeployments.length === 0) {
+            return null;
+        }
+
+        const existingDeployment =
+            matchingDeployments.find(deployment =>
+                (deployment.entryPoints || []).some(entry =>
+                    entry.entryPointType === "WEB_APP" &&
+                    Boolean(entry.webApp?.url)
+                )
+            );
+
+        if (!existingDeployment) {
+            throw new Error(
+                "Deployment dengan identitas toko ini sudah ditemukan, " +
+                "tetapi URL Web App tidak tersedia. Installer menghentikan " +
+                "pembuatan deployment baru agar tidak menghasilkan duplikat."
+            );
+        }
+
+        return existingDeployment;
     },
 
 
