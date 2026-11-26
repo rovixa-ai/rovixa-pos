@@ -50,7 +50,12 @@ const Installer = {
 
             event.preventDefault();
 
-            if (this.busy || this.actionInProgress) {
+            if (
+                this.busy ||
+                this.actionInProgress ||
+                this.waitingForAppsScriptSettings ||
+                this.databaseReadyForScript
+            ) {
                 return;
             }
 
@@ -318,7 +323,10 @@ setBusy(busy) {
 
         if (button) {
 
-            button.disabled = busy;
+            button.disabled =
+                busy ||
+                this.waitingForAppsScriptSettings ||
+                this.databaseReadyForScript;
 
             if (busy) {
 
@@ -374,7 +382,9 @@ setBusy(busy) {
 
         if (storeNameInput) {
             storeNameInput.disabled =
-                busy || this.databaseReadyForScript;
+                busy ||
+                this.waitingForAppsScriptSettings ||
+                this.databaseReadyForScript;
         }
 
         if (form) {
