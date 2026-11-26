@@ -656,6 +656,97 @@ Object.assign(Installer, {
 
 
     /* ======================================
+       OPEN ALL APPLICATIONS
+       USER-INITIATED MULTI-TAB OPEN
+    ====================================== */
+
+    openAllApplications(configuration) {
+
+        const urls = [
+            configuration?.managementUrl,
+            configuration?.penjualanUrl,
+            configuration?.pembelianUrl
+        ];
+
+        const validUrls = urls.map(value => {
+
+            const rawUrl =
+                String(value || "").trim();
+
+            if (!rawUrl) {
+                return null;
+            }
+
+            try {
+
+                const parsedUrl =
+                    new URL(rawUrl);
+
+                if (
+                    !["https:", "http:"].includes(
+                        parsedUrl.protocol
+                    )
+                ) {
+                    return null;
+                }
+
+                return parsedUrl.href;
+
+            } catch (error) {
+
+                return null;
+
+            }
+        });
+
+        if (validUrls.some(url => !url)) {
+
+            this.setStatus(
+                "Satu atau lebih URL aplikasi belum tersedia atau tidak valid. Buka aplikasi satu per satu melalui link yang tersedia.",
+                "error"
+            );
+
+            return;
+        }
+
+        const openedWindows = [];
+
+        validUrls.forEach(url => {
+
+            const appWindow =
+                window.open(
+                    url,
+                    "_blank",
+                    "noopener,noreferrer"
+                );
+
+            openedWindows.push(appWindow);
+
+        });
+
+        const openedCount =
+            openedWindows.filter(Boolean).length;
+
+        if (openedCount === 3) {
+
+            this.setStatus(
+                "Management, Penjualan, dan Pembelian telah diminta untuk dibuka pada tiga tab baru.",
+                "success"
+            );
+
+        } else {
+
+            this.setStatus(
+                openedCount +
+                " dari 3 tab berhasil dibuka. Browser mungkin memblokir popup. Izinkan popup untuk halaman Installer, lalu tekan Buka Semua Aplikasi kembali.",
+                "error"
+            );
+
+        }
+    },
+
+
+    /* ======================================
        SHOW FINAL INSTALLATION PAGE
     ====================================== */
 
@@ -694,6 +785,13 @@ Object.assign(Installer, {
         description.style.fontSize = "13px";
         description.style.color = "#68766f";
 
+        const openAllButton =
+            this.createActionButton(
+                "Buka Semua Aplikasi",
+                () => this.openAllApplications(configuration),
+                "button-primary"
+            );
+
         const linksContainer =
             document.createElement("div");
 
@@ -721,6 +819,7 @@ Object.assign(Installer, {
         content.append(
             heading,
             description,
+            openAllButton,
             linksContainer
         );
     },
