@@ -240,27 +240,10 @@ Object.assign(Installer, {
                                 );
                             }
 
-                            return; 
-                                            } 
- 
-                                            window.open( 
-                                                this.webAppUrl, 
-                                                "_blank", 
-                                                "noopener,noreferrer" 
-                                            ); 
- 
-                                        } 
-                                    ); 
- 
-                                content.appendChild( 
-                                    openButton 
-                                ); 
-                            } 
- 
-                            return; 
-                        } 
- 
- 
+                            return;
+                        }
+
+
                         if (purpose === "verify-api") { 
  
                             await this.verifyAppsScriptApi(); 
