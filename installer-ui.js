@@ -716,9 +716,16 @@ Object.assign(Installer, {
             const appWindow =
                 window.open(
                     url,
-                    "_blank",
-                    "noopener,noreferrer"
+                    "_blank"
                 );
+
+            if (appWindow) {
+                try {
+                    appWindow.opener = null;
+                } catch (error) {
+                    // Tab opening is still valid if opener cannot be reset.
+                }
+            }
 
             openedWindows.push(appWindow);
 
@@ -788,8 +795,7 @@ Object.assign(Installer, {
         const openAllButton =
             this.createActionButton(
                 "Buka Semua Aplikasi",
-                () => this.openAllApplications(configuration),
-                "button-primary"
+                () => this.openAllApplications(configuration)
             );
 
         const linksContainer =
