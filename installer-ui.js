@@ -680,7 +680,7 @@ Object.assign(Installer, {
             try {
 
                 const parsedUrl =
-                    new URL(rawUrl);
+                    new window.URL(rawUrl);
 
                 if (
                     !["https:", "http:"].includes(
