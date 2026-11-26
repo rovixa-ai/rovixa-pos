@@ -943,6 +943,35 @@ Object.assign(Installer, {
             return;
         }
 
+        const instruction =
+            document.createElement("p");
+
+        instruction.textContent =
+            "Setelah menekan Izinkan di Google dan melihat respons JSON Web App, kembali ke tab Installer.";
+
+        instruction.style.fontSize = "12px";
+        instruction.style.lineHeight = "1.7";
+        instruction.style.marginTop = "12px";
+
+        const confirmButton =
+            this.createActionButton(
+                "Saya Sudah Menyelesaikan Otorisasi",
+                () => {
+
+                    const confirmed =
+                        window.confirm(
+                            "Apakah Anda sudah menekan Izinkan dan melihat respons JSON dari Web App?"
+                        );
+
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    this.completeInstallation();
+
+                }
+            );
+
         const openButton =
             this.createActionButton(
                 "Buka Web App untuk Otorisasi",
@@ -974,6 +1003,20 @@ Object.assign(Installer, {
                         return;
                     }
 
+                    try {
+                        webAppWindow.opener = null;
+                    } catch (error) {
+                        // Web App remains open if opener cannot be reset.
+                    }
+
+                    openButton.textContent =
+                        "Web App Sudah Dibuka";
+
+                    content.append(
+                        instruction,
+                        confirmButton
+                    );
+
                     this.setStatus(
                         "Web App telah dibuka pada tab baru. Selesaikan otorisasi Google, kemudian kembali ke halaman Installer.",
                         "info"
@@ -982,40 +1025,7 @@ Object.assign(Installer, {
                 }
             );
 
-        const instruction =
-            document.createElement("p");
-
-        instruction.textContent =
-            "Setelah menekan Izinkan di Google dan melihat respons JSON Web App, kembali ke tab Installer.";
-
-        instruction.style.fontSize = "12px";
-        instruction.style.lineHeight = "1.7";
-        instruction.style.marginTop = "12px";
-
-        const confirmButton =
-            this.createActionButton(
-                "Saya Sudah Menyelesaikan Otorisasi",
-                () => {
-
-                    const confirmed =
-                        window.confirm(
-                            "Apakah Anda sudah menekan Izinkan dan melihat respons JSON dari Web App?"
-                        );
-
-                    if (!confirmed) {
-                        return;
-                    }
-
-                    this.completeInstallation();
-
-                }
-            );
-
-        content.append(
-            openButton,
-            instruction,
-            confirmButton
-        );
+        content.appendChild(openButton);
     }
 
 });
